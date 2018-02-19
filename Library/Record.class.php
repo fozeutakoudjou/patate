@@ -16,16 +16,16 @@ abstract class Record implements \ArrayAccess{
     protected $id;
     public $tabAttrib = array();
     protected $tabType = array('name'=>'is_numeric','name_2'=>'html');
+	protected $tabLang = array();
 
-    public function __construct(array $donnees = array(), $fromDB = false){
+    public function __construct(array $donnees = array(), $fromDB = false, $lang = '', $useOfAllLang = false){
         if (!empty($donnees)){
-            if(!$fromDB)
-                $this->hydrate($donnees);
-            else
-                $this->hydrate2($donnees); 
+            $this->hydrate($donnees, $fromDB, $lang, $useOfAllLang);
         }
     }
-    
+    public function getTabLang(){
+        return $this->tabLang;
+    }
     public function isNew(){
         return empty($this->id);
     }
@@ -41,31 +41,74 @@ abstract class Record implements \ArrayAccess{
     public function setId($id){
         $this->id = (int) $id;
     }
-    
-    public function hydrate(array $donnees){
-        $tools = new Tools();
-        foreach ($donnees as $attribut => $valeur){
-            $methode = 'set'.ucfirst($attribut);
-            if (is_callable(array($this, $methode))){
-                $html = (array_key_exists($attribut,$this->tabType)&& $this->tabType[$attribut]=='html')?true:false;
-                $this->$methode($this->escape($valeur, $tools,$html));                
-            }
-            $this->tabAttrib[$attribut] = $valeur;
+    public function setFieldValue($field, $value, $fromDB = false, $lang = '', $useOfAllLang = false){
+		$tools = new Tools();
+		if(!$fromDB && !property_exists($this, $field)){
+			$tmpField = Tools::removeLangKey($field);
+			$isLangField = in_array($tmpField, $this->tabLang);
+			if($isLangField){
+				$lang = Tools::getLangFormField($field, $tmpField);
+				$useOfAllLang = true;
+				$field = $tmpField;
+			}
+		}else{
+			$isLangField = in_array($field, $this->tabLang);
+		}
+        $methode = 'set'.ucfirst($field);
+		$html = (array_key_exists($field, $this->tabType) && $this->tabType[$field]=='html') ? true : false;
+		if (is_callable(array($this, $methode))){
+			$escapedValue = $this->escape($value, $tools, $html, $fromDB);
+			$fieldValue = $escapedValue;
+			if($isLangField && $useOfAllLang){
+				$tmpValue = is_array($this->$field) ? $this->$field : array();
+				$tmpValue[$lang] = $fieldValue;
+				$fieldValue = $tmpValue;
+			}
+			$this->$methode($fieldValue); 
+		}
+		$fieldKey = ($isLangField && $useOfAllLang) ? Tools::getFieldKey($field, $lang) : $field;
+		if($fromDB){
+			$this->tabAttrib[$fieldKey] = isset($escapedValue) ? $escapedValue : $this->escape($value, $tools, $html, $fromDB);
+		}else{
+			$this->tabAttrib[$fieldKey] = $value;
+		}
+    }
+    public function hydrate(array $donnees, $fromDB = false, $lang = '', $useOfAllLang = false){
+        foreach ($donnees as $field => $value){
+            $this->setFieldValue($field, $value, $fromDB, $lang, $useOfAllLang);
         }
     }
-    
-    public function hydrate2(array $donnees){
-        $tools = new Tools();
-        foreach ($donnees as $attribut => $valeur){
-            $methode = 'set'.ucfirst($attribut);
-            if (is_callable(array($this, $methode))){
-                $html = (array_key_exists($attribut,$this->tabType)&& $this->tabType[$attribut]=='html')?true:false;
-                $this->$methode($this->escape2($valeur, $tools,$html));                
+	
+    public function fillMultilangEmptyFields()
+    {
+		foreach($this->tabLang as $field){
+			if(is_array($this->$field)){
+				$this->$field = $this->fillMultilangEmpty($field);
+			}
+		}
+	}
+	public function fillMultilangEmpty($field)
+    {
+		$values = $this->$field;
+		$defaultLang = '';
+        $defaultValue = (isset($values[$defaultLang]) && !empty($values[$defaultLang])) ? $values[$defaultLang] : '';
+        //Recherche d'une valeur non nulle
+        if (empty($defaultValue)) {
+            foreach ($values as $value) {
+                if (!empty($value)) {
+                    $defaultValue= $value;
+                    break;
+                }
             }
-            $this->tabAttrib[$attribut] = $this->escape2($valeur, $tools,$html);
         }
+        foreach ($values as $key => $value) {
+            if (empty($value)) {
+                $values[$key] = $defaultValue;
+            }
+        }
+        return $values;
     }
-    
+	
     public function offsetGet($var){
         if (isset($this->$var) && is_callable(array($this, $var))){
             return $this->$var();
@@ -141,37 +184,21 @@ abstract class Record implements \ArrayAccess{
      * @param type $html_ok
      * @return type
      */
-    public function escape($string, $tools, $html = false)
+    public function escape($string, $tools, $html = false, $fromDB = false)
 	{
 		if (_MAGIC_QUOTES_GPC_ && !is_array($string))
 			$string = stripslashes($string);
 		if (!is_numeric($string) && !is_array($string))
 		{
 			if (!$html){
-                $string = $this->_escape($string);
+                $string = $fromDB ? $this->_escape2($string) : $this->_escape($string);
 				$string = strip_tags($tools->nl2br($string));
             }
 		}
 
 		return $string;
 	}
-    
-    // pour les données venant de la base de données
-    public function escape2($string, $tools, $html = false)
-	{
-		if (_MAGIC_QUOTES_GPC_ && !is_array($string))
-			$string = stripslashes($string);
-		if (!is_numeric($string) && !is_array($string))
-		{
-			if (!$html){
-                $string = $this->_escape2($string);
-				$string = strip_tags($tools->nl2br($string));				
-                //$string = stripslashes($string);
-            }
-		}
-
-		return $string;
-	}
+	
     /**
      * escape string before sql
      * @param type $str

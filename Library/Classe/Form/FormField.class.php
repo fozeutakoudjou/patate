@@ -23,6 +23,8 @@ abstract class FormField {
     protected $addons_right;
     protected $help_text_inline='';
     protected $help_text_block='';
+	
+	protected $translatable;
 
     protected static $error_list = array();
 
@@ -37,7 +39,7 @@ abstract class FormField {
 		$this->attrs['name'] = $name;
 		$this->error_messages= new ErrorList;
 		$this->custom_error_messages = array();
-
+		$this->translatable= false;
 		$this->_init();
 	}
 
@@ -82,7 +84,12 @@ abstract class FormField {
 		$this->label = $text;
 		return $this;
 	}
-
+	
+	public function setTranslatable($translatable) {
+		$this->translatable = $translatable;
+		return $this;
+	}
+	
 	public function value($text) {
 
 		$this->value = $text;
@@ -282,7 +289,49 @@ abstract class FormField {
                 break;
         }
         return $this;
-    }        
+    }
+
+	public function toStringLangField($showLangSwitcher = true){
+		$languages = $this->form->getLanguages();
+		$activeLang = $this->form->getActiveLang();
+    	$field='';
+		$name = $this->attrs['name'];
+		$value = array();
+		$id='';
+		$for='';
+		$field .= '<div class="col-md-4">';
+		foreach ($languages as $lang){
+			$activeClass=($lang->getIso_code()==$activeLang)?' active-lang':'';
+			$langClass = ' lang-'.$lang->getIso_code();
+			$this->attrs['name']=$name.'_'.$lang->getIso_code();
+			$currentValue = '';
+			if (true === $this->autocomplete) {
+				$value[$lang->getIso_code()]=$this->form->get_bounded_data($this->attrs['name']);
+				$value[$lang->getIso_code()] = (!empty($value[$lang->getIso_code()])|| (!isset($this->value[$lang->getIso_code()]))) ? $value[$lang->getIso_code()] : $this->value[$lang->getIso_code()];
+				$currentValue = $value[$lang->getIso_code()];
+			}
+			//$value[$lang->getIso_code()] = (!empty($value[$lang->getIso_code()])) ? htmlspecialchars($value[$lang->getIso_code()]) : '';
+			list($for, $id) = self::_generate_for_id($this->form->auto_id(), $this->attrs['name']);
+			$attributeString = ' class="col-lg-10 translatable-field ' . $langClass . $activeClass . '" data-lang="' . $lang->getIso_code() . '" ';
+			$field .= '<div '. $attributeString . '">' . $this->renderLangFields($id, $currentValue) . '</div>';
+		}
+		if($showLangSwitcher){
+			$field.='<div class="col-lg-2">
+			<button class="btn dropdown-toggle" data-toggle="dropdown">'.$activeLang.'<i class="fa fa-angle-down"></i></button>
+			<ul class="dropdown-menu pull-right">';
+			foreach ($languages as $lang){
+				$field.='<li><a href="#" data-iso-code="'.$lang->getIso_code().'">'.$lang->getName().'</li></a>';
+			}
+			$field.='</ul>
+			</div>';
+		}
+		$field .= '</div>';
+		return $field;
+    }
+	
+	public function renderLangFields($id, $value){
+    	return '';
+    }	
 }
 
 ?>

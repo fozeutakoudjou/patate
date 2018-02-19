@@ -29,7 +29,7 @@ class FormText extends FormInput {
 
 		return parent::get_cleaned_value(preg_replace('`[\x00-\x19]`i', '', $value));
 	}
-
+	
 	public function __toString() {
 
 		$tab = func_num_args() > 0 ? func_get_arg(0) : '';
@@ -47,19 +47,29 @@ class FormText extends FormInput {
 
 		$errors = $this->error_messages->__toString($tab);
 		if (!empty($errors)) { $errors = "\n".$errors; }
+		
+		if($this->translatable){
+			$field=$this->toStringLangField();
+		}else {
+			if (true === $this->autocomplete) {
 
-		if (true === $this->autocomplete) {
+				$value = $this->form->get_bounded_data($this->attrs['name']);
+				$value = (!empty($value)) ? $value : $this->value;
+				$value = (!empty($value)) ? htmlspecialchars($value) : '';
 
-			$value = $this->form->get_bounded_data($this->attrs['name']);
-			$value = (!empty($value)) ? $value : $this->value;
-			$value = (!empty($value)) ? ' value="'.htmlspecialchars($value).'"' : '';
+			} else {
 
-		} else {
-
-			$value = '';
+				$value = '';
+			}
+			$field = '<div class="col-md-4">' . $this->renderLangFields($id, $value) . '</div>';
 		}
-        
-        // icons
+		
+		
+		return $tab.sprintf("%2\$s%1\$s%3\$s", $field, $label, $errors);
+	}
+	
+	public function renderLangFields($id, $value){
+		// icons
         $lefticons = '';
         $righticons = '';
         if(is_array($this->icons_left) && count($this->icons_left))
@@ -87,7 +97,7 @@ class FormText extends FormInput {
         if($this->help_text_inline != '')
             $helpertext = '<span class="help-inline">'.$this->help_text_block.'</span>';
         
-		$field = '<div class="col-md-4">';
+		$field = '';
         if((is_array($this->icons_left) && count($this->icons_left)) || (is_array($this->icons_right) && count($this->icons_right))){
             if((is_array($this->addons_left) && count($this->addons_left)) || (is_array($this->icons_right) && count($this->icons_right)))
                 $field .= '<div class="input-icon input-group">';
@@ -102,9 +112,9 @@ class FormText extends FormInput {
             || (is_array($this->addons_left) && count($this->addons_left)) || (is_array($this->icons_right) && count($this->icons_right)))
                    $field .= '</div>';
         $field .= $helpertext;
-        $field .= '</div>';
-		return $tab.sprintf("%2\$s%1\$s%3\$s", $field, $label, $errors);
-	}
+        $field .= '';
+		return $field;
+    }
 }
 
 ?>

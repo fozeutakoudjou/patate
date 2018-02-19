@@ -22,12 +22,14 @@ class Form {
 	protected $uniqid;
     protected $closeForm;
     protected $formType;
+    protected $languages;
+    protected $activeLang;
 
     protected static $instances = array();
     
     private $chemin = '\\Library\\Classe\\Form\\';
 
-    public function __construct($uniqid, $method = 'post', $formType = 'form-horizontal') {
+    public function __construct($uniqid, $method = 'post', $formType = 'form-horizontal', $languages = array(), $activeLang = '') {
 
 		$this->fields= array();
 		$this->hidden_fields = array();
@@ -41,6 +43,8 @@ class Form {
 		$this->attrs         = new AttributeList(array('method' => $method));
         $this->closeForm = true;
         $this->formType = $formType;
+        $this->languages = $languages;
+        $this->activeLang = $activeLang;
         
 
 		if (false !== $uniqid && in_array($uniqid, self::$instances)) {
@@ -55,6 +59,18 @@ class Form {
 		}
 	}
 
+	public function getActiveLang() {
+		return $this->activeLang;
+	}
+	public function getLanguages() {
+		return $this->languages;
+	}
+	public function setActiveLang($activeLang) {
+		return $this->activeLang = $activeLang;
+	}
+	public function setLanguages($languages) {
+		return $this->languages = $languages;
+	}
 	public function is_valid(array $values) {
 
 		if ($this->is_submited()) {

@@ -12,6 +12,15 @@ abstract class Manager {
     
     protected $dao;
     protected $nameTable;
+	
+    protected $lang;
+    protected $languages;
+    protected $useOfLang = true;
+    protected $useOfAllLang = false;
+	protected $primary = 'id';
+	private static $langPrimary = 'iso_code';
+	
+	private $langCanBeUsed = null;
 
 
     public function __construct($dao){
@@ -27,10 +36,23 @@ abstract class Manager {
     public function fecthAssoc_data($requete, $refObjet){
         
         $output = array();
+		$ids = array();
+		$i = 0;
         while ($data = $requete->fetch(\PDO::FETCH_ASSOC)){
-            
-            $output[] = new $refObjet($data, true);
-            
+			$id = $data[$this->primary];
+			if($this->useOfAllLang && isset($ids[$id])){
+				$tabLang = $output[$ids[$id]]->getTabLang();
+				foreach($tabLang as $field){
+					$output[$ids[$id]]->setFieldValue($field, $data[$field], true, $data[self::$langPrimary], $this->useOfAllLang);
+				}
+			}else{
+				$lang = ($this->isLangCanBeUsed() && $this->useOfLang && isset($data[self::$langPrimary])) ? $data[self::$langPrimary] : '';
+				$output[] = new $refObjet($data, true, $lang, $this->useOfAllLang);
+				if($this->useOfAllLang){
+					$ids[$id] = $i;
+					$i++;
+				}
+			}
         }
         $requete->closeCursor();
         
@@ -44,14 +66,8 @@ abstract class Manager {
      * @return \Library\refObjet 
      */
     public function fecthRow_data($requete, $refObjet){
-        $output ='';
-        if($data = $requete->fetch(\PDO::FETCH_ASSOC)){
-            
-            $output = new $refObjet($data, true);
-        }
-        $requete->closeCursor();
-        
-        return $output;
+        $output = $this->fecthAssoc_data($requete, $refObjet);
+		return empty($output) ? '' : $output[0];
     }
     
     /**
@@ -123,11 +139,12 @@ abstract class Manager {
             $out .= ($i!=0?' OR ':'').$value.' LIKE "%'.$name.'%"';
             $i++;
         }
-        $sql ='SELECT DISTINCT t.* 
-               FROM '._DB_PREFIX_.$this->nameTable.' t  
-               WHERE '.$out;
+        $sql ='SELECT DISTINCT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' t ' . $this->getLangJoin() .
+               ' WHERE '.$out;
         
         $req = $this->dao->prepare($sql);
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
     }
@@ -139,11 +156,12 @@ abstract class Manager {
         $out .= ($i!=0?' AND ':'').$value.'="'.$name[$k].'"';
             $i++;
         }
-        $sql ='SELECT DISTINCT t.* 
-               FROM '._DB_PREFIX_.$this->nameTable.' t  
-               WHERE '.$out;
+        $sql ='SELECT DISTINCT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' t ' . $this->getLangJoin() .
+               ' WHERE '.$out;
         
         $req = $this->dao->prepare($sql);
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
     }
@@ -154,23 +172,25 @@ abstract class Manager {
      * @return type 
      */
     public function findById($id){
-        $sql = 'SELECT t.* 
-                FROM '._DB_PREFIX_.$this->nameTable.' as t
-                WHERE t.id=:id';        
+        $sql = 'SELECT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t ' . $this->getLangJoin() .
+                ' WHERE t.id=:id';        
         $req = $this->dao->prepare($sql);
         $req->bindValue(':id', intval($id));
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthRow_data($req, $this->name);    
     }
     
     public function findById2($name, $id, $page=1, $limit = null, $filterOrder = NULL, $order = 'DESC'){
-        $sql = 'SELECT t.* 
-                FROM '._DB_PREFIX_.$this->nameTable.' as t
-                WHERE t.'.$name.'=:name'.
+        $sql = 'SELECT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t ' . $this->getLangJoin() .
+                ' WHERE t.'.$name.'=:name'.
                 (isset($filterOrder)?' ORDER BY '.$filterOrder.' '.$order:' ').
                 ($limit?' LIMIT '.($page-1)*$limit.', '.$limit:' ');     
         $req = $this->dao->prepare($sql);
         $req->bindValue(':name', intval($id));
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
     }
@@ -218,24 +238,26 @@ abstract class Manager {
      * @return type 
      */
     public function findByName($name,$value, $filterOrder = NULL, $order = 'DESC'){
-        $sql = 'SELECT t.* 
-                FROM '._DB_PREFIX_.$this->nameTable.' as t
-                WHERE t.'.$name.'=:name '.(isset($filterOrder)?'ORDER BY '.$filterOrder.' '.$order:'');        
+        $sql = 'SELECT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t ' . $this->getLangJoin() .
+                ' WHERE t.'.$name.'=:name '.(isset($filterOrder)?'ORDER BY '.$filterOrder.' '.$order:'');        
         $req = $this->dao->prepare($sql);
         $req->bindValue(':name', $value);
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
     }
     
-    public function findInfosStrictInf($name,$value, $filterOrder = NULL, $order = 'DESC',$critéria = NULL, $page=1, $limit = null, $type='date'){
-        $sql = 'SELECT t.* 
-                FROM '._DB_PREFIX_.$this->nameTable.' as t
-                WHERE t.'.$name.'< :name '.
-                (isset($critéria)?' AND '.$critéria:' ').(($type == 'date') ? ' AND  t.'.$name.' <> "0000-00-00 00:00:00" ' : '').
+    public function findInfosStrictInf($name,$value, $filterOrder = NULL, $order = 'DESC',$criteria = NULL, $page=1, $limit = null, $type='date'){
+        $sql = 'SELECT t.* ' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t ' . $this->getLangJoin() .
+                ' WHERE t.'.$name.'< :name '.
+                (isset($criteria)?' AND '.$criteria:' ').(($type == 'date') ? ' AND  t.'.$name.' <> "0000-00-00 00:00:00" ' : '').
                 (isset($filterOrder)?' ORDER BY '.$filterOrder.' '.$order:' ').
                 ($limit?' LIMIT '.($page-1)*$limit.', '.$limit:' ');        
         $req = $this->dao->prepare($sql);
         $req->bindValue(':name', $value);
+		$this->addLangParam($req);
         $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
     }
@@ -245,8 +267,8 @@ abstract class Manager {
      * @return type 
      */
     public function findAll(){
-        $sql = 'SELECT t.*
-                FROM '._DB_PREFIX_.$this->nameTable.' as t';
+        $sql = 'SELECT t.*' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t';
         $req = $this->dao->query($sql);
         $output = array();
         while ($data = $req->fetch(\PDO::FETCH_ASSOC)){            
@@ -261,17 +283,70 @@ abstract class Manager {
      * @return type 
      */
     public function findAll2($filterOrder = NULL, $order = 'DESC', $page=1, $limit = null){
-        $sql = 'SELECT SQL_CALC_FOUND_ROWS t.*
-                FROM '._DB_PREFIX_.$this->nameTable.' as t '.
+        $sql = 'SELECT SQL_CALC_FOUND_ROWS t.*' . $this->getLangSelect() .
+                'FROM '._DB_PREFIX_.$this->nameTable.' as t  ' . $this->getLangJoin() .
                 (isset($filterOrder)?'ORDER BY '.$filterOrder.' '.$order:'').
                 ($limit?' LIMIT '.($page-1)*$limit.', '.$limit:' ');
       
-        //echo $sql;
-        $req = $this->dao->query($sql);
-        
+        $req = $this->dao->prepare($sql);
+		$this->addLangParam($req);
+        $req->execute();
         return $this->fecthAssoc_data($req, $this->name);
         
     }
+	
+	public function getLangJoin()
+    {
+		$join = ' ';
+		if($this->isLangCanBeUsed() && $this->useOfLang){
+			$join .= ' LEFT JOIN ' . _DB_PREFIX_ . $this->nameTable.'_lang tl ON (tl.id_' . $this->nameTable .
+			' = t.' . $this->primary . ') '. ($this->useOfAllLang ? '' : ' AND (tl.'.self::$langPrimary.' = :lang) ');
+		}
+        return $join;
+    }
+	public function getLangSelect()
+    {
+		$sql = ' ';
+		if($this->isLangCanBeUsed() && $this->useOfLang){
+			$sql .= ', tl.* ';
+		}
+        return $sql;
+    }
+	public function addLangParam($req)
+    {
+		if($this->isLangCanBeUsed() && !$this->useOfAllLang && !empty($this->lang)){
+			$req->bindValue(':lang', $this->lang);
+		}
+    }
+	public function isLangCanBeUsed($object = null)
+    {
+		if($this->langCanBeUsed === null){
+			$object = ($object === null) ? $this->getNewObject() : $object;
+			$this->langCanBeUsed = !empty($object->getTabLang());
+		}
+		return $this->langCanBeUsed;
+    }
+	public function getNewObject($params = array())
+    {
+		return new $this->name($params);
+    }
+	
+	
+	public function setUseOfAllLang($useOfAllLang)
+    {
+		$this->useOfAllLang = $useOfAllLang;
+    }
+	
+	public function setLang($lang)
+    {
+		$this->lang = $lang;
+    }
+	
+	public function setUseOfLang($useOfLang)
+    {
+		$this->useOfLang = $useOfLang;
+    }
+	
     /**
      * ajout d'un enregistrement dans un objet reccord
      * @param array $params
@@ -301,8 +376,11 @@ abstract class Manager {
                     $req->bindParam(':'.$key,$objData->$methode());
                 }            
             }
-            //var_dump($req->execute());die();
-            return $req->execute();
+            $result = $req->execute();
+			if($result){
+				$result = $this->saveMultilangFields($objData, false);
+			}
+            return $result;
         }
     }
     /**
@@ -332,8 +410,87 @@ abstract class Manager {
                     $req->bindParam(':'.$key,$objData->$methode());
                 }            
             }
-            return $req->execute();
+            $result = $req->execute();
+			if($result){
+				$result = $this->saveMultilangFields($objData, true);
+			}
+            return $result;
         }
+    }
+	public function saveMultilangFields($objData, $update = false)
+    {
+		$result = true;
+		if($this->isLangCanBeUsed()){
+			$method = 'get' . ucfirst($objData->getPrimary());
+			$idObject = ($update)? $objData->$method() : (int) $this->getLasId();
+			if($update){
+				$sqlInit = $this->getLangUpdateSqlInit($objData);
+			}else{
+				$addSqlInit= $this->getLangAddSqlInit($objData);
+			}
+			$isLangValuesFormatted =false;
+			foreach ($this->languages as $lang){
+				if($update && $this->isObjectSavedForLang($idObject, $lang)){
+					$sql = $sqlInit;
+				}else{
+					if(!isset($addSqlInit)){
+						$addSqlInit = $this->getLangAddSqlInit($objData);
+					}
+					$sql = $addSqlInit;
+				}
+				$req=$this->dao->prepare($sql);
+				$req->bindParam(':id_' . $this->nameTable, $idObject);
+				$req->bindParam(':' . self::$langPrimary, $lang->getIso_code());
+				if(!$isLangValuesFormatted){
+					$objData->fillMultilangEmptyFields();
+				}
+				foreach ($objData->getTablang() as $field){
+					$method = 'get'.ucfirst($key);
+					if (is_callable(array($objData, $method)) && property_exists($objData, $field)){
+						$req->bindParam(':'.$field, $objData->$method()[$lang]);
+					} 
+				}
+				$isLangValuesFormatted = true;
+				$result = ($result && (bool)$req->execute());
+			}
+		}
+		return $result;
+    }
+    
+    public function getLangAddSqlInit($objData)
+    {
+    	$sqlInit='INSERT INTO ' . _DB_PREFIX_ . $this->nameTable . '_lang (' . 'id_'.$this->nameTable . ', ' . self::$langPrimary . ', ' .
+      	implode(',', $objData->getTablang()) . ') VALUES(:id_' . $this->nameTable . ', :' . self::$langPrimary .
+		', :' . implode(',:', $objData->getTablang()).')';
+      	return $sqlInit;
+    }
+    
+    public function getLangUpdateSqlInit($objData)
+    {
+    	$sqlInit= 'UPDATE '._DB_PREFIX_.$this->nameTable.'_lang SET ';
+    	$first= true;
+    	foreach ($objData->getTablang()as $field){
+    		if(!$first){
+    			$sqlInit.=', ';
+    		}
+    		$sqlInit.=$field.' = :'.$field;
+    		$first = false;
+    	}
+    	$sqlInit.=' WHERE (id_'.$this->nameTable . ' = :id_' . $this->nameTable . ') AND (' . self::$langPrimary . ' = :' . self::$langPrimary . ')';
+    	return $sqlInit;
+    }
+    
+    public function isObjectSavedForLang($idObject, $lang)
+    {
+    	$sql = 'SELECT COUNT(*) AS number FROM '._DB_PREFIX_.$this->nameTable.
+    	'_lang WHERE (id_'.$this->nameTable.' = :id_' . $this->nameTable . ') AND (' . self::$langPrimary . ' = :' . self::$langPrimary . ')';
+    	$req=$this->dao->prepare($sql);
+    	$codeLang = $lang->getIso_code();
+    	$req->bindParam(':id_' . $this->nameTable, $idObject);
+    	$req->bindParam(':' . self::$langPrimary, $codeLang);
+    	$req->execute();
+    	$data = $req->fetch(\PDO::FETCH_OBJ);
+    	return (int)$data->number;
     }
     /**
      *Sélectionne Toutes les tables de la base de données

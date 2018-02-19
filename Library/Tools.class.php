@@ -593,6 +593,20 @@ class Tools {
         return md5(_COOKIE_KEY_.$chaine);
     }
 
+	public static function getFieldKey($field, $lang){
+		$code = is_string($lang)?$lang:$lang->getIso_code();
+		return $field.'_'.$code;
+    }
+	
+	public static function removeLangKey($field){
+        $lenght = strlen($field)-3;
+        $result = substr($field, 0, $lenght);
+        return $result;
+    }
+	
+	public static function getLangFormField($fullField, $field){
+		return str_replace($field.'_', '', $fullField);
+    }
 }
 
 ?>

@@ -42,10 +42,20 @@ class FormTextarea extends FormField {
 		}
 		$errors = $this->error_messages->__toString($tab);
 		if (!empty($errors)) { $errors = "\n".$errors; }
-		$value = $this->form->get_bounded_data($this->attrs['name']);
-		$value = (!empty($value)) ? htmlspecialchars($value) : htmlspecialchars($this->value);
-
-         // helper text
+		
+		if($this->translatable){
+			$field=$this->toStringLangField();
+		}else {
+			$value = $this->form->get_bounded_data($this->attrs['name']);
+			$value = (!empty($value)) ? htmlspecialchars($value) : htmlspecialchars($this->value);
+			$field = '<div class="col-md-4">' . $this->renderLangFields($id, $value) . '</div>';
+		}
+        
+		return $tab.sprintf("%2\$s%1\$s%3\$s", $field, $label, $errors);
+	}
+	
+	public function renderLangFields($id, $value){
+		 // helper text
         $helpertext = '';
         if($this->help_text_block != '')
             $helpertext = '<span class="help-block">'.$this->help_text_block.'</span>';
@@ -53,9 +63,9 @@ class FormTextarea extends FormField {
         if($this->help_text_inline != '')
             $helpertext = '<span class="help-inline">'.$this->help_text_block.'</span>';
         
-		$field = '<div class="col-md-4"><textarea'.$id.$this->attrs.'>'.$value.'</textarea>'.$helpertext.'</div>';
-		return $tab.sprintf("%2\$s%1\$s%3\$s", $field, $label, $errors);
-	}
+		$field = '<textarea'.$id.$this->attrs.'>'.$value.'</textarea>'.$helpertext;
+    	return $field;
+    }
 }
 
 ?>
