@@ -1,0 +1,20 @@
+<!-- visible or deseable is used for Create Menu please don't miss or remove it -->
+<routes>
+    <route url="/admin/log-in.html" module="Utilisateurs" action="connect"/>
+    <route url="/admin/utilisateurs.html" module="Utilisateurs" action="utilisateurs" visible="enable"/>
+    <route url="/admin/add-user-([0-9]+)\.html" module="Utilisateurs" action="createuser" vars="id"/>
+    <route url="/admin/add-user.html" module="Utilisateurs" action="createuser" visible="enable" />
+    <route url="/admin/utilisateur-edit-([0-9]+)\.html" module="Utilisateurs" action="createuser" vars="id" visible="deseable"/>
+    <route url="/admin/utilisateur-profil-([0-9]+)\.html" module="Utilisateurs" action="showUser" vars="id" visible="deseable"/>
+    <route url="/admin/utilisateur-delete-([0-9]+)\.html" module="Utilisateurs" action="deleteuser" vars="id" visible="deseable" />
+    <route url="/admin/deconnexion.html" module="Utilisateurs" action="logout" />
+
+    <route url="/admin/groupeutilisateurs.html" module="Utilisateurs" action="groupeutilisateurs" visible="enable"/>
+    <route url="/admin/add-groupuser.html" module="Utilisateurs" action="creategroupeuser" visible="enable"/>
+    <route url="/admin/groupeutilisateurs-edit-([0-9]+)\.html" module="Utilisateurs" action="creategroupeuser" vars="id" visible="deseable"/>
+    <route url="/admin/groupeutilisateurs-delete-([0-9]+)\.html" module="Utilisateurs" action="Deletegroupeuser" vars="id" visible="deseable"/>
+    
+    <route url="/admin/actiongroupeduser.html" module="Utilisateurs" action="results" />
+    <route url="/admin/csvutilisateurs.html" module="Utilisateurs" action="csvUtilisateurs" />
+    <route url="/admin/csvgroupeutilisateurs.html" module="Utilisateurs" action="csvGroupeUtilisateur" />
+</routes>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- visible or deseable is used for Create Menu please don't miss or remove it -->
+<routes>
+    <route url="/admin/lang.html" module="Lang" action="lang"  visible="enable"/>
+    <route url="/admin/lang-create.html" module="Lang" action="Langcreate"  visible="enable"/> 
+    <route url="/admin/lang-edit-([0-9]+)\.html" module="Lang" action="Langcreate" vars="id_lang" visible="deseable"/>
+    <route url="/admin/lang-delete-([0-9]+)\.html" module="Lang" action="delete" vars="id_lang" visible="deseable"/>  
+    <route url="/admin/actiongroupedlang.html" module="Lang" action="Results"/>             
+</routes>
+                        

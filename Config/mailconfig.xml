@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<params>
+ <items>
+  <serveurMail>smtp</serveurMail>
+  <emailSite>ffozeu@crystals-services.com</emailSite>
+  <nomExpediteur>crystals</nomExpediteur>
+  <identificationSMTP>0</identificationSMTP>
+  <securiteSMTP>tls</securiteSMTP>
+  <portSMTP>120</portSMTP>
+  <utilisateurSMTP>ffozeu</utilisateurSMTP>
+  <passwordSMTP>ffozeu</passwordSMTP>
+  <serveurSMTP>mail.crystals.com</serveurSMTP>
+ </items>
+</params>

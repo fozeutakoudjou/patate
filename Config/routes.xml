@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : Routes.xml
+    Created on : 8 avril 2012, 10:38
+    Author     : FFOZEU
+    Description:
+        Purpose of the document follows.
+-->
+
+<routes>
+    <route url="/admin/" module="Index" action="index"/>
+    <route url="/admin/sites.html" module="Sites" action="sites"/>
+    <route url="/admin/login.html" module="Users" action="connect"/>
+        
+    <route url="/admin/newsletter.html" module="Newsletters" action="List"/>
+    <route url="/admin/add-newsletter.html" module="Newsletters" action="create"/>
+    <route url="/admin/newsletter-edit-([0-9]+)\.html" module="Newsletters" action="create" vars="id"/>
+    <route url="/admin/newsletter-delete-([0-9]+)\.html" module="Newsletters" action="delete" vars="id"/>
+    <route url="/admin/newsletter-membre.html" module="Newsletters" action="member"/>
+    
+    <route url="/admin/log-in.html" module="Utilisateurs" action="connect"/>
+    <route url="/admin/utilisateurs.html" module="Utilisateurs" action="utilisateurs"/>
+    <route url="/admin/add-user.html" module="Utilisateurs" action="createuser"/>
+    <route url="/admin/utilisateur-edit-([0-9]+)\.html" module="Utilisateurs" action="edituser" vars="id"/>
+    <route url="/admin/utilisateur-delete-([0-9]+)\.html" module="Utilisateurs" action="deleteuser" vars="id"/>
+    <route url="/admin/deconnexion.html" module="Utilisateurs" action="logout" />
+
+    <route url="/admin/groupeutilisateurs.html" module="Utilisateurs" action="groupeutilisateurs"/>
+    <route url="/admin/add-groupuser.html" module="Utilisateurs" action="creategroupeuser"/>
+    <route url="/admin/groupeutilisateurs-edit-([0-9]+)\.html" module="Utilisateurs" action="creategroupeuser" vars="id"/>
+    <route url="/admin/groupeutilisateurs-delete-([0-9]+)\.html" module="Utilisateurs" action="groupedeleteuser" vars="id"/>
+    
+    <route url="/admin/pub.html" module="Advers" action="pub"/>
+    <route url="/admin/add-pub.html" module="Advers" action="create"/>
+    <route url="/admin/pub-edit-([0-9]+)\.html" module="Advers" action="create" vars="id_annonce_pub"/>
+    <route url="/admin/pub-detail-([0-9]+)\.html" module="Advers" action="show" vars="id_annonce_pub"/>
+    <route url="/admin/pub-delete-([0-9]+)\.html" module="Advers" action="delete" vars="id_annonce_pub"/>
+
+    <route url="/admin/modulecreator.html" module="ModuleCreator" action="createmodule"/>
+    
+    <route url="/admin/cree-menu.html" module="Menu" action="addMenu"/>
+    
+
+
+</routes>

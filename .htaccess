@@ -1,0 +1,35 @@
+# ALLOW USER BY IP
+<Limit GET POST>
+	order deny,allow
+	deny from all
+	allow from 127.0.0.1
+	allow from 192.168.0.254
+</Limit>
+
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType image/gif A172800
+	ExpiresByType image/jpg A172800
+	ExpiresByType image/png A172800
+	ExpiresByType text/javascript A172800
+	ExpiresByType text/css A172800
+	ExpiresByType application/x-javascript A172800
+</IfModule>
+<ifmodule mod_deflate.c>
+	SetOutputFilter DEFLATE
+	AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/x-javascript application/x-httpd-php
+	BrowserMatch ^Mozilla/4 gzip-only-text/html
+	BrowserMatch ^Mozilla/4\.0[678] no-gzip
+	BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+	BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
+	SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|swf|mp4|m4v)$ no-gzip dont-vary
+</ifmodule>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Si le fichier auquel on tente d'accéder existe (si on veut accéder à une image par exemple)
+    # Alors on ne réécrit pas l'URL
+    RewriteRule ^admin/ backend.php [QSA,L]
+    RewriteRule ^api/?(.*)$ api.php [QSA,L]
+    RewriteCond %{REQUEST_FILENAME} !-f	
+    RewriteRule ^(.*)$ frontend.php [QSA,L]
+</IfModule>
