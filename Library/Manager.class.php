@@ -22,7 +22,6 @@ abstract class Manager {
 	
 	private $langCanBeUsed = null;
 
-
     public function __construct($dao){
         $this->dao = $dao;
     }
