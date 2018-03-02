@@ -444,7 +444,7 @@ abstract class Manager {
 					$objData->fillMultilangEmptyFields();
 				}
 				foreach ($objData->getTablang() as $field){
-					$method = 'get'.ucfirst($key);
+					$method = 'get'.ucfirst($field);
 					if (is_callable(array($objData, $method)) && property_exists($objData, $field)){
 						$req->bindParam(':'.$field, $objData->$method()[$lang]);
 					} 
