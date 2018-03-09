@@ -1,4 +1,5 @@
 <?php
+use Library\Context;
 $currentDir = dirname(__FILE__);
 
 if( !defined('IN') )
@@ -23,7 +24,7 @@ else
 /* Database*/
 define('_DB_SERVER_', 'localhost');
 define('_DB_TYPE_', 'mysql');
-define('_DB_NAME_', 'cf_core');
+define('_DB_NAME_', 'patate');
 define('_DB_USER_', 'root');
 define('_DB_PASSWD_', '');
 define('_DB_PORT_', '3306');
@@ -36,7 +37,7 @@ if(_BASE_DIR_ !='')
 else
     define('_BASE_URI_', 'http://crystals-core.localhost/');
 
-define('_COOKIE_KEY_', '238a8fccdf8113576f2d7b8a97d53c8e');
+define('_COOKIE_KEY_', '2f57912d7bd53cc6f8e8af813c8d738a');
 define('_COOKIE_IV_', '');
 
 define('_VERSION_', '2.1.0');
@@ -82,6 +83,7 @@ define('_SCRIPTS_DIR_',_GLOBAL_ASSETS_DIR.'scripts/');
 define('_SITE_ROOT_DIR_',    realpath($currentDir.'/..'));
 define('_MODULES_DIR_', _SITE_ROOT_DIR_.'\\Applications\\Modules\\');
 define('_SITE_APP_DIR',_SITE_ROOT_DIR_.'/Applications/');
+define('_SITE_LIBRARY_DIR',_SITE_ROOT_DIR_.'/Library/');
 define('_SITE_MOD_DIR',_SITE_APP_DIR.'Modules/');
 define('_SITE_FO_TEMPLATE_DIR',_SITE_APP_DIR.'Frontend/Templates/');
 define('_SITE_CACHE_DIR_', _SITE_ROOT_DIR_.'/Cache/');
@@ -130,4 +132,11 @@ define('__LOGO_MAIL__', _IMG_DIR_.'logo-mail'._BASE_DIR_.'.png');
 /*Variable de configuration*/
 if (!defined('_MAGIC_QUOTES_GPC_'))
 	define('_MAGIC_QUOTES_GPC_',         get_magic_quotes_gpc());
+
+define('_DAO_STRUCTURE_CONCAT_', 1);
+define('_DAO_STRUCTURE_FOLDER_', 2);
+define('_DAO_STRUCTURE_', _DAO_STRUCTURE_FOLDER_);
+
+Context::getContext();
 ?>
+
