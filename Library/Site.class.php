@@ -14,7 +14,7 @@ class Site extends ApplicationComponent{
     
     public function __construct(Application $app){
         parent::__construct($app);
-        $this->managers = new Managers('PDO', DbFactory::getPdoInstance());
+        //$this->managers = new Managers('PDO', DbFactory::getPdoInstance());
     }
     
     /**

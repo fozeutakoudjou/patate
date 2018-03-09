@@ -1,5 +1,10 @@
 <?php
 namespace Library;
+use Library\dao\Factory;
+
+use Library\constant\dao\Operator;
+use Library\constant\dao\OrderWay;
+use Library\constant\dao\OrderBy;
 /**
  * Description of MainController
  *
@@ -26,7 +31,69 @@ abstract class MainController extends ApplicationComponent{
 
 
     public function __construct(Application $app, $module,$action){
-        parent::__construct($app);
+		/*$dao = $this->getDAOInstance('Language');
+		//$language = $dao->createModel();
+		$data = array(
+			'name' => 'English (English)',
+			'active' => '1',
+			'isoCode' => 'mm',
+			'languageCode' => 'en-us',
+			'dateFormatLite' => 'm/d/Y',
+			'dateFormatFull' => 'm/d/Y H:i:s',
+		);
+		//$language->hydrate($data);
+		//$dao->add($language);
+		//var_dump($dao->add($language));
+		$language = $dao->getById(15);
+		$language->setIsoCode('fr');
+		var_dump($dao->update($language));
+		var_dump($dao->delete($language));
+		var_dump($language);*/
+		/*var_dump($language->validateFields());*/
+		
+		$dao = $this->getDAOInstance('Group');
+		$daoC = $this->getDAOInstance('Configuration');
+		$daol = $this->getDAOInstance('Language');
+		$data = array(
+			'name' => 'English (English)',
+			'active' => '1',
+			'isoCode' => 'es',
+			'languageCode' => 'en-us',
+			'dateFormatLite' => 'm/d/Y',
+			'dateFormatFull' => 'm/d/Y H:i:s',
+		);
+		/*$language = $daol->createModel();
+		$language->hydrate($data);*/
+		
+		/*$language = $daol->getByField('isoCode', 's', false, 0, 0, OrderBy::PRIMARY, OrderWay::DESC, Operator::START_WITH);
+		var_dump($language);*/
+		//var_dump($daol->add($language));
+		//$group = $dao->createModel();
+		/*$data = array(
+			'name' => 'English (English)',
+			'active' => '1',
+			'isoCode' => 'mm',
+			'languageCode' => 'en-us',
+			'dateFormatLite' => 'm/d/Y',
+			'dateFormatFull' => 'm/d/Y H:i:s',
+		);
+		//$language->hydrate($data);
+		//$dao->add($language);
+		//var_dump($dao->add($language));
+		$language = $dao->getById(15);
+		$language->setIsoCode('fr');
+		var_dump($dao->update($language));
+		var_dump($dao->delete($language));
+		var_dump($language);*/
+		$group = $dao->createModel();
+		$data = array(
+			'name' => 'grp 1',
+			'description' => 'description gp1',
+		);
+		$group->hydrate($data);
+		var_dump($dao->add($group));
+		die(0);
+		parent::__construct($app);
         $this->managers = new Managers('PDO', DbFactory::getPdoInstance());
         $this->page = new Page($app); 
         $this->page->setModule($module);
@@ -360,6 +427,20 @@ abstract class MainController extends ApplicationComponent{
             foreach ($tabVar as $key => $value) {
                 $this->page->addVar($key, $this->{$value});
             }
+    }
+	
+	private function getDAOInstance($className, $fromCurrent = true, $module = ''){
+		if($fromCurrent){
+			$module = '';
+			$start = strpos(__NAMESPACE__, 'modules\\') ;
+			if($start !== false){
+				$start += strlen('modules\\');
+				$end = strpos(__NAMESPACE__, '\\', $start);
+				$length = $end - $start;
+				$module = substr(__NAMESPACE__, $start, $length);
+			}
+		}
+        return Factory::getDAOInstance($className, $module);
     }
 }
 

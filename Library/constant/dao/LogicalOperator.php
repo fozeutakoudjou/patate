@@ -1,6 +1,6 @@
 <?php
 
-namespace constant\dao;
+namespace Library\constant\dao;
 
 abstract class LogicalOperator{
 	const AND_ = 1;

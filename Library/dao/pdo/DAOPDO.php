@@ -1,17 +1,31 @@
 <?php
-namespace dao\pdo;
+namespace Library\dao\pdo;
 
+use Library\constant\dao\Operator;
+use Library\constant\dao\LogicalOperator;
+use Library\dao\DAO;
+use Library\dao\DAOImplementation;
 
-use dao\DAO;
-
-abstract class DAOPDO extends DAO{
+class DAOPDO extends DAO implements DAOImplementation{
     
     /** @var \PDO Database connection */
     protected $db;
-    
+    protected static $operatorList = array(
+		Operator::EQUALS => '%s = %s',
+		Operator::DIFFERENT => '%s <> %s',
+		Operator::CONTAINS => array('field' => '%s LIKE %s', 'value' => '%%%s%%'),
+		Operator::START_WITH => array('field' => '%s LIKE %s', 'value' => '%s%%'),
+		Operator::END_WITH => array('field' => '%s LIKE %s', 'value' => '%%%s'),
+	);
+	protected static $logicalOperatorList = array(
+		LogicalOperator::AND_ => 'AND',
+		LogicalOperator::OR_ => 'OR'
+	);
     public function __construct($param){
         parent::__construct($param);
         $this->db = $param['db'];
+		$this->isImplementation = true;
+		$this->implementation = null;
     }
      
     /**
@@ -20,30 +34,30 @@ abstract class DAOPDO extends DAO{
      * @param \models\Model $model
      * @return bool
      */
-    protected function _add($model) {
-        $fieldsString ='(';
+    public function _add($model) {
+		$fieldsString ='(';
         $valuesString ='(';
         $first = true;
-        foreach ($this->definition['fields'] as $key => $value) {
-            $canFieldBeSet = $this->canFieldBeSet($model, $key);
-            if($canFieldBeSet){
+        foreach ($this->definition['fields'] as $field => $value) {
+            $canFieldBeSet = $this->canFieldBeSet($model, $field);
+            if($canFieldBeSet && !$model->isLangField($field)){
                 if ($first) {
                     $first = false;
                 }else{
                     $fieldsString.=', ';
                     $valuesString.=', ';
                 }
-                $fieldsString.=$key;
-                $valuesString.=':'.$key;
+                $fieldsString.=$field;
+                $valuesString.=':'.$field;
             }
         }
         $fieldsString.=')';
-        $valuesString.=')';
+        $valuesString.=');';
         $sql = 'INSERT INTO '._DB_PREFIX_.$this->definition['table'].$fieldsString.' VALUES '.$valuesString;
         $query =$this->db->prepare($sql);  
-        foreach ($this->definition['fields'] as $key => $value) {
-            if ($this->canFieldBeSet($model, $key)) {
-                $this->addQueryParam($query, $model, $key);
+        foreach ($this->definition['fields'] as $field => $value) {
+            if ($this->canFieldBeSet($model, $field) && !$model->isLangField($field)) {
+                $this->addModelParam($query, $model, $field);
             }
         }
         $result = $query->execute();
@@ -55,34 +69,32 @@ abstract class DAOPDO extends DAO{
      *
      * @param \models\Model $model
      * @param array $identifiers
-     * @param array $fieldsToExclude
      * @param array $fieldsToUpdate
      * @return bool
      */
-    protected function _update($model, $identifiers = array(), $fieldsToExclude = array(), $fieldsToUpdate = array()) {
+    public function _update($model, $fieldsToUpdate = array(), $identifiers = array()) {
         $fieldsString ='';
         $first = true;
-        foreach ($this->definition['fields'] as $key => $value) {
-            $canFieldBeSet = $this->canFieldBeSet($model, $key);
-            $updateField = (empty($fieldsToUpdate))? true: in_array($key, $fieldsToUpdate);
-            if($canFieldBeSet && !in_array($key, $fieldsToExclude) && $updateField){
+        foreach ($fieldsToUpdate as $field) {
+            if($this->canFieldBeSet($model, $field)){
                 if ($first) {
                     $first = false;
                 }else{
                     $fieldsString.=', ';
                 }
-                $fieldsString.=$key.' = :'.$key;
+                $fieldsString.=$field.' = :'.$field;
             }
         }
-        $condition = $this->getCondition($model, $identifiers);
+        $identifiers = $this->formatIdentifiers($model, $identifiers);
+        $condition = $this->getRestrictionFromArray($identifiers);
         $sql = 'UPDATE '._DB_PREFIX_.$this->definition['table'].' SET '.$fieldsString .' WHERE '.$condition;
         $query =$this->db->prepare($sql);
-        foreach ($this->definition['fields'] as $key => $value) {
-            if ($this->canFieldBeSet($model, $key) && !in_array($key, $fieldsToExclude)) {
-                $this->addQueryParam($query, $model, $key);
+        foreach ($fieldsToUpdate as $field) {
+            if ($this->canFieldBeSet($model, $field)) {
+                $this->addModelParam($query, $model, $field);
             }
         }
-        $this->setRestrictionParams($query, $model, $identifiers);
+        $this->addParamsFromArray($query, $identifiers);
         $result = $query->execute();
         return $result;
     }
@@ -94,11 +106,12 @@ abstract class DAOPDO extends DAO{
      * @param array $identifiers
      * @return bool
      */
-    protected function _delete($model, $identifiers = array()) {
-        $condition = $this->getCondition($model, $identifiers);
+    public function _delete($model, $identifiers = array()) {
+        $identifiers = $this->formatIdentifiers($model, $identifiers);
+        $condition = $this->getRestrictionFromArray($identifiers);
         $sql = 'DELETE FROM  '._DB_PREFIX_.$this->definition['table'].' WHERE '.$condition;
         $query =$this->db->prepare($sql);
-        $this->setRestrictionParams($query, $model, $identifiers);
+        $this->addParamsFromArray($query, $identifiers);
         $result = $query->execute();
         return $result;
     }
@@ -109,151 +122,191 @@ abstract class DAOPDO extends DAO{
      * @param array $fields
      * @return array
      */
-    protected function _getByFields($fields, $returnTotal = false, $start = 0, $limit = 0,
+    public function _getByFields($fields, $returnTotal = false, $start = 0, $limit = 0,
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
         $restriction=$this->getRestrictionFromArray($fields, $logicalOperator);
-        $sql = 'SELECT * FROM  '._DB_PREFIX_.$this->definition['table'].(empty($restriction)?'':' WHERE '.$restriction).
+        $sql = 'SELECT t.*' . $this->getLangSelect() .' FROM  '._DB_PREFIX_.$this->definition['table']. ' t' . $this->getLangJoin() .
+		(empty($restriction)?'':' WHERE '.$restriction).
         $this->getOrderString($orderBy, $orderWay) . $this->getLimitString($start, $limit);
-        $query =$this->db->prepare($sql);
-        foreach ($fields as $key => $value) {
-            $keyTmp = $key.'cond_tmp';
-            $this->{$keyTmp} = $value;
-            $query->bindParam(':'.$key, $this->{$keyTmp});
-        }
+		$query =$this->db->prepare($sql);
+		$this->addParamsFromArray($query, $fields);
+		$this->addLangParam($query);
         $query->execute();
-        return $this->getAllAsObjectFromQuery($query);
+        $result = $this->getAllAsObjectFromQuery($query);
+		if($returnTotal){
+			$total = $this->getByFieldsCount($fields, $logicalOperator);
+			$result = array('list' => $result, 'total' => $total);
+		}
+		return $result;
+    }
+	
+	public function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_){
+		$restriction=$this->getRestrictionFromArray($fields, $logicalOperator);
+		$sql = 'SELECT COUNT(*) AS number FROM  '._DB_PREFIX_.$this->definition['table']. ' t' . (empty($restriction)?'':' WHERE '.$restriction);
+        $query =$this->db->prepare($sql);
+		$this->addParamsFromArray($query, $fields);
+        $query->execute();
+		$data = $query->fetch(\PDO::FETCH_OBJ);
+    	return (int)$data->number;
+	}
+	
+	public function getLangJoin()
+    {
+		$join = ' ';
+		if($this->defaultModel->isMultilang() && $this->useOfLang && !is_array($this->definition['primary'])){
+			$join .= ' LEFT JOIN ' . _DB_PREFIX_ . $this->definition['table'].'_lang tl ON (tl.id_' .$this->definition['table'] .
+			' = t.' . $this->definition['primary'] . ') '. ($this->useOfAllLang ? '' : ' AND (tl.lang = :lang) ');
+		}
+        return $join;
+    }
+	public function getLangSelect()
+    {
+		$sql = ' ';
+		if($this->defaultModel->isMultilang() && $this->useOfLang && !is_array($this->definition['primary'])){
+			$sql .= ', tl.* ';
+		}
+        return $sql;
+    }
+	public function addLangParam($query)
+    {
+		if($this->useOfLang && $this->defaultModel->isMultilang() && !$this->useOfAllLang && !is_array($this->definition['primary'])){
+			$query->bindValue(':lang', $this->lang);
+		}
     }
     
     protected function getAllAsObjectFromQuery($query){
         $result = array();
+		$ids = array();
+		$i = 0;
+		$primary = is_array($this->definition['primary']) ? $this->definition['primary'][0] : $this->definition['primary'];
         while ($data = $query->fetch(\PDO::FETCH_ASSOC)){
-            $result[]=$this->createModel($data);
+			$id = $data[$primary];
+			if($this->useOfAllLang && isset($ids[$id])){
+				$langFields = $result[$ids[$id]]->getLangFields();
+				foreach($langFields as $field){
+					$result[$ids[$id]]->setFieldValue($field, $data[$field], $data['lang'], $this->useOfAllLang);
+				}
+			}else{
+				$lang = ($this->defaultModel->isMultilang() && $this->useOfLang && isset($data['lang'])) ? $data['lang'] : '';
+				$result[] = $this->createModel($data, true, $lang, $this->useOfAllLang);
+				if($this->useOfAllLang){
+					$ids[$id] = $i;
+					$i++;
+				}
+			}
         }
         $query->closeCursor();
         return $result;
     }
     
     protected function getOrderString($orderBy, $orderWay){
-        
+        return '';
     }
     
     protected function getLimitString($start, $limit){
-        
+        return '';
     }
     
-    protected function addQueryParam($query, $model, $field, $suffix = '_tmp', $lang = false) {
-        $method = 'get'.ucfirst($field);
-        $keyTmp = $key.$suffix;
-        $this->{$keyTmp} = $model->$method();
-        $query->bindParam(':'.$key, $this->{$keyTmp});
-    }
-    
-    protected function addConditionQueryParam($query, $model, $field) {
-        self::addQueryParam($query, $model, $field, '_cond_tmp');
-    }
-    
-    protected function getCondition($model, $identifiers) {
-        $condition = '';
-        if(!empty($identifiers)){
-            $first = true;
-            $condition.=$this->getRestrictionFromArray($identifiers);
-        }else{
-            if (!is_array($this->definition['primary'])) {
-                $condition .= $this->definition['primary'] .' = :'.$this->definition['primary'];
-            }else{
-                $first = true;
-                foreach ($this->definition['primary'] as $field) {
-                    if ($first) {
-                        $first = false;
-                    }else{
-                        $condition.=' AND ';
-                    }
-                    $condition.='('.$field.' = :'.$field.')';
-                }
-            }
-        }
-        return $condition;
+    protected function addModelParam($query, $model, $field, $lang = false) {
+        $value = $model->getPropertyValue($field);
+		$value = is_array($value) ? $value[$lang] : $value;
+        $query->bindParam(':'.$field, $value);
     }
     
     protected function getRestrictionFromArray($params, $logicalOperator = LogicalOperator::AND_) {
         $condition = '';
         $first = true;
-        foreach ($params as $key => $value) {
+        foreach ($params as $field => $value) {
+			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
             if ($first) {
                 $first = false;
             }else{
-                $condition.=' ' .(($logicalOperator === LogicalOperator::AND_) ? 'AND' : 'OR').' ';
+                $condition.=' ' .(isset(self::$logicalOperatorList[$logicalOperator]) ? self::$logicalOperatorList[$logicalOperator] : 'AND').' ';
             }
-            $condition.=$key.' = :'.$key;
+            $condition .= $this->getOperatorQuery($field, $value, $operator);
         }
         return $condition;
     }
-    
-    protected  function setRestrictionParams($query, $model, $identifiers) {
-        if(!empty($identifiers)){
-            foreach ($identifiers as $key => $value) {
-                $keyTmp = $key.'cond_tmp';
-                $this->{$keyTmp} = $value;
-                $query->bindParam(':'.$key, $this->{$keyTmp});
-            }
-        }else{
-            if (!is_array($this->definition['primary'])) {
-                $this->addConditionQueryParam($query, $model, $this->definition['primary']);
-            }else{
-                foreach ($this->definition['primary'] as $field) {
-                    $this->addConditionQueryParam($query, $model, $field);
-                }
-            }
-        }
+	
+    protected function getOperatorQuery($field, $value, $operator) {
+		$sql = '(';
+		if(isset(self::$operatorList[$operator])){
+			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['field'] : self::$operatorList[$operator];
+			$sql .= sprintf($formatter, $field, ':'.$field);
+		}elseif($operator == Operator::BETWEEN){
+			$i = 1;
+			$values = is_array($value) ? $value['value'] : $value;
+			$values = is_array($values) ? $values : array('' => $values);
+			foreach($values as $key => $val){
+				$sql .= ($i==1) ? $field.' BETWEEN :' .$field . $key : ' AND :' . $field . $key;
+				$i++;
+				if($i==3){
+					break;
+				}
+			}
+		}
+		$sql .= ')';
+		return $sql;
+    }
+	
+	protected  function addParamsFromArray($query, $params) {
+		$tmpValues = array();
+        foreach ($params as $field => $value) {
+			$values = is_array($value) ? $value['value'] : $value;
+			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
+			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
+			$values = is_array($values) ? $values : array('' => $values);
+			foreach($values as $key => $val){
+				$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);
+				$tmpValues[$field][$key] = $formattedValue;
+				$query->bindParam(':'.$field.$key, $tmpValues[$field][$key]);
+			}
+		}
     }
     
-	public function saveMultilangFields($model, $update = false)
+	public function saveMultilangFields($model, $update = false, $fieldsToUpdate = array())
     {
 		$result = true;
-		if($this->saveOfLangField && $this->definition['multilang'] && !is_array($this->definition['primary'])){
-			$langFields = $model->getLangFields();
-			$method = 'get' . ucfirst($this->definition['primary']);
-			$idObject = $model->$method();
+		$langFields = ($update) ? $fieldsToUpdate : $model->getLangFields();
+		if($this->saveOfLangField && $model->isMultilang() && !is_array($this->definition['primary']) && !empty($langFields)){
+			$idObject = $model->getPropertyValue($this->definition['primary']);
 			if($update){
-				$sqlInit = $this->getLangUpdateSqlInit($model);
+				$sqlInit = $this->getLangUpdateSqlInit($langFields);
 			}else{
-				$addSqlInit= $this->getLangAddSqlInit($model);
+				$addSqlInit= $this->getLangAddSqlInit($langFields);
 			}
 			foreach ($this->languages as $lang => $langObject){
 				if($update && $this->isObjectSavedForLang($idObject, $lang)){
 					$sql = $sqlInit;
 				}else{
 					if(!isset($addSqlInit)){
-						$addSqlInit = $this->getLangAddSqlInit($model);
+						$addSqlInit = $this->getLangAddSqlInit($langFields);
 					}
 					$sql = $addSqlInit;
 				}
-				$req=$this->dao->prepare($sql);
-				$req->bindParam(':id_' . $this->definition['table'], $idObject);
-				$req->bindParam(':lang', $lang);
+				$query=$this->db->prepare($sql);
+				$query->bindParam(':id_' . $this->definition['table'], $idObject);
+				$query->bindParam(':lang', $lang);
 				foreach ($langFields as $field){
-					$method = 'get'.ucfirst($field);
-					if (is_callable(array($model, $method)) && property_exists($model, $field)){
-						$req->bindParam(':'.$field, $model->$method()[$lang]);
+					if (property_exists($model, $field)){
+						$this->addModelParam($query, $model, $field, $lang);
 					} 
 				}
-				$result = ($result && (bool)$req->execute());
+				$result = ($result && (bool)$query->execute());
 			}
 		}
 		return $result;
     }
     
-    public function getLangAddSqlInit($model)
+    public function getLangAddSqlInit($langFields)
     {
-		$langFields = $model->getLangFields();
     	$sqlInit='INSERT INTO ' . _DB_PREFIX_ . $this->definition['table']. '_lang (' . 'id_'.$this->definition['table'] . ', lang, ' .
       	implode(',', $langFields) . ') VALUES(:id_' . $this->definition['table'] . ', :lang, :' . implode(',:', $langFields).')';
       	return $sqlInit;
     }
     
-    public function getLangUpdateSqlInit($model)
+    public function getLangUpdateSqlInit($langFields)
     {
-		$langFields = $model->getLangFields();
     	$sqlInit= 'UPDATE '._DB_PREFIX_.$this->definition['table'].'_lang SET ';
     	$first= true;
     	foreach ($langFields as $field){
@@ -271,11 +324,11 @@ abstract class DAOPDO extends DAO{
     {
     	$sql = 'SELECT COUNT(*) AS number FROM '._DB_PREFIX_.$this->definition['table'].
     	'_lang WHERE (id_'.$this->definition['table'].' = :idObject) AND (lang = :lang)';
-    	$req=$this->dao->prepare($sql);
-    	$req->bindParam(':idObject', $idObject);
-    	$req->bindParam(':lang', $lang);
-    	$req->execute();
-    	$data = $req->fetch(\PDO::FETCH_OBJ);
+    	$query=$this->db->prepare($sql);
+    	$query->bindParam(':idObject', $idObject);
+    	$query->bindParam(':lang', $lang);
+    	$query->execute();
+    	$data = $query->fetch(\PDO::FETCH_OBJ);
     	return ((int)$data->number > 0);
     }
     

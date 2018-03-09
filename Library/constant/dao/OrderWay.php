@@ -1,6 +1,6 @@
 <?php
 
-namespace constant\dao;
+namespace Library\constant\dao;
 
 abstract class OrderWay{
 	const ASC = 1;

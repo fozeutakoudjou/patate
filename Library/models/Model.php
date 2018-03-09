@@ -1,8 +1,8 @@
 <?php
-namespace models;
+namespace Library\models;
 
-use utilities\Validate;
-use utilities\Tools;
+use Library\Validate;
+use Library\Tools;
 
 class Model{
     
@@ -14,74 +14,76 @@ class Model{
     const TYPE_HTML    = 6;
     const TYPE_NOTHING = 7;
     const TYPE_SQL     = 8;
+    const TYPE_DECIMAL = 9;
     
     protected $fieldsValidated = false;
     protected $defaultLang;
     protected $languages;
     protected $definition = array();
     
-    public function __construct($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $preffix = ''){
-        $this->hydrate($data, $fromDB, $lang, $useOfAllLang, $preffix);
+    public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
+		if(!empty($data)){
+			$this->hydrate($data, $fromDB, $lang, $useOfAllLang, $languages, $preffix);
+		}
     }
     
-    public function hydrate(array $data, $fromDB = false, $lang = '', $useOfAllLang = false, $preffix = '')
+    public function hydrate(array $data, $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = '')
     {
 		foreach ($data as $field => $value) {
-            $this->setFieldValue($field, $value, $fromDB, $lang, $useOfAllLang, $preffix);
+            $this->setFieldValue($field, $value, $lang, $useOfAllLang, $preffix);
         }
+		if(!$fromDB && $this->isMultilang()){
+			$langFields = $this->getLangFields();
+			foreach ($languages as $tmpLang => $langObject) {
+				foreach ($langFields as $field) {
+					$fieldKey = $preffix . Tools::getLangFieldKey($field, $tmpLang);
+					if (!isset($data[$fieldKey])) {
+						$this->setFieldValue($field, $data[$fieldKey], $tmpLang, true, '');
+					}
+				}
+			}
+		}
     }
-	public function copyFromPost($preffix = '')
+	public function copyFromPost($languages = array(), $preffix = '')
     {
 		$data = Tools::getAllValues();
 		$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		foreach($primaries as $primary){
-			$postedPrimary = $primary . '_' . $this->definition['table'];
-			if(!isset($data[$primary]) && isset($data[$postedPrimary])){
-				$data[$primary] = $data[$postedPrimary];
+			$postedPrimary = $preffix . $primary . '_' . $this->definition['table'];
+			if(!isset($data[$preffix . $primary]) && isset($data[$postedPrimary])){
+				$data[$preffix . $primary] = $data[$postedPrimary];
 			}
 		}
-		$this->hydrate($data, false, '', true, $preffix);
+		$this->hydrate($data, false, '', true, $languages, $preffix);
     }
-    public function setFieldValue($field, $value, $fromDB = false, $lang = '', $useOfAllLang = false, $preffix = ''){
+    public function setFieldValue($field, $value, $lang = '', $useOfAllLang = false, $preffix = ''){
 		$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		$field = str_replace($preffix, '', $field);
-		if(!$fromDB && isset($this->definition['multilang']) && $this->definition['multilang'] && !isset($this->definition['fields'][$field]) && !in_array($field, $primaries)){
-			$tmpField = Tools::removeLangKey($field);
-			$isLangField = isset($this->definition['fields'][$tmpField]) && isset($this->definition['fields'][$tmpField]['lang']) && $this->definition['fields'][$tmpField]['lang'];
-			if($isLangField){
-				$lang = Tools::getLangFormField($field, $tmpField);
-				$useOfAllLang = true;
-				$field = $tmpField;
-			}
-		}else{
-			$isLangField = isset($this->definition['multilang']) && $this->definition['multilang'] && isset($this->definition['fields'][$field]['lang']) && $this->definition['fields'][$field]['lang'];
-		}
-        $methode = 'set'.ucfirst($field);
 		if (isset($this->definition['fields'][$field]) || in_array($field, $primaries)){
-			if($isLangField && $useOfAllLang){
-				$tmpValue = is_array($this->$field) ? $this->$field : array();
+			if($this->isLangField($field) && $useOfAllLang){
+				$fieldValue = $this->getPropertyValue($field);
+				$tmpValue = is_array($fieldValue) ? $fieldValue: array();
 				$tmpValue[$lang] = $value;
 				$value = $tmpValue;
 			}
-			$this->$methode($value); 
+			$this->setPropertyValue($field, $value); 
 		}
     }
 	
-    public function formatFields($languages, $defaultLang) {
+    public function formatFields($languages = array(), $defaultLang = '') {
 		$this->defaultLang = $defaultLang;
 		$this->languages = $languages;
         if(isset($this->definition['fields'])){
             foreach ($this->definition['fields'] as $fieldName=> $fieldDefinition) {
                 $purify = false;
-				$isLangField = isset($this->definition['multilang']) && $this->definition['multilang'] && isset($fieldDefinition['lang']) && $fieldDefinition['lang'];
+				$isLangField = $this->isLangField($fieldName);
                 if(isset($fieldDefinition['validate'])){
                     $fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate']
 						:array($fieldDefinition['validate']);
                     $purify = in_array('isCleanHtml', $fieldValidations);
                 }
-                $getter = 'get'.ucfirst($fieldName);
-                $value = $this->$getter();
-				if($this->isFieldEmpty($fieldName) && isset($fieldDefinition['default']) && $fieldDefinition['default']){
+                $value = $this->getPropertyValue($fieldName);
+				if($this->isFieldEmpty($fieldName) && isset($fieldDefinition['default'])){
 					$value = $fieldDefinition['default'];
 				}
                 if($isLangField && !is_array($value)){
@@ -94,10 +96,11 @@ class Model{
 					foreach($value as $key => $val){
 						$value[$key] = self::formatValue($val, $fieldDefinition['type'], false, $purify);
 					}
+					if(!$isLangField && isset($value[0])){
+						$value = $value[0];
+					}
                 }
-				
-				$setter = 'set'.ucfirst($fieldName);
-                $this->$setter($value);
+				$this->setPropertyValue($fieldName, $value);
 				if($isLangField){
 					$this->fillMultilangEmptyFields($fieldName);
 				}
@@ -108,26 +111,24 @@ class Model{
     public function validateFields() {
         $errors=array();
         foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
-            $method = 'get'.ucfirst($fieldName);
-            $value = $this->$method();
+            $value = $this->getPropertyValue($fieldName);
 			$value = is_array($value) ? $value : array($value);
             if($this->isFieldEmpty($fieldName)){
                 if(isset($fieldDefinition['required']) && $fieldDefinition['required']
                         && !isset($fieldDefinition['default'])){
                     $errors[$fieldName] = array('errors' => array(Validate::VALIDATE_REQUIRED));
                 }
-            }else if(isset($['validate'])){
+            }else if(isset($fieldDefinition['validate'])){
                 $fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate'] : array($fieldDefinition['validate']);
                 foreach ($fieldValidations as $validation) {
-                    if (method_exists('Validate', $validation)) {
+                    if (method_exists('Library\\Validate', $validation)) {
 						foreach($value as $key => $val){
-							if (!Validate::$validation($value)) {
+							if (!Validate::$validation($val)) {
 								if (isset($errors[$fieldName])) {
 									$errors[$fieldName]['errors'][]=$validation;
 								}else{
 									$errors[$fieldName] = array('errors' => array($validation));
-									if(isset($this->definition['multilang']) && $this->definition['multilang'] &&
-										isset($fieldDefinition['lang']) && $fieldDefinition['lang']){
+									if($this->isLangField($fieldName)){
 										$errors[$fieldName]['lang'] = $key;
 									}
 								}
@@ -200,32 +201,38 @@ class Model{
     public function isMultilangFieldEmpty($field)
     {
         $emptyField = true;
-		if(is_array($this->$field)){
-			foreach ($this->$field as $value) {
-				if (Validate::isRequired($value)) {
-					$emptyField = false;
-					break;
-				}
+		$value = $this->getPropertyValue($field);
+		$values = is_array($value) ? $value : array($value);
+		foreach ($values as $value) {
+			if (Validate::isRequired($value)) {
+				$emptyField = false;
+				break;
 			}
-		}else{
-			return !Validate::isRequired($this->$field);
 		}
         return $emptyField;
     }
 	public function isFieldEmpty($field)
     {
-		if(isset($this->definition['fields'][$field]['lang']) && $this->definition['fields'][$field]['lang']){
-			return $this->isMultilangFieldEmpty($field)
+		$value = $this->getPropertyValue($field);
+		if($value === null){
+			return true;
+		}
+		if($this->isLangField($field)){
+			return $this->isMultilangFieldEmpty($field);
 		}else{
-			return !Validate::isRequired($this->$field);
+			if($this->definition['fields'][$field]['type'] == self::TYPE_BOOL){
+				return false;
+			}else{
+				return !Validate::isRequired($value);
+			}
 		}
     }
 	protected function fillMultilangEmptyFields($field)
     {
 		$languages = $this->languages;
-		$values = $this->$field;
+		$values = $this->getPropertyValue($field);
         $defaultValue = ((isset($values[$this->defaultLang]) && (!empty($values[$this->defaultLang]))) ? $values[$this->defaultLang] : '');
-        //Recherche d'une valeur non nulle
+        //Find not empty value
         if (empty($defaultValue)) {
             foreach ($values as $value) {
                 if (!empty($value)) {
@@ -245,7 +252,7 @@ class Model{
                 $values[$key] = $defaultValue;
             }
         }
-        $this->$field = $values;
+        $this->setPropertyValue($field, $values);
     }
     public function isFieldsValidated() {
         return $this->fieldsValidated;
@@ -256,18 +263,41 @@ class Model{
     }
 	
 	public function getLangFields() {
-		if(isset($this->definition['multilang']) && $this->definition['multilang']){
-			if(!isset($this->langFields)){
-				$this->langFields = array();
-				foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
-					if(isset($fieldDefinition['lang']) && $fieldDefinition['lang']){
-						$this->langFields[] = $fieldName;
-					}
+		if(!isset($this->langFields)){
+			$this->langFields = array();
+			foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
+				if($this->isLangField($fieldName)){
+					$this->langFields[] = $fieldName;
 				}
 			}
-		}else{
-			return array();
 		}
         return $this->langFields;
     }
+	
+	public function isLangField($field) {
+		return $this->isMultilang() && isset($this->definition['fields'][$field]['lang']) && $this->definition['fields'][$field]['lang'];
+    }
+	
+	public function isMultilang() {
+		return isset($this->definition['multilang']) && $this->definition['multilang'];
+    }
+	
+	public function isAutoIncrement() {
+		return isset($this->definition['auto_increment']) && $this->definition['auto_increment'];
+    }
+	
+	public function getGetterName($field){
+		$getter = (isset($this->definition['fields'][$field]) && $this->definition['fields'][$field]['type'] == self::TYPE_BOOL) ? 'is' : 'get';
+		return $getter . ucfirst($field);
+	}
+	
+	public function getPropertyValue($field){
+		$getter = $this->getGetterName($field);
+		return $this->$getter();
+	}
+	
+	public function setPropertyValue($field, $value){
+		$setter = 'set' . ucfirst($field);
+		return $this->$setter($value);
+	}
 }

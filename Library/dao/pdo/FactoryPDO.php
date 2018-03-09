@@ -1,9 +1,25 @@
 <?php
-namespace dao\pdo;
-use dao\DbFactory;
+namespace Library\dao\pdo;
+use Library\dao\Factory;
 
-class DbFactoryPDO extends DbFactory {
-    
+class FactoryPDO extends Factory {
+    protected $dbConnection;
+	
+	protected $server;
+    protected $user;
+    protected $password;
+    protected $database;
+    protected $port;
+	
+	public function __construct($connect = true)
+    {
+        $this->server = _DB_SERVER_;
+        $this->port = _DB_PORT_;
+        $this->user = _DB_USER_;
+        $this->password = _DB_PASSWD_;
+        $this->database = _DB_NAME_;
+        parent::__construct();
+    }
     public function connect(){
         try {
             $this->dbConnection = $this->_getPDO($this->server, $this->port, $this->user, $this->password, $this->database, 5);
@@ -17,6 +33,9 @@ class DbFactoryPDO extends DbFactory {
         }
         
         $this->dbConnection->exec('SET SESSION sql_mode = \'\'');
+		
+		$this->dbConnection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+		$this->dbConnection->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         
         return $this->dbConnection;
     }
