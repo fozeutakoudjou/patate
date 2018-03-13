@@ -57,13 +57,13 @@ abstract class MainController extends ApplicationComponent{
 		$data = array(
 			'name' => 'English (English)',
 			'active' => '1',
-			'isoCode' => 'es',
+			'isoCode' => 'de',
 			'languageCode' => 'en-us',
 			'dateFormatLite' => 'm/d/Y',
 			'dateFormatFull' => 'm/d/Y H:i:s',
 		);
-		/*$language = $daol->createModel();
-		$language->hydrate($data);*/
+		$language = $daol->createModel();
+		$language->hydrate($data);
 		
 		/*$language = $daol->getByField('isoCode', 's', false, 0, 0, OrderBy::PRIMARY, OrderWay::DESC, Operator::START_WITH);
 		var_dump($language);*/
@@ -76,15 +76,11 @@ abstract class MainController extends ApplicationComponent{
 			'languageCode' => 'en-us',
 			'dateFormatLite' => 'm/d/Y',
 			'dateFormatFull' => 'm/d/Y H:i:s',
-		);
+		);*/
 		//$language->hydrate($data);
 		//$dao->add($language);
-		//var_dump($dao->add($language));
-		$language = $dao->getById(15);
-		$language->setIsoCode('fr');
-		var_dump($dao->update($language));
-		var_dump($dao->delete($language));
-		var_dump($language);*/
+		//var_dump($daol->add($language));
+		var_dump($language);
 		$group = $dao->createModel();
 		$data = array(
 			'name' => 'grp 1',

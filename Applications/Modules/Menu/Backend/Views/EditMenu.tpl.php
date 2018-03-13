@@ -184,7 +184,7 @@
 										     <?php 
 										        	endforeach; ?>		
 									     </tbody>
-									</table
+									</table>
 									
        		     <?php } ?>
        		     

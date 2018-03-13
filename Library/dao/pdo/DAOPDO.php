@@ -47,21 +47,22 @@ class DAOPDO extends DAO implements DAOImplementation{
                     $fieldsString.=', ';
                     $valuesString.=', ';
                 }
-                $fieldsString.=$field;
+                $fieldsString.='`'.$field.'`';
                 $valuesString.=':'.$field;
             }
         }
         $fieldsString.=')';
         $valuesString.=');';
-        $sql = 'INSERT INTO '._DB_PREFIX_.$this->definition['table'].$fieldsString.' VALUES '.$valuesString;
+        $sql = 'INSERT INTO '.'`'._DB_PREFIX_.$this->definition['table'].'`'.$fieldsString.' VALUES '.$valuesString;
         $query =$this->db->prepare($sql);  
         foreach ($this->definition['fields'] as $field => $value) {
             if ($this->canFieldBeSet($model, $field) && !$model->isLangField($field)) {
                 $this->addModelParam($query, $model, $field);
             }
         }
+		var_dump($sql);
         $result = $query->execute();
-        return $result;
+		return $result;
     }
     
     /**

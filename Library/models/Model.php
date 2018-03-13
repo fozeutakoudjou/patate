@@ -17,8 +17,6 @@ class Model{
     const TYPE_DECIMAL = 9;
     
     protected $fieldsValidated = false;
-    protected $defaultLang;
-    protected $languages;
     protected $definition = array();
     
     public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
@@ -71,8 +69,6 @@ class Model{
     }
 	
     public function formatFields($languages = array(), $defaultLang = '') {
-		$this->defaultLang = $defaultLang;
-		$this->languages = $languages;
         if(isset($this->definition['fields'])){
             foreach ($this->definition['fields'] as $fieldName=> $fieldDefinition) {
                 $purify = false;
@@ -102,7 +98,7 @@ class Model{
                 }
 				$this->setPropertyValue($fieldName, $value);
 				if($isLangField){
-					$this->fillMultilangEmptyFields($fieldName);
+					$this->fillMultilangEmptyFields($fieldName, $languages, $defaultLang);
 				}
             }
         }
@@ -227,11 +223,10 @@ class Model{
 			}
 		}
     }
-	protected function fillMultilangEmptyFields($field)
+	protected function fillMultilangEmptyFields($field, $languages, $defaultLang)
     {
-		$languages = $this->languages;
 		$values = $this->getPropertyValue($field);
-        $defaultValue = ((isset($values[$this->defaultLang]) && (!empty($values[$this->defaultLang]))) ? $values[$this->defaultLang] : '');
+        $defaultValue = ((isset($values[$defaultLang]) && (!empty($values[$defaultLang]))) ? $values[$defaultLang] : '');
         //Find not empty value
         if (empty($defaultValue)) {
             foreach ($values as $value) {
