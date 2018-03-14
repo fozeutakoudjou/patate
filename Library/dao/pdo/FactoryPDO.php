@@ -1,6 +1,7 @@
 <?php
 namespace Library\dao\pdo;
 use Library\dao\Factory;
+use Library\Tools;
 
 class FactoryPDO extends Factory {
     protected $dbConnection;

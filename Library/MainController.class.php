@@ -31,33 +31,32 @@ abstract class MainController extends ApplicationComponent{
 
 
     public function __construct(Application $app, $module,$action){
-		/*$dao = $this->getDAOInstance('Language');
-		//$language = $dao->createModel();
+		$dao = $this->getDAOInstance('Language');
+		$language = $dao->createModel();
 		$data = array(
-			'name' => 'English (English)',
+			'name' => 'Turc',
 			'active' => '1',
-			'isoCode' => 'mm',
-			'languageCode' => 'en-us',
+			'isoCode' => 'tr',
+			'languageCode' => 'tr-Ru',
 			'dateFormatLite' => 'm/d/Y',
 			'dateFormatFull' => 'm/d/Y H:i:s',
 		);
-		//$language->hydrate($data);
-		//$dao->add($language);
-		//var_dump($dao->add($language));
+		$language->hydrate($data);
+		$dao->add($language);
 		$language = $dao->getById(15);
 		$language->setIsoCode('fr');
-		var_dump($dao->update($language));
-		var_dump($dao->delete($language));
-		var_dump($language);*/
+		//var_dump($dao->update($language));
+		//var_dump($dao->delete($language));
+		//var_dump($language);
 		/*var_dump($language->validateFields());*/
-		
+		die;
 		$dao = $this->getDAOInstance('Group');
 		$daoC = $this->getDAOInstance('Configuration');
 		$daol = $this->getDAOInstance('Language');
 		$data = array(
 			'name' => 'English (English)',
 			'active' => '1',
-			'isoCode' => 'de',
+			'isoCode' => 'en',
 			'languageCode' => 'en-us',
 			'dateFormatLite' => 'm/d/Y',
 			'dateFormatFull' => 'm/d/Y H:i:s',

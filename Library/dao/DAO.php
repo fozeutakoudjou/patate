@@ -241,7 +241,7 @@ class DAO{
      */
     public function createModel($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false) {
         $folder = empty($this->module) ? _SITE_LIBRARY_DIR : _SITE_MOD_DIR . $this->module . '/';
-		$folder.='models/';
+		$folder.='Models/';
 		if(file_exists($folder . $this->className . '.php')){
 			$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $folder);
 			$namespace = str_replace('/', '\\', $namespace);

@@ -33,9 +33,9 @@ define('_MYSQL_ENGINE_', 'InnoDB');
 
 define('_BASE_DIR_', '');
 if(_BASE_DIR_ !='')
-    define('_BASE_URI_', 'http://crystals-core.localhost/'._BASE_DIR_.'/');
+    define('_BASE_URI_', 'http://patate.localhost/'._BASE_DIR_.'/');
 else
-    define('_BASE_URI_', 'http://crystals-core.localhost/');
+    define('_BASE_URI_', 'http://patate.localhost/');
 
 define('_COOKIE_KEY_', '2f57912d7bd53cc6f8e8af813c8d738a');
 define('_COOKIE_IV_', '');
