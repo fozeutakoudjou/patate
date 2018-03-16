@@ -1,15 +1,14 @@
 <?php
 namespace Library\dao;
 
-
 use Library\constant\dao\Operator;
 use Library\constant\dao\LogicalOperator;
 use Library\constant\dao\OrderWay;
 use Library\constant\dao\OrderBy;
 
-abstract class DAO{
+class DAO{
     
-    /** @var Factory Database connection */
+    /** @var Factory factory */
     protected $factory;
 	
     protected $module;
@@ -25,14 +24,22 @@ abstract class DAO{
     protected $useOfLang = true;
     protected $useOfAllLang = false;
     protected $saveOfLangField = true;
+	
+	protected $isImplementation;
+	
+	/** @var DAOImplementation implementation */
     protected $implementation;
     
     public function __construct($param){
+		$this->isImplementation = false;
         $this->factory= $param['factory'];
         $this->module= $param['module'];
         $this->className= $param['className'];
         $this->lang= $param['lang'];
         $this->languages= $param['languages'];
+		if(isset($param['implementation'])){
+			$this->implementation = $param['implementation'];
+		}
     }
     
     protected function validation($model){
@@ -49,11 +56,13 @@ abstract class DAO{
             }
             $this->definition = $model->getDefinition();
 			$this->defaultModel = $model;
+			
+			if(!$this->isImplementation){
+				$this->implementation->setDefinition($model);
+			}
         }
     }
 	
-	abstract protected function saveMultilangFields($model, $update = false, $fieldsToUpdate = array());
-     
     /**
      * Add object
      *
@@ -70,25 +79,17 @@ abstract class DAO{
         }
         $this->validation($model);
         $model->formatFields($this->languages, $this->lang);
-        $result = $this->_add($model);
+        $result = $this->getImplementation()->_add($model);
         if($result && !is_array($this->definition['primary']) && $model->isAutoIncrement()){
             $model->setPropertyValue($this->definition['primary'], $this->getLastId());
         }
 		if($result){
-			$result = $this->saveMultilangFields($model, false);
+			$result = $this->getImplementation()->saveMultilangFields($model, false);
 		}
 		$this->saveOfLangField = true;
         return $result;
     }
-    
-    /**
-     * Add object
-     *
-     * @param \models\Model $model
-     * @return bool
-     */
-    abstract protected function _add($model);
-    
+	
     /**
      * Update object
      *
@@ -116,24 +117,13 @@ abstract class DAO{
 				}
             }
         }
-        $result = $this->_update($model, $newFieldsToUpdate, $identifiers);
+        $result = $this->getImplementation()->_update($model, $newFieldsToUpdate, $identifiers);
 		if($result){
-			$result = $this->saveMultilangFields($model, true, $newLangFields);
+			$result = $this->getImplementation()->saveMultilangFields($model, true, $newLangFields);
 		}
 		$this->saveOfLangField = true;
         return $result;
     }
-    
-    /**
-     * Update object
-     *
-     * @param \models\Model $model
-     * @param array $identifiers
-     * @param array $fieldsToExclude
-     * @param array $fieldsToUpdate
-     * @return bool
-     */
-    abstract protected function _update($model, $fieldsToUpdate = array(), $identifiers = array());
     
     /**
      * Delete object
@@ -150,18 +140,9 @@ abstract class DAO{
 			$this->requireValidation = true;
 			return $result;
 		}else{
-			return $this->_delete($model, $identifiers);
+			return $this->getImplementation()->_delete($model, $identifiers);
 		}
     }
-    
-    /**
-     * Delete object
-     *
-     * @param \models\Model $model
-     * @param array $identifiers
-     * @return bool
-     */
-    abstract protected function _delete($model, $identifiers = array());
     
     /**
      * getByField object
@@ -207,7 +188,7 @@ abstract class DAO{
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
         $this->setDefinition();
 		$fields = $this->addDelectedParam($fields);
-        $result = $this->_getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay, $logicalOperator);
+        $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay, $logicalOperator);
 		$this->useOfLang = true;
 		$this->useOfAllLang = true;
 		return $result;
@@ -223,7 +204,7 @@ abstract class DAO{
     public function getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_) {
         $this->setDefinition();
 		$fields = $this->addDelectedParam($fields);
-        return $this->_getByFieldsCount($fields, $logicalOperator);
+        return $this->getImplementation()->_getByFieldsCount($fields, $logicalOperator);
     }
 	
 	protected function addDelectedParam($params){
@@ -232,19 +213,6 @@ abstract class DAO{
 		}
 		return $params;
 	}
-    
-    /**
-     * getByField object
-     *
-     * @param \models\Model $model
-     * @param array $fields
-     * @return array
-     */
-    abstract protected function _getByFields($fields, $returnTotal = false, $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_);
-    
-    
-    abstract protected function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_);
     
     /**
      * getByField object
@@ -363,25 +331,54 @@ abstract class DAO{
 	public function setUseOfAllLang($useOfAllLang)
     {
 		$this->useOfAllLang = $useOfAllLang;
+		if(!$this->isImplementation){
+			$this->implementation->setUseOfAllLang($useOfAllLang);
+		}
     }
 	
 	public function setLang($lang)
     {
 		$this->lang = $lang;
+		if(!$this->isImplementation){
+			$this->implementation->setLang($lang);
+		}
     }
 	
 	public function setUseOfLang($useOfLang)
     {
 		$this->useOfLang = $useOfLang;
+		if(!$this->isImplementation){
+			$this->implementation->setUseOfLang($useOfLang);
+		}
     }
 	
 	public function setLanguages($languages)
     {
 		$this->languages = $languages;
+		if(!$this->isImplementation){
+			$this->implementation->setLanguages($languages);
+		}
     }
 	
 	public function setSaveOfLangField($saveOfLangField)
     {
 		$this->saveOfLangField = $saveOfLangField;
+		if(!$this->isImplementation){
+			$this->implementation->setSaveOfLangField($saveOfLangField);
+		}
+    }
+	
+	/*public function setImplementation()
+    {
+		if($this instanceof DAOImplementation){
+			$this->implementation = $this;
+		}else{
+			$this->implementation = $this->implementationParam;
+		}
+    }*/
+	
+	protected function getImplementation()
+    {
+		return $this->isImplementation ? $this : $this->implementation;
     }
 }

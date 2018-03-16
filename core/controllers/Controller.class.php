@@ -1,17 +1,17 @@
 <?php
-namespace Library;
-use Library\dao\Factory;
+namespace core\controllers;
 
-use Library\constant\dao\Operator;
-use Library\constant\dao\OrderWay;
-use Library\constant\dao\OrderBy;
+use core\dao\Factory;
+use core\constant\dao\Operator;
+use core\constant\dao\OrderWay;
+use core\constant\dao\OrderBy;
 /**
  * Description of MainController
  *
  * @author FFOZEU
  */
 
-abstract class MainController extends ApplicationComponent{
+abstract class Controller extends ApplicationComponent{
     
     protected $action = '';
     protected $module = '';
@@ -32,7 +32,7 @@ abstract class MainController extends ApplicationComponent{
 
     public function __construct(Application $app, $module,$action){
 		$dao = $this->getDAOInstance('Language');
-		$language = $dao->createModel();
+		/*$language = $dao->createModel();
 		$data = array(
 			'name' => 'Turc',
 			'active' => '1',
@@ -49,7 +49,7 @@ abstract class MainController extends ApplicationComponent{
 		//var_dump($dao->delete($language));
 		//var_dump($language);
 		/*var_dump($language->validateFields());*/
-		die;
+		/*die;
 		$dao = $this->getDAOInstance('Group');
 		$daoC = $this->getDAOInstance('Configuration');
 		$daol = $this->getDAOInstance('Language');
@@ -79,7 +79,8 @@ abstract class MainController extends ApplicationComponent{
 		//$language->hydrate($data);
 		//$dao->add($language);
 		//var_dump($daol->add($language));
-		var_dump($language);
+		//var_dump($language);
+        /*$dao = $this->getDAOInstance('Group');
 		$group = $dao->createModel();
 		$data = array(
 			'name' => 'grp 1',
@@ -87,9 +88,9 @@ abstract class MainController extends ApplicationComponent{
 		);
 		$group->hydrate($data);
 		var_dump($dao->add($group));
-		die(0);
+		//die(0);*/
 		parent::__construct($app);
-        $this->managers = new Managers('PDO', DbFactory::getPdoInstance());
+        //$this->managers = new Managers('PDO', DbFactory::getPdoInstance());
         $this->page = new Page($app); 
         $this->page->setModule($module);
         $this->cache = new Cache($app);
@@ -437,6 +438,8 @@ abstract class MainController extends ApplicationComponent{
 		}
         return Factory::getDAOInstance($className, $module);
     }
+    
+    abstract function run();
 }
 
 ?>

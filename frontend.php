@@ -1,5 +1,5 @@
 <?php
-use Applications\Frontend\FrontendApplication;
+use core\Router;
 use Library\MobileDetect\MobileDetect;
 
 //dirname(__FILE__).
