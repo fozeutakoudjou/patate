@@ -1,10 +1,11 @@
 <?php
-namespace Library\dao;
+namespace core\dao;
 
-use Library\constant\dao\Operator;
-use Library\constant\dao\LogicalOperator;
-use Library\constant\dao\OrderWay;
-use Library\constant\dao\OrderBy;
+use core\Tools;
+use core\constant\dao\Operator;
+use core\constant\dao\LogicalOperator;
+use core\constant\dao\OrderWay;
+use core\constant\dao\OrderBy;
 
 class DAO{
     
@@ -29,6 +30,9 @@ class DAO{
 	
 	/** @var DAOImplementation implementation */
     protected $implementation;
+	
+	protected $defaultLang;
+    protected $defaultLanguages;
     
     public function __construct($param){
 		$this->isImplementation = false;
@@ -37,6 +41,8 @@ class DAO{
         $this->className= $param['className'];
         $this->lang= $param['lang'];
         $this->languages= $param['languages'];
+        $this->defaultLang = $this->lang;
+        $this->defaultLanguages = $this->languages;
 		if(isset($param['implementation'])){
 			$this->implementation = $param['implementation'];
 		}
@@ -190,7 +196,7 @@ class DAO{
 		$fields = $this->addDelectedParam($fields);
         $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay, $logicalOperator);
 		$this->useOfLang = true;
-		$this->useOfAllLang = true;
+		$this->useOfAllLang = false;
 		return $result;
     }
     
@@ -240,12 +246,12 @@ class DAO{
      * @return \models\Model
      */
     public function createModel($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false) {
-        $folder = empty($this->module) ? _SITE_LIBRARY_DIR : _SITE_MOD_DIR . $this->module . '/';
-		$folder.='models/';
-		if(file_exists($folder . $this->className . '.php')){
-			$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $folder);
-			$namespace = str_replace('/', '\\', $namespace);
-			$finalClass = $namespace.$this->className;
+		$folder = (empty($this->module) ? _SITE_CORE_DIR_ : _SITE_MODULES_DIR_ . $this->module . '/'). 'models/';
+		$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $folder);
+		$namespace = str_replace('/', '\\', $namespace);
+		$finalClass = Tools::getClass($namespace.$this->className);
+		$file = str_replace('\\', '/', _SITE_ROOT_DIR_ . '/' .$finalClass).'.php';
+		if(file_exists($file)){
 			return new $finalClass($param, $fromDB, $lang, $useOfAllLang);
 		}else{
 			throw new \Exception('Model file does not exist');
@@ -380,5 +386,14 @@ class DAO{
 	protected function getImplementation()
     {
 		return $this->isImplementation ? $this : $this->implementation;
+    }
+	
+	public function reset($params = array())
+    {
+        $this->lang = $this->defaultLang;
+        $this->languages = $this->defaultLanguages;
+		$this->useOfLang = true;
+		$this->useOfAllLang = false;
+		$this->saveOfLangField = true;
     }
 }

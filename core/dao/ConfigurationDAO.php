@@ -1,5 +1,5 @@
 <?php
-namespace Library\dao;
+namespace core\dao;
 
 class ConfigurationDAO extends DAO{	
 

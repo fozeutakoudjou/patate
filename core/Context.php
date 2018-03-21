@@ -20,7 +20,7 @@ class Context
     /** @var String */
     protected $lang;
     
-    public static function getContext()
+    public static function getInstance()
     {
         if (!isset(self::$instance)) {
             self::$instance = new Context();
@@ -37,6 +37,10 @@ class Context
     
     public function init()
     {
+		var_dump(Tools::getHttpHost(true));
+		var_dump($_SERVER['REQUEST_URI']);
+		var_dump(Tools::getValue('test'));
+		var_dump(Tools::getValue('test6'));
 		$this->lang = 'en';
 		$isAdmin = true;
 		$factory = Factory::getInstance();

@@ -1,7 +1,7 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
-use Library\dao\Factory;
+use core\dao\Factory;
 
 class Language extends Model{
 	private $id;
@@ -14,6 +14,7 @@ class Language extends Model{
 	private $rtl;
 	
 	private static $_LANGUAGES;
+	private static $totalActiveLanguages;
 	protected $definition = array(
 		'table' => 'language',
 		'primary' => 'id',
@@ -49,6 +50,14 @@ class Language extends Model{
         }
 
         return $languages;
+    }
+	
+	public static function isMultiLanguageActivated()
+    {
+        if (self::$totalActiveLanguages === null) {
+			self::$totalActiveLanguages = count(self::getLanguages(true));
+        }
+        return (self::$totalActiveLanguages >0);
     }
 
 	public function getId(){

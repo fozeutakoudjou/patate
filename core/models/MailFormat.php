@@ -1,5 +1,5 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
 class MailFormat extends Model{
 	private $id;

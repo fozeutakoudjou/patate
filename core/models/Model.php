@@ -1,8 +1,8 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
-use Library\Validate;
-use Library\Tools;
+use core\Validate;
+use core\Tools;
 
 class Model{
     
@@ -117,7 +117,7 @@ class Model{
             }else if(isset($fieldDefinition['validate'])){
                 $fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate'] : array($fieldDefinition['validate']);
                 foreach ($fieldValidations as $validation) {
-                    if (method_exists('Library\\Validate', $validation)) {
+                    if (method_exists('core\\Validate', $validation)) {
 						foreach($value as $key => $val){
 							if (!Validate::$validation($val)) {
 								if (isset($errors[$fieldName])) {

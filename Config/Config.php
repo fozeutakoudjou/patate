@@ -1,5 +1,5 @@
 <?php
-use Library\Context;
+use core\Context;
 $currentDir = dirname(__FILE__);
 
 if( !defined('IN') )
@@ -31,11 +31,8 @@ define('_DB_PORT_', '3306');
 define('_DB_PREFIX_', 'c2w_');
 define('_MYSQL_ENGINE_', 'InnoDB');
 
-define('_BASE_DIR_', '');
-if(_BASE_DIR_ !='')
-    define('_BASE_URI_', 'http://patate.localhost/'._BASE_DIR_.'/');
-else
-    define('_BASE_URI_', 'http://patate.localhost/');
+define('_BASE_DIR_', '/patate/');
+define('_BASE_URI_', 'http://localhost'._BASE_DIR_);
 
 define('_COOKIE_KEY_', '2f57912d7bd53cc6f8e8af813c8d738a');
 define('_COOKIE_IV_', '');
@@ -81,14 +78,12 @@ define('_SCRIPTS_DIR_',_GLOBAL_ASSETS_DIR.'scripts/');
 
 /* Directories : repertoire physique, toute constante _SITE_ doit pointer sur un repertoire physique*/
 define('_SITE_ROOT_DIR_',    realpath($currentDir.'/..'));
-define('_MODULES_DIR_', _SITE_ROOT_DIR_.'\\Applications\\Modules\\');
-define('_SITE_APP_DIR',_SITE_ROOT_DIR_.'/Applications/');
-define('_SITE_LIBRARY_DIR',_SITE_ROOT_DIR_.'/Library/');
-define('_SITE_MOD_DIR',_SITE_APP_DIR.'Modules/');
-define('_SITE_FO_TEMPLATE_DIR',_SITE_APP_DIR.'Frontend/Templates/');
+define('_SITE_LIBRARIES_DIR_',_SITE_ROOT_DIR_.'/libraries/');
+define('_SITE_CORE_DIR_',_SITE_ROOT_DIR_.'/core/');
+define('_SITE_OVERRIDE_DIR_',_SITE_ROOT_DIR_.'/core/');
+define('_SITE_MODULES_DIR_',_SITE_ROOT_DIR_.'modules/');
 define('_SITE_CACHE_DIR_', _SITE_ROOT_DIR_.'/Cache/');
 define('_SITE_MAIL_TPL_DIR_', _SITE_ROOT_DIR_.'/Mails/');
-define('_SITE_CONFIG_DIR_', _SITE_ROOT_DIR_.'/Config/');
 define('_SITE_LOG_DIR_', _SITE_ROOT_DIR_.'/log/');
 
 define('_SITE_WEB_DIR_',  _SITE_ROOT_DIR_.'/web/');
@@ -137,6 +132,6 @@ define('_DAO_STRUCTURE_CONCAT_', 1);
 define('_DAO_STRUCTURE_FOLDER_', 2);
 define('_DAO_STRUCTURE_', _DAO_STRUCTURE_FOLDER_);
 
-Context::getContext();
+Context::getInstance();
 ?>
 

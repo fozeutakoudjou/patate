@@ -1,2 +1,0 @@
-# 2.2.0 add
-Ajout du chargement automatique du fichier de configuration app.xml d'une application

@@ -1,5 +1,5 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
 class UserGroup extends Model{
 	private $idUser;

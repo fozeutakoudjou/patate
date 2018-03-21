@@ -1,5 +1,5 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
 class Lang extends Model{
 	private $id_lang;

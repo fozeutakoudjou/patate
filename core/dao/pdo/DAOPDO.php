@@ -1,10 +1,10 @@
 <?php
-namespace Library\dao\pdo;
+namespace core\dao\pdo;
 
-use Library\constant\dao\Operator;
-use Library\constant\dao\LogicalOperator;
-use Library\dao\DAO;
-use Library\dao\DAOImplementation;
+use core\constant\dao\Operator;
+use core\constant\dao\LogicalOperator;
+use core\dao\DAO;
+use core\dao\DAOImplementation;
 
 class DAOPDO extends DAO implements DAOImplementation{
     

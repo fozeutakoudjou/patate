@@ -1,5 +1,0 @@
-<!-- visible or deseable is used for Create Menu please don't miss or remove it -->
-<routes>
-	<route url="/admin/traduire-([a-zA-Z0-9-]*)\.html" module="Traduction" action="create" vars="mod" visible="enable" />
-    <route url="/admin/translate-([a-zA-Z0-9-]*)\.html" module="Traduction" action="application" vars="app" visible="enable"/>
-</routes>

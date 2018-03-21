@@ -1,5 +1,5 @@
 <?php
-namespace Library\models;
+namespace core\models;
 
 class Access extends Model{
 	private $id;

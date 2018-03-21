@@ -1,10 +1,10 @@
 <?php
-namespace Library\dao;
+namespace core\dao;
 
-use Library\constant\dao\Operator;
-use Library\constant\dao\LogicalOperator;
-use Library\constant\dao\OrderWay;
-use Library\constant\dao\OrderBy;
+use core\constant\dao\Operator;
+use core\constant\dao\LogicalOperator;
+use core\constant\dao\OrderWay;
+use core\constant\dao\OrderBy;
 
 interface DAOImplementation{
     

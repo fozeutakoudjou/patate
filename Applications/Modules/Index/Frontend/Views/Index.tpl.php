@@ -1,1 +1,0 @@
-<h1><?php echo __NAME__;?></h1>

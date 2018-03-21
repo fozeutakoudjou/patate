@@ -1,6 +1,6 @@
 <?php
-namespace Library\dao;
-use Library\Tools;
+namespace core\dao;
+use core\Tools;
 
 abstract class Factory {
     private static $daoClasses = array();
@@ -51,10 +51,13 @@ abstract class Factory {
 			$class = self::getDAOClass($className.'DAO', _DAO_STRUCTURE_, $module, $param, true, false);
 			$class = ($class === null) ? $defaultImplementation : $class;
 			self::$daoClasses[self::getCacheKey($className.'DAO', $module)] = $class;
-			return $class;
 		}else{
-			return $implementation;
+			$class = $implementation;
 		}
+		if($class!=null){
+			$class->reset();
+		}
+		return $class;
     }
     private static function getCacheKey($className, $module){
 		return $module . $className;
@@ -64,29 +67,38 @@ abstract class Factory {
         if (!isset(self::$daoClasses[$key]) || (self::$daoClasses[$key] === null)){
             $daoSource = self::getDAOSource();
             $class = '';
-			$namespace = (empty($module) ? _SITE_LIBRARY_DIR : _SITE_MOD_DIR . $module . '/') . 'dao/';
-			$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $namespace);
-			$namespace = str_replace('/', '\\', $namespace);
-            $defaultNamespace = $namespace;
-            $defaultClassName = $className;
-			if($useImplementation){
-				if($daoStructure==_DAO_STRUCTURE_FOLDER_){
-					$namespace.=Tools::strtolower($daoSource).'\\';
-					$sourceClass = $className . $daoSource;
-					$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $sourceClass . '.php';
-					$className = (file_exists($fileName)) ? $sourceClass : $className;
-				}else{
-					$className .= $daoSource;
-				}
-				$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $className . '.php';
+			if(empty($module)){
+				$directories = array(_SITE_OVERRIDE_DIR_. 'dao/', _SITE_CORE_DIR_. 'dao/');
+			}else{
+				$directories = array(_SITE_MODULES_DIR_ . $module . '/dao/');
 			}
 			$finalClassName = '';
-			if($useImplementation && file_exists($fileName)){
-				$finalClassName = $namespace.$className;
-			}elseif($useDefault && file_exists(_SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $defaultNamespace) . $defaultClassName . '.php')){
-				$finalClassName = $defaultNamespace.$defaultClassName;
+			foreach($directories as $directory){
+				$folder = str_replace(_SITE_ROOT_DIR_ . '/', '', $directory);
+				$namespace = str_replace('/', '\\', $folder);
+				$defaultNamespace = $namespace;
+				$defaultClassName = $className;
+				if($useImplementation){
+					if($daoStructure==_DAO_STRUCTURE_FOLDER_){
+						$namespace.=Tools::strtolower($daoSource).'\\';
+						$sourceClass = $className . $daoSource;
+						$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $sourceClass . '.php';
+						$className = (file_exists($fileName)) ? $sourceClass : $className;
+					}else{
+						$className .= $daoSource;
+					}
+					$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $className . '.php';
+				}
+				$finalClassName = '';
+				if($useImplementation && file_exists($fileName)){
+					$finalClassName = $namespace.$className;
+				}elseif($useDefault && file_exists(_SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $defaultNamespace) . $defaultClassName . '.php')){
+					$finalClassName = $defaultNamespace.$defaultClassName;
+				}
+				if(!empty($finalClassName)){
+					break;
+				}
 			}
-			
             if(empty($finalClassName)){
 				if($throwException){
 					throw new \Exception('DAO file does not exist');

@@ -1,5 +1,0 @@
-
-<routes>
-    <route url="/admin/emailconfig.html" module="ConfigSMTP" action="configSMTP" visible="enable"/>
-</routes>
-                        

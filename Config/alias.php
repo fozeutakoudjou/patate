@@ -1,5 +1,5 @@
 <?php
-use Library\dao\Factory;
+use core\dao\Factory;
 /**
  * Sanitize data which will be injected into SQL query
  *

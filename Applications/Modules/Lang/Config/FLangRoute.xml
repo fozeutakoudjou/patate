@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- visible or deseable is used for Create Menu please don't miss or remove it -->
-                            <routes>
-  					                <route url="/admin/Lang.html" module="Lang" action="lang" visible="enable" />          
-                            </routes>
-                        

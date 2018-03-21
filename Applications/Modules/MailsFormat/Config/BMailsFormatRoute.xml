@@ -1,8 +1,0 @@
-<!-- visible or deseable is used for Create Menu please don't miss or remove it -->
-<routes>
-    <route url="/admin/mails-format.html" module="MailsFormat" action="list" visible="enable"/>
-     <route url="/admin/mails-format-add.html" module="MailsFormat" action="create" visible="enable"/>
-    <route url="/admin/mails-format-edit-([0-9]+)\.html" module="MailsFormat" action="create" vars="id" visible="deseable"/>
-    <route url="/admin/mails-format-delete-([0-9]+)\.html" module="MailsFormat" action="delete" vars="id" visible="deseable"/>
-</routes>
-                        
