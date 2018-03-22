@@ -37,10 +37,6 @@ class Context
     
     public function init()
     {
-		var_dump(Tools::getHttpHost(true));
-		var_dump($_SERVER['REQUEST_URI']);
-		var_dump(Tools::getValue('test'));
-		var_dump(Tools::getValue('test6'));
 		$this->lang = 'en';
 		$isAdmin = true;
 		$factory = Factory::getInstance();

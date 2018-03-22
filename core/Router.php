@@ -5,9 +5,6 @@ use core\models\Configuration;
 use core\models\Language;
 
 class Router{
-    const FC_FRONT = 1;
-    const FC_ADMIN = 2;
-    const FC_MODULE = 3;
 
     /**
      * @var Dispatcher
@@ -15,62 +12,14 @@ class Router{
     protected static $instance = null;
 	
     protected $isAdmin = false;
+    protected $isModule = false;
 
     /**
      * @var array List of default routes
      */
-    public $default_routes = array(
-        'category_rule' => array(
-            'controller' =>    'category',
-            'rule' =>        '{id}-{rewrite}',
-            'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_category'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        'supplier_rule' => array(
-            'controller' =>    'supplier',
-            'rule' =>        '{id}__{rewrite}',
-            'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_supplier'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        'manufacturer_rule' => array(
-            'controller' =>    'manufacturer',
-            'rule' =>        '{id}_{rewrite}',
-            'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_manufacturer'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        'cms_rule' => array(
-            'controller' =>    'cms',
-            'rule' =>        'content/{id}-{rewrite}',
-            'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_cms'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        'cms_category_rule' => array(
-            'controller' =>    'cms',
-            'rule' =>        'content/category/{id}-{rewrite}',
-            'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_cms_category'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        'module' => array(
+	 
+	protected $frontDefaultRoutes = array(
+		'module' => array(
             'controller' =>    null,
             'rule' =>        'module/{module}{/:controller}',
             'keywords' => array(
@@ -78,48 +27,48 @@ class Router{
                 'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
             ),
             'params' => array(
-                'fc' => 'module',
+                'is_module' => '1',
             ),
         ),
-        'product_rule' => array(
-            'controller' =>    'product',
-            'rule' =>        '{category:/}{id}-{rewrite}{-:ean13}.html',
+		'controller_rule' => array(
+            'controller' =>    null,
+            'rule' =>        '{controller}',
             'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_product'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'ean13' =>        array('regexp' => '[0-9\pL]*'),
-                'category' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'categories' =>        array('regexp' => '[/_a-zA-Z0-9-\pL]*'),
-                'reference' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'manufacturer' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'supplier' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'price' =>            array('regexp' => '[0-9\.,]*'),
-                'tags' =>            array('regexp' => '[a-zA-Z0-9-\pL]*'),
-            ),
-        ),
-        /* Must be after the product and category rules in order to avoid conflict */
-        'layered_rule' => array(
-            'controller' =>    'category',
-            'rule' =>        '{id}-{rewrite}{/:selected_filters}',
+                'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
+            )
+        )
+	);
+	protected $adminDefaultRoutes = array(
+		'module' => array(
+            'controller' =>    null,
+            'rule' =>        'module/{module}{/:controller}{/:action}{/:id}',
             'keywords' => array(
-                'id' =>            array('regexp' => '[0-9]+', 'param' => 'id_category'),
-                /* Selected filters is used by the module blocklayered */
-                'selected_filters' =>    array('regexp' => '.*', 'param' => 'selected_filters'),
-                'rewrite' =>        array('regexp' => '[_a-zA-Z0-9\pL\pS-]*'),
-                'meta_keywords' =>    array('regexp' => '[_a-zA-Z0-9-\pL]*'),
-                'meta_title' =>        array('regexp' => '[_a-zA-Z0-9-\pL]*'),
+                'module' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'module'),
+                'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
+                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action'),
+                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id'),
+            ),
+            'params' => array(
+                'is_module' => '1',
             ),
         ),
-    );
-
+		'controller_rule' => array(
+            'controller' =>    null,
+            'rule' =>        '{controller}{/:action}{/:id}',
+            'keywords' => array(
+                'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
+                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action'),
+                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id'),
+            )
+        )
+	);
+	
     /**
      * @var bool If true, use routes to build URL (mod rewrite must be activated)
      */
-    protected $use_routes = false;
+    protected $useRoutes = false;
 
-    protected $multilang_activated = false;
+    protected $multilangActivated = false;
 
     /**
      * @var array List of loaded routes
@@ -130,33 +79,32 @@ class Router{
      * @var string Current controller name
      */
     protected $controller;
+	
+    protected $moduleName = '';
 
     /**
      * @var string Current request uri
      */
-    protected $request_uri;
+    protected $requestUri;
 
     /**
      * @var array Store empty route (a route with an empty rule)
      */
-    protected $empty_route;
+    protected $emptyRoute;
 
     /**
      * @var string Set default controller, which will be used if http parameter 'controller' is empty
      */
-    protected $default_controller;
-    protected $use_default_controller = false;
+    protected $defaultController;
+    protected $useDefaultController = false;
+	
+	protected $defaultRoutes = array();
 
     /**
      * @var string Controller to use if found controller doesn't exist
      */
-    protected $controller_not_found = 'pagenotfound';
-
-    /**
-     * @var string Front controller to use
-     */
-    protected $front_controller = self::FC_FRONT;
-
+    protected $controllerNotFound = 'pagenotfound';
+	
     /**
      * Get current instance of router (singleton)
      *
@@ -177,51 +125,32 @@ class Router{
      */
     protected function __construct()
     {
-        $this->use_routes = (bool)Configuration::get('REWRITING_SETTINGS');
+        $this->useRoutes = (bool)Configuration::get('REWRITING_SETTINGS');
+		$this->useRoutes = true;
 		$this->adminVirtual = (defined('_VIRTUAL_ADMIN_DIR_') && !empty(_VIRTUAL_ADMIN_DIR_)) ? _VIRTUAL_ADMIN_DIR_ : 'admin';
-        // Select right front controller
-        if (defined('_PS_ADMIN_DIR_')) {
-            $this->front_controller = self::FC_ADMIN;
-            $this->controller_not_found = 'adminnotfound';
-        } elseif (Tools::getValue('fc') == 'module') {
-            $this->front_controller = self::FC_MODULE;
-            $this->controller_not_found = 'pagenotfound';
-        } else {
-            $this->front_controller = self::FC_FRONT;
-            $this->controller_not_found = 'pagenotfound';
-        }
-		
         $this->setRequestUri();
 
         // Switch language if needed (only on front)
-        if (in_array($this->front_controller, array(self::FC_FRONT, self::FC_MODULE))) {
+        if (!$this->isAdmin) {
             Tools::switchLanguage();
         }
 		if (Language::isMultiLanguageActivated()) {
-            $this->multilang_activated = true;
+            $this->multilangActivated = true;
         }
-
         $this->loadRoutes();
     }
 
     public function useDefaultController()
     {
-        $this->use_default_controller = true;
-        if ($this->default_controller === null) {
-            if (defined('_PS_ADMIN_DIR_')) {
-                if (isset(Context::getInstance()->employee) && Validate::isLoadedObject(Context::getInstance()->employee) && isset(Context::getInstance()->employee->default_tab)) {
-                    $this->default_controller = Tab::getClassNameById((int)Context::getInstance()->employee->default_tab);
-                }
-                if (empty($this->default_controller)) {
-                    $this->default_controller = 'AdminDashboard';
-                }
-            } elseif (Tools::getValue('fc') == 'module') {
-                $this->default_controller = 'default';
+        $this->useDefaultController = true;
+        if ($this->defaultController === null) {
+            if ($this->isModule) {
+                $this->defaultController = 'default';
             } else {
-                $this->default_controller = 'index';
+                $this->defaultController = 'index';
             }
         }
-        return $this->default_controller;
+        return $this->defaultController;
     }
 
     /**
@@ -236,27 +165,29 @@ class Router{
         if (!$this->controller) {
             $this->controller = $this->useDefaultController();
         }
+		
+		$subFolder = ($this->isAdmin) ? 'backend/': 'frontend/';
+		$directories = ($this->isModule && !empty($this->moduleName)) ?
+			array(_SITE_MODULES_DIR_.$this->moduleName.'/'.$subFolder, _SITE_OVERRIDE_DIR_.'modules/'.$this->moduleName.'/'.$subFolder) :
+			array(_SITE_CONTROLLER_DIR_.$subFolder, _SITE_OVERRIDE_DIR_.'controllers/'.$subFolder);
+		$controllers = self::getControllers($directories, $this->isAdmin);
+		var_dump($directories);
+		var_dump($controllers);
+		die();
         // Dispatch with right front controller
         switch ($this->front_controller) {
             // Dispatch front office controller
             case self::FC_FRONT :
-                $controllers = Dispatcher::getControllers(array(_PS_FRONT_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_.'controllers/front/'));
+                $controllers = self::getControllers(array(_PS_FRONT_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_.'controllers/front/'));
                 $controllers['index'] = 'IndexController';
                 if (isset($controllers['auth'])) {
                     $controllers['authentication'] = $controllers['auth'];
                 }
-                if (isset($controllers['compare'])) {
-                    $controllers['productscomparison'] = $controllers['compare'];
-                }
-                if (isset($controllers['contact'])) {
-                    $controllers['contactform'] = $controllers['contact'];
-                }
 
                 if (!isset($controllers[strtolower($this->controller)])) {
-                    $this->controller = $this->controller_not_found;
+                    $this->controller = $this->controllerNotFound;
                 }
                 $controller_class = $controllers[strtolower($this->controller)];
-                $params_hook_action_dispatcher = array('controller_type' => self::FC_FRONT, 'controller_class' => $controller_class, 'is_module' => 0);
             break;
 
             // Dispatch module controller for front office
@@ -265,7 +196,7 @@ class Router{
                 $module = Module::getInstanceByName($module_name);
                 $controller_class = 'PageNotFoundController';
                 if (Validate::isLoadedObject($module) && $module->active) {
-                    $controllers = Dispatcher::getControllers(_PS_MODULE_DIR_.$module_name.'/controllers/front/');
+                    $controllers = self::getControllers(_PS_MODULE_DIR_.$module_name.'/controllers/front/');
                     if (isset($controllers[strtolower($this->controller)])) {
                         include_once(_PS_MODULE_DIR_.$module_name.'/controllers/front/'.$this->controller.'.php');
                         $controller_class = $module_name.$this->controller.'ModuleFrontController';
@@ -287,9 +218,9 @@ class Router{
                     if (file_exists(_PS_MODULE_DIR_.$tab->module.'/'.$tab->class_name.'.php')) {
                         $retrocompatibility_admin_tab = _PS_MODULE_DIR_.$tab->module.'/'.$tab->class_name.'.php';
                     } else {
-                        $controllers = Dispatcher::getControllers(_PS_MODULE_DIR_.$tab->module.'/controllers/admin/');
+                        $controllers = self::getControllers(_PS_MODULE_DIR_.$tab->module.'/controllers/admin/');
                         if (!isset($controllers[strtolower($this->controller)])) {
-                            $this->controller = $this->controller_not_found;
+                            $this->controller = $this->controllerNotFound;
                             $controller_class = 'AdminNotFoundController';
                         } else {
                             // Controllers in modules can be named AdminXXX.php or AdminXXXController.php
@@ -299,29 +230,16 @@ class Router{
                     }
                     $params_hook_action_dispatcher = array('controller_type' => self::FC_ADMIN, 'controller_class' => $controller_class, 'is_module' => 1);
                 } else {
-                    $controllers = Dispatcher::getControllers(array(_PS_ADMIN_DIR_.'/tabs/', _PS_ADMIN_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_.'controllers/admin/'));
+                    $controllers = self::getControllers(array(_PS_ADMIN_DIR_.'/tabs/', _PS_ADMIN_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_.'controllers/admin/'));
                     if (!isset($controllers[strtolower($this->controller)])) {
                         // If this is a parent tab, load the first child
                         if (Validate::isLoadedObject($tab) && $tab->id_parent == 0 && ($tabs = Tab::getTabs(Context::getInstance()->language->id, $tab->id)) && isset($tabs[0])) {
                             Tools::redirectAdmin(Context::getInstance()->link->getAdminLink($tabs[0]['class_name']));
                         }
-                        $this->controller = $this->controller_not_found;
+                        $this->controller = $this->controllerNotFound;
                     }
 
                     $controller_class = $controllers[strtolower($this->controller)];
-                    $params_hook_action_dispatcher = array('controller_type' => self::FC_ADMIN, 'controller_class' => $controller_class, 'is_module' => 0);
-
-                    if (file_exists(_PS_ADMIN_DIR_.'/tabs/'.$controller_class.'.php')) {
-                        $retrocompatibility_admin_tab = _PS_ADMIN_DIR_.'/tabs/'.$controller_class.'.php';
-                    }
-                }
-
-                // @retrocompatibility with admin/tabs/ old system
-                if ($retrocompatibility_admin_tab) {
-                    include_once($retrocompatibility_admin_tab);
-                    include_once(_PS_ADMIN_DIR_.'/functions.php');
-                    runAdminTab($this->controller, !empty($_REQUEST['ajaxMode']));
-                    return;
                 }
             break;
 
@@ -353,23 +271,23 @@ class Router{
     {
         // Get request uri (HTTP_X_REWRITE_URL is used by IIS)
         if (isset($_SERVER['REQUEST_URI'])) {
-            $this->request_uri = $_SERVER['REQUEST_URI'];
+            $this->requestUri = $_SERVER['REQUEST_URI'];
         } elseif (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
-            $this->request_uri = $_SERVER['HTTP_X_REWRITE_URL'];
+            $this->requestUri = $_SERVER['HTTP_X_REWRITE_URL'];
         }
-        $this->request_uri = rawurldecode($this->request_uri);
-		$this->request_uri = preg_replace('#^'.preg_quote(_BASE_DIR_, '#').'#i', '/', $this->request_uri);
+        $this->requestUri = rawurldecode($this->requestUri);
+		$this->requestUri = preg_replace('#^'.preg_quote(_BASE_DIR_, '#').'#i', '/', $this->requestUri);
 		$adminUri = '/'.$this->adminVirtual.'/';
-		$endWithSlash = Tools::endsWith($this->request_uri, '/');
-		$this->request_uri = $endWithSlash ? $this->request_uri : $this->request_uri . '/';
-		$this->request_uri = preg_replace('#^'.preg_quote($adminUri, '#').'#i', '/', $this->request_uri, 1, $count);
-		$this->request_uri = $endWithSlash ? $this->request_uri : substr($this->request_uri, 0, strlen($this->request_uri)-1);
+		$endWithSlash = Tools::endsWith($this->requestUri, '/');
+		$this->requestUri = $endWithSlash ? $this->requestUri : $this->requestUri . '/';
+		$this->requestUri = preg_replace('#^'.preg_quote($adminUri, '#').'#i', '/', $this->requestUri, 1, $count);
+		$this->requestUri = $endWithSlash ? $this->requestUri : substr($this->requestUri, 0, strlen($this->requestUri)-1);
 		$this->isAdmin = ($count>0);
         // If there are several languages, get language from uri
-        if (!$this->isAdmin && $this->use_routes && Language::isMultiLanguageActivated()) {
-            if (preg_match('#^/([a-z]{2})(?:/.*)?$#', $this->request_uri, $m)) {
+        if (!$this->isAdmin && $this->useRoutes && Language::isMultiLanguageActivated()) {
+            if (preg_match('#^/([a-z]{2})(?:/.*)?$#', $this->requestUri, $m)) {
                 $_GET['isolang'] = $m[1];
-                $this->request_uri = substr($this->request_uri, 3);
+                $this->requestUri = substr($this->requestUri, 3);
             }
         }
     }
@@ -381,9 +299,10 @@ class Router{
     {
         $context = Context::getInstance();
 
-        $languages = Language::getLanguages();
+        $languages = Language::getLanguages(true);
 		$lang = $context->getLang();
-        if (!array_key_exists($lang,$languages)) {
+		$langKeys = array_keys($languages);
+        if (!in_array($lang,$langKeys)) {
             $language_ids[$lang] = null;
         }
 		
@@ -393,26 +312,48 @@ class Router{
 				$this->addRoute($row['page'], $row['url_rewrite'], $row['page'], $row['id_lang'], array(), array());
 			}
 		}
-
+		$this->defaultRoutes = $this->isAdmin ? $this->adminDefaultRoutes : $this->frontDefaultRoutes;
         // Set default routes
-        foreach ($languages as $lang => $langObject) {
-            foreach ($this->default_routes as $id => $route) {
-                $this->addRoute(
-                    $id,
-                    $route['rule'],
-                    $route['controller'],
-                    $lang,
-                    $route['keywords'],
-                    isset($route['params']) ? $route['params'] : array()
-                );
-            }
+        foreach ($this->defaultRoutes as $id => $route) {
+			$this->addRoute(
+				$id,
+				$route['rule'],
+				$route['controller'],
+				$langKeys,
+				$route['keywords'],
+				isset($route['params']) ? $route['params'] : array()
+			);
+		}
+		$routesFiles = $this->getRouteFiles();
+		$dom = new \DOMDocument;
+		foreach ($routesFiles as $file){
+            $dom->load($file);
+			$list = $dom->getElementsByTagName('route');
+			foreach ($list as $item){
+				$keywords = array();
+				$params = array();
+				$keywordsElement = $item->getElementsByTagName('keywords');
+				foreach ($keywordsElement as $keywordsItem){
+					$name = $keywordsItem->getAttribute('name');
+					$param = $keywordsItem->getAttribute('param');
+					$keywords[$name]['regexp'] =$keywordsItem->getAttribute('regexp');
+					if(!empty($param)){
+						$keywords[$name]['param'] =$param;
+					}
+				}
+				$paramsElement = $item->getElementsByTagName('keywords');
+				foreach ($paramsElement as $paramsItem){
+					$params[$paramsItem->getAttribute('name')] =$paramsItem->getAttribute('value');
+				}
+				$this->addRoute($item->getAttribute('name'), $item->getAttribute('rule'), $item->getAttribute('controller'),  $langKeys, $keywords, $params);
+			}
         }
 
         // Load the custom routes prior the defaults to avoid infinite loops
-        if ($this->use_routes) {
+        if ($this->useRoutes) {
            // Set default empty route if no empty route (that's weird I know)
-            if (!$this->empty_route) {
-                $this->empty_route = array(
+            if (!$this->emptyRoute) {
+                $this->emptyRoute = array(
                     'routeID' =>    'index',
                     'rule' =>        '',
                     'controller' =>    'index',
@@ -464,17 +405,21 @@ class Router{
         }
 
         $regexp = '#^/'.$regexp.'$#u';
-        if (!isset($this->routes[$lang])) {
-            $this->routes[$lang] = array();
-        }
+		$langKeys = is_array($lang)? $lang : array($lang);
+		foreach($langKeys as $langKey){
+			if (!isset($this->routes[$langKey])) {
+				$this->routes[$langKey] = array();
+			}
 
-        $this->routes[$lang][$route_id] = array(
-            'rule' =>        $rule,
-            'regexp' =>        $regexp,
-            'controller' =>    $controller,
-            'keywords' =>    $keywords,
-            'params' =>        $params,
-        );
+			$this->routes[$langKey][$route_id] = array(
+				'rule' =>        $rule,
+				'regexp' =>        $regexp,
+				'controller' =>    $controller,
+				'keywords' =>    $keywords,
+				'params' =>        $params,
+			);
+		}
+        
     }
 
     /**
@@ -497,22 +442,21 @@ class Router{
      * Check if a keyword is written in a route rule
      *
      * @param string $route_id
-     * @param int $id_lang
+     * @param int $lang
      * @param string $keyword
-     * @param int $id_shop
      * @return bool
      */
-    public function hasKeyword($route_id, $id_lang, $keyword)
+    public function hasKeyword($route_id, $lang, $keyword)
     {
         if (empty($this->routes)) {
             $this->loadRoutes();
         }
 
-        if (!isset($this->routes[$id_lang]) || !isset($this->routes[$id_lang][$route_id])) {
+        if (!isset($this->routes[$lang]) || !isset($this->routes[$lang][$route_id])) {
             return false;
         }
 
-        return preg_match('#\{([^{}]*:)?'.preg_quote($keyword, '#').'(:[^{}]*)?\}#', $this->routes[$id_lang][$route_id]['rule']);
+        return preg_match('#\{([^{}]*:)?'.preg_quote($keyword, '#').'(:[^{}]*)?\}#', $this->routes[$lang][$route_id]['rule']);
     }
 
     /**
@@ -525,11 +469,11 @@ class Router{
     public function validateRoute($route_id, $rule, &$errors = array())
     {
         $errors = array();
-        if (!isset($this->default_routes[$route_id])) {
+        if (!isset($this->defaultRoutes[$route_id])) {
             return false;
         }
 
-        foreach ($this->default_routes[$route_id]['keywords'] as $keyword => $data) {
+        foreach ($this->defaultRoutes[$route_id]['keywords'] as $keyword => $data) {
             if (isset($data['param']) && !preg_match('#\{([^{}]*:)?'.$keyword.'(:[^{}]*)?\}#', $rule)) {
                 $errors[] = $keyword;
             }
@@ -558,7 +502,7 @@ class Router{
 
         if (!isset($this->routes[$id_lang][$route_id])) {
             $query = http_build_query($params, '', '&');
-            $index_link = $this->use_routes ? '' : 'index.php';
+            $index_link = $this->useRoutes ? '' : 'index.php';
             return ($route_id == 'index') ? $index_link.(($query) ? '?'.$query : '') : ((trim($route_id) == '') ? '' : 'index.php?controller='.$route_id).(($query) ? '&'.$query : '').$anchor;
         }
         $route = $this->routes[$id_lang][$route_id];
@@ -570,21 +514,21 @@ class Router{
             }
 
             if (!array_key_exists($key, $params)) {
-                throw new PrestaShopException('Dispatcher::createUrl() miss required parameter "'.$key.'" for route "'.$route_id.'"');
+                throw new PrestaShopException('self::createUrl() miss required parameter "'.$key.'" for route "'.$route_id.'"');
             }
-            if (isset($this->default_routes[$route_id])) {
-                $query_params[$this->default_routes[$route_id]['keywords'][$key]['param']] = $params[$key];
+            if (isset($this->defaultRoutes[$route_id])) {
+                $query_params[$this->defaultRoutes[$route_id]['keywords'][$key]['param']] = $params[$key];
             }
         }
 
         // Build an url which match a route
-        if ($this->use_routes || $force_routes) {
+        if ($this->useRoutes || $force_routes) {
             $url = $route['rule'];
             $add_param = array();
 
             foreach ($params as $key => $value) {
                 if (!isset($route['keywords'][$key])) {
-                    if (!isset($this->default_routes[$route_id]['keywords'][$key])) {
+                    if (!isset($this->defaultRoutes[$route_id]['keywords'][$key])) {
                         $add_param[$key] = $value;
                     }
                 } else {
@@ -605,7 +549,7 @@ class Router{
         else {
             $add_params = array();
             foreach ($params as $key => $value) {
-                if (!isset($route['keywords'][$key]) && !isset($this->default_routes[$route_id]['keywords'][$key])) {
+                if (!isset($route['keywords'][$key]) && !isset($this->defaultRoutes[$route_id]['keywords'][$key])) {
                     $add_params[$key] = $value;
                 }
             }
@@ -628,18 +572,14 @@ class Router{
      *
      * @return string
      */
-    public function getController($id_shop = null)
+    public function getController()
     {
-        if (defined('_PS_ADMIN_DIR_')) {
+        if ($this->isAdmin) {
             $_GET['controllerUri'] = Tools::getvalue('controller');
         }
         if ($this->controller) {
             $_GET['controller'] = $this->controller;
             return $this->controller;
-        }
-
-        if (isset(Context::getInstance()->shop) && $id_shop === null) {
-            $id_shop = (int)Context::getInstance()->shop->id;
         }
 
         $controller = Tools::getValue('controller');
@@ -656,26 +596,27 @@ class Router{
         if (!Validate::isControllerName($controller)) {
             $controller = false;
         }
-
+		
         // Use routes ? (for url rewriting)
-        if ($this->use_routes && !$controller && !defined('_PS_ADMIN_DIR_')) {
-            if (!$this->request_uri) {
-                return strtolower($this->controller_not_found);
+        if ($this->useRoutes && !$controller) {
+			var_dump($this->requestUri);
+            if (!$this->requestUri) {
+                return strtolower($this->controllerNotFound);
             }
-            $controller = $this->controller_not_found;
-            $test_request_uri = preg_replace('/(=http:\/\/)/', '=', $this->request_uri);
+            $controller = $this->controllerNotFound;
+            $test_request_uri = preg_replace('/(=http:\/\/)/', '=', $this->requestUri);
 
             // If the request_uri matches a static file, then there is no need to check the routes, we keep "controller_not_found" (a static file should not go through the dispatcher)
             if (!preg_match('/\.(gif|jpe?g|png|css|js|ico)$/i', parse_url($test_request_uri, PHP_URL_PATH))) {
                 // Add empty route as last route to prevent this greedy regexp to match request uri before right time
-                if ($this->empty_route) {
-                    $this->addRoute($this->empty_route['routeID'], $this->empty_route['rule'], $this->empty_route['controller'], Context::getInstance()->language->id, array(), array(), $id_shop);
+				$lang = Context::getInstance()->getLang();
+                if ($this->emptyRoute) {
+                    $this->addRoute($this->emptyRoute['routeID'], $this->emptyRoute['rule'], $this->emptyRoute['controller'], $lang, array(), array());
                 }
 
-                list($uri) = explode('?', $this->request_uri);
-
-                if (isset($this->routes[$id_shop][Context::getInstance()->language->id])) {
-                    foreach ($this->routes[$id_shop][Context::getInstance()->language->id] as $route) {
+                list($uri) = explode('?', $this->requestUri);
+                if (isset($this->routes[$lang])) {
+                    foreach ($this->routes[$lang] as $route) {
                         if (preg_match($route['regexp'], $uri, $m)) {
                             // Route found ! Now fill $_GET with parameters of uri
                             foreach ($m as $k => $v) {
@@ -684,7 +625,8 @@ class Router{
                                 }
                             }
 
-                            $controller = $route['controller'] ? $route['controller'] : $_GET['controller'];
+                            $controller = $route['controller'] ? $route['controller'] : false;
+                            $controller = isset($_GET['controller']) ? $_GET['controller'] : false;
                             if (!empty($route['params'])) {
                                 foreach ($route['params'] as $k => $v) {
                                     $_GET[$k] = $v;
@@ -694,12 +636,13 @@ class Router{
                             // A patch for module friendly urls
                             if (preg_match('#module-([a-z0-9_-]+)-([a-z0-9_]+)$#i', $controller, $m)) {
                                 $_GET['module'] = $m[1];
-                                $_GET['fc'] = 'module';
+								
+                                $_GET['is_module'] = '1';
                                 $controller = $m[2];
                             }
-
-                            if (isset($_GET['fc']) && $_GET['fc'] == 'module') {
-                                $this->front_controller = self::FC_MODULE;
+                            if (isset($_GET['is_module']) && $_GET['is_module'] == '1') {
+                                $this->isModule = true;
+								$this->moduleName = Tools::getvalue('module');
                             }
                             break;
                         }
@@ -707,7 +650,7 @@ class Router{
                 }
             }
 
-            if ($controller == 'index' || preg_match('/^\/index.php(?:\?.*)?$/', $this->request_uri)) {
+            if ($controller == 'index' || preg_match('/^\/index.php(?:\?.*)?$/', $this->requestUri)) {
                 $controller = $this->useDefaultController();
             }
         }
@@ -715,90 +658,6 @@ class Router{
         $this->controller = str_replace('-', '', $controller);
         $_GET['controller'] = $this->controller;
         return $this->controller;
-    }
-
-    /**
-     * Get list of all available FO controllers
-     *
-     * @var mixed $dirs
-     * @return array
-     */
-    public static function getControllers($dirs)
-    {
-        if (!is_array($dirs)) {
-            $dirs = array($dirs);
-        }
-
-        $controllers = array();
-        foreach ($dirs as $dir) {
-            $controllers = array_merge($controllers, Dispatcher::getControllersInDirectory($dir));
-        }
-        return $controllers;
-    }
-
-    /**
-     * Get list of all available Module Front controllers
-     *
-     * @return array
-     */
-    public static function getModuleControllers($type = 'all', $module = null)
-    {
-        $modules_controllers = array();
-        if (is_null($module)) {
-            $modules = Module::getModulesOnDisk(true);
-        } elseif (!is_array($module)) {
-            $modules = array(Module::getInstanceByName($module));
-        } else {
-            $modules = array();
-            foreach ($module as $_mod) {
-                $modules[] = Module::getInstanceByName($_mod);
-            }
-        }
-
-        foreach ($modules as $mod) {
-            foreach (Dispatcher::getControllersInDirectory(_PS_MODULE_DIR_.$mod->name.'/controllers/') as $controller) {
-                if ($type == 'admin') {
-                    if (strpos($controller, 'Admin') !== false) {
-                        $modules_controllers[$mod->name][] = $controller;
-                    }
-                } elseif ($type == 'front') {
-                    if (strpos($controller, 'Admin') === false) {
-                        $modules_controllers[$mod->name][] = $controller;
-                    }
-                } else {
-                    $modules_controllers[$mod->name][] = $controller;
-                }
-            }
-        }
-        return $modules_controllers;
-    }
-
-    /**
-     * Get list of available controllers from the specified dir
-     *
-     * @param string $dir Directory to scan (recursively)
-     * @return array
-     */
-    public static function getControllersInDirectory($dir)
-    {
-        if (!is_dir($dir)) {
-            return array();
-        }
-
-        $controllers = array();
-        $controller_files = scandir($dir);
-        foreach ($controller_files as $controller_filename) {
-            if ($controller_filename[0] != '.') {
-                if (!strpos($controller_filename, '.php') && is_dir($dir.$controller_filename)) {
-                    $controllers += Dispatcher::getControllersInDirectory($dir.$controller_filename.DIRECTORY_SEPARATOR);
-                } elseif ($controller_filename != 'index.php') {
-                    $key = str_replace(array('controller.php', '.php'), '', strtolower($controller_filename));
-                    $controllers[$key] = basename($controller_filename, '.php');
-                }
-            }
-        }
-
-        return $controllers;
     }
 }
 
