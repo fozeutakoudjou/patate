@@ -6,6 +6,7 @@
  */
 
 function autoload($class){
+	var_dump(__CLASS__);
 	require_once dirname(__FILE__).'/Tools.php';
 	$class = core\Tools::getClass($class);
 	$file = dirname(__FILE__).'/../'.str_replace('\\', '/', $class);

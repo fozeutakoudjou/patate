@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<controllers>
+    <controller name="test" model="testModel"/>
+	<controller name="test_mod_plt"/>
+</controllers>

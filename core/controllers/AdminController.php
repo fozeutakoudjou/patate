@@ -1,8 +1,7 @@
 <?php
 namespace core\controllers;
 
-abstract class FrontController extends Controller{
-    //put your code here
+abstract class AdminController extends Controller{
     
     public function run(){
         

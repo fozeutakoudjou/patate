@@ -1,445 +1,582 @@
 <?php
-namespace core\controllers;
+/*
+* 2007-2016 PrestaShop
+*
+* NOTICE OF LICENSE
+*
+* This source file is subject to the Open Software License (OSL 3.0)
+* that is bundled with this package in the file LICENSE.txt.
+* It is also available through the world-wide-web at this URL:
+* http://opensource.org/licenses/osl-3.0.php
+* If you did not receive a copy of the license and are unable to
+* obtain it through the world-wide-web, please send an email
+* to license@prestashop.com so we can send you a copy immediately.
+*
+* DISCLAIMER
+*
+* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+* versions in the future. If you wish to customize PrestaShop for your
+* needs please refer to http://www.prestashop.com for more information.
+*
+*  @author PrestaShop SA <contact@prestashop.com>
+*  @copyright  2007-2016 PrestaShop SA
+*  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+*  International Registered Trademark & Property of PrestaShop SA
+*/
 
-use core\dao\Factory;
-use core\constant\dao\Operator;
-use core\constant\dao\OrderWay;
-use core\constant\dao\OrderBy;
 /**
- * Description of MainController
- *
- * @author FFOZEU
+ * @TODO Move undeclared variables and methods to this (base) class: $errors, $layout, checkLiveEditAccess, etc.
+ * @since 1.5.0
  */
+abstract class ControllerCore
+{
+    /** @var Context */
+    protected $context;
 
-abstract class Controller extends ApplicationComponent{
-    
-    protected $action = '';
-    protected $module = '';
-    protected $page = null;
-    protected $cache = null;
-    protected $view = '';
-    protected $errors = array();
-    protected $infos = array();
-    protected $managers = null;
-    protected $tabCSS = array();
-    protected $tabJS = array();
-    protected $tabPluginsCSS = array();
-    protected $tabPluginsJS = array();
-    protected $tabLang = array();
-    protected $name ='';
-    protected $pagination = '';
+    /** @var array List of CSS files */
+    public $css_files = array();
 
+    /** @var array List of JavaScript files */
+    public $js_files = array();
 
-    public function __construct(Application $app, $module,$action){
-		$dao = $this->getDAOInstance('Language');
-		/*$language = $dao->createModel();
-		$data = array(
-			'name' => 'Turc',
-			'active' => '1',
-			'isoCode' => 'tr',
-			'languageCode' => 'tr-Ru',
-			'dateFormatLite' => 'm/d/Y',
-			'dateFormatFull' => 'm/d/Y H:i:s',
-		);
-		$language->hydrate($data);
-		$dao->add($language);
-		$language = $dao->getById(15);
-		$language->setIsoCode('fr');
-		//var_dump($dao->update($language));
-		//var_dump($dao->delete($language));
-		//var_dump($language);
-		/*var_dump($language->validateFields());*/
-		/*die;
-		$dao = $this->getDAOInstance('Group');
-		$daoC = $this->getDAOInstance('Configuration');
-		$daol = $this->getDAOInstance('Language');
-		$data = array(
-			'name' => 'English (English)',
-			'active' => '1',
-			'isoCode' => 'en',
-			'languageCode' => 'en-us',
-			'dateFormatLite' => 'm/d/Y',
-			'dateFormatFull' => 'm/d/Y H:i:s',
-		);
-		$language = $daol->createModel();
-		$language->hydrate($data);
-		
-		/*$language = $daol->getByField('isoCode', 's', false, 0, 0, OrderBy::PRIMARY, OrderWay::DESC, Operator::START_WITH);
-		var_dump($language);*/
-		//var_dump($daol->add($language));
-		//$group = $dao->createModel();
-		/*$data = array(
-			'name' => 'English (English)',
-			'active' => '1',
-			'isoCode' => 'mm',
-			'languageCode' => 'en-us',
-			'dateFormatLite' => 'm/d/Y',
-			'dateFormatFull' => 'm/d/Y H:i:s',
-		);*/
-		//$language->hydrate($data);
-		//$dao->add($language);
-		//var_dump($daol->add($language));
-		//var_dump($language);
-        /*$dao = $this->getDAOInstance('Group');
-		$group = $dao->createModel();
-		$data = array(
-			'name' => 'grp 1',
-			'description' => 'description gp1',
-		);
-		$group->hydrate($data);
-		var_dump($dao->add($group));
-		//die(0);*/
-		parent::__construct($app);
-        //$this->managers = new Managers('PDO', DbFactory::getPdoInstance());
-        $this->page = new Page($app); 
-        $this->page->setModule($module);
-        $this->cache = new Cache($app);
-        $this->name = $module;                    
-        $this->setModule($module);        
-        $this->setAction($action);
-        $this->init();
-        $this->setView($action);
-        
-    }
-    protected function init(){
-        //chargement du CSS et JS
-        $this->tabLang[] = _SITE_ROOT_DIR_.'/Applications/'.$this->app->name().'/Lang/fr.php';
-        $this->loadModLanguageFile();
-        $this->addModJS();
-        $this->addModCSS();
-        $this->page->addVar('tabCSS', $this->tabCSS);
-        $this->page->addVar('tabJS', $this->tabJS);
-        $this->page->addVar('tabLangFile', $this->tabLang);
-    }
-    public function execute(){
-        $method = 'execute'.ucfirst($this->action);
-        if (!is_callable(array($this, $method))){
-            throw new \RuntimeException('L\'action "'.$this->action.'" n\'est pas définie sur ce module');
-        }
-        $this->$method($this->app->httpRequest());
-    }
-    
-    public function page(){
-        return $this->page;
-    }
+    /** @var array List of PHP errors */
+    public static $php_errors = array();
+
+    /** @var bool Set to true to display page header */
+    protected $display_header;
+
+    /** @var bool Set to true to display page header javascript */
+    protected $display_header_javascript;
+
+    /** @var string Template filename for the page content */
+    protected $template;
+
+    /** @var string Set to true to display page footer */
+    protected $display_footer;
+
+    /** @var bool Set to true to only render page content (used to get iframe content) */
+    protected $content_only = false;
+
+    /** @var bool If AJAX parameter is detected in request, set this flag to true */
+    public $ajax = false;
+
+    /** @var bool If set to true, page content and messages will be encoded to JSON before responding to AJAX request */
+    protected $json = false;
+
+    /** @var string JSON response status string */
+    protected $status = '';
+
     /**
-     * this function initialize module
-     * @param type $module
-     * @throws \InvalidArgumentException
+     * @see Controller::run()
+     * @var string|null Redirect link. If not empty, the user will be redirected after initializing and processing input.
      */
-    public function setModule($module){
-        if (!is_string($module) || empty($module)){
-            throw new \InvalidArgumentException('Le module doit être une chaine de caractères valide');
-        }
-        $this->module = $module;
-    }
+    protected $redirect_after = null;
+
+    /** @var string Controller type. Possible values: 'front', 'modulefront', 'admin', 'moduleadmin' */
+    public $controller_type;
+
+    /** @var string Controller name */
+    public $php_self;
+
     /**
-     * this function initialize view action of the module
-     * @param type $action
-     * @throws \InvalidArgumentException
+     * Check if the controller is available for the current user/visitor
      */
-    public function setAction($action){
-        if (!is_string($action) || empty($action)){
-            throw new \InvalidArgumentException('L\'action doit être une chaine de caractères valide');
-        }
-        $this->action = $action;
-    }
+    abstract public function checkAccess();
+
     /**
-     * this function initialize view module
-     * @param type $view
-     * @throws \InvalidArgumentException
+     * Check if the current user/visitor has valid view permissions
      */
-    public function setView($view){
-        if (!is_string($view) || empty($view)){
-            throw new \InvalidArgumentException('La vue doit être une chaine de caractères valide');
-        }
-        $this->view = ucfirst($view);
-        $appname = $this->app->name();
-        $templates = $this->app->templates();
-        // Vu de l'action defini dans le module
-        $fileload = dirname(__FILE__).'/../Applications/Modules/'.$this->module.'/'.$appname.'/Views/'.$this->view.'.tpl.php';
-        // vue par défaut override par vous
-        $fileload2 = dirname(__FILE__).'/../Applications/'.$appname.'/Templates/'.$templates.'/Override/'.$this->view.'.tpl.php';
-        // vue par défaut de l'action dans le template de l'application
-        $fileload3 = dirname(__FILE__).'/../Applications/'.$appname.'/Templates/'.$templates.'/'.$this->view.'.tpl.php';
-        $default = dirname(__FILE__).'/../Applications/'.$appname.'/Templates/'.$templates.'/Default.tpl.php'; // vue par défaut
-        //find dexisting views
-        if(!file_exists($fileload))
-            if(!file_exists($fileload2))
-                if(!file_exists($fileload3))
-                    $fileload =$default;
-                else $fileload = $fileload3;
-            else $fileload = $fileload2;
-        $this->page->setContentFile($fileload);
-    }
-    
+    abstract public function viewAccess();
+
     /**
-     * this function load language file of your module
+     * Initialize the page
      */
-    protected function loadModLanguageFile(){
-        $dir = _SITE_MOD_DIR.$this->module.'/Lang/';
-        $lang = $dir.'fr.php';
-        if(is_dir($dir) && file_exists($lang)){
-            $this->tabLang[] = $lang;
-        }
-    }
-    /**
-     *  add Js file on your project
-     * @param type $pathfile
-     */
-    protected function addJS($pathfile){
-        if(is_array($pathfile) && count($pathfile)){
-			foreach ($pathfile as $value)
-				if(!array_key_exists($value, $this->tabJS))
-					$this->tabJS[$value] = 'all';
-		}else
-			if(!array_key_exists($pathfile, $this->tabJS)){
-				$this->tabJS[$pathfile] = 'all';
-			}
-        $this->addVar(array('tabJS' => 'tabJS'));
-    }
-	
-    /**
-     * Ajout d'un fichier JS d'un module     
-     * @param type $applaction
-     * @param type $filename
-     * @param type $mod
-     */
-    protected function addModJS($applaction='F',$filename='',$mod='')
-	{
-        $urlfile ='';
-        $module = (!empty($mod)?$mod:$this->name);
-        $pathfile = (!empty($filename)?$filename:$this->name.'.js');
-        $name_dir = '/scripts/';
-        if(file_exists(($applaction=='F'?_SITE_THEME_FO_MOD_DIR_:_SITE_THEME_BO_MOD_DIR_).$module.$name_dir.$applaction.$pathfile))
-            $urlfile =($applaction=='F'?_THEME_FO_MOD_DIR_:_THEME_BO_MOD_DIR_).$module.'/web'.$name_dir.$applaction.$pathfile;
-        elseif(file_exists(_SITE_MOD_DIR.$module.'/web'.$name_dir.$applaction.$pathfile))
-            $urlfile =_MOD_DIR_.$module.'/web'.$name_dir.$applaction.$pathfile;
-        if(!array_key_exists($urlfile, $this->tabJS)){
-            $this->tabJS[$urlfile] = 'all';
-            $this->addVar(array('tabJS' => 'tabJS'));
-        }
-    }
-	/**
-	 * this function add some plugin to projet
-	 * @param type $plugins
-	 */
-	final function addJSPlugins($plugins)
-	{
-        
-    }
-    /**
-     * Chargement des plugins
-     * @param array $plugins
-     */
-    final function addMediaPlugins(array $plugins)
+    public function init()
     {
-        if (is_array($plugins))
-        {
-            $add = false;
-            foreach ($plugins as $value) {
-                if (file_exists(_SITE_PLUGINS_DIR_.$value.'.css') && !array_key_exists(_PLUGINS_DIR_.$value.'.css', $this->tabPluginsCSS)){
-                    $this->tabPluginsCSS[_PLUGINS_DIR_.$value.'.css'] = 'screen';
-                    $add = true;
-                }if (file_exists(_SITE_PLUGINS_DIR_.$value.'.min.js') && !array_key_exists(_PLUGINS_DIR_.$value.'.min.js', $this->tabPluginsJS)){
-                    $this->tabPluginsJS[_PLUGINS_DIR_.$value.'.min.js'] = 'all';
-                    $add = true;
-                }else if(file_exists(_SITE_PLUGINS_DIR_.$value.'.js') && !array_key_exists(_PLUGINS_DIR_.$value.'.js', $this->tabPluginsJS)){
-                    $this->tabPluginsJS[_PLUGINS_DIR_.$value.'.js'] = 'all';
-                    $add = true;
-                }
-            }
-            if($add)
-                $this->addVar(array('pluginsCSS' => 'tabPluginsCSS', 'pluginsJS' => 'tabPluginsJS'));
+        if (_PS_MODE_DEV_ && $this->controller_type == 'admin') {
+            set_error_handler(array(__CLASS__, 'myErrorHandler'));
         }
-    }
-    /**
-     * add css file on your project
-     * @param type $pathfile
-     * @param type $media
-     */
-    protected function addCSS($pathfile,$media='screen'){
-        if(!array_key_exists($pathfile, $this->tabCSS)){
-            $this->tabCSS[$pathfile] = (string)$media;
+
+        if (!defined('_PS_BASE_URL_')) {
+            define('_PS_BASE_URL_', Tools::getShopDomain(true));
         }
-        $this->addVar(array('tabCSS' => 'tabCSS'));
-    }
-    
-    /**
-     * 
-     * @param type $applaction
-     * @param type $filename
-     * @param type $mod
-     */
-    protected function addModCSS($applaction='F',$filename='',$mod=''){
-        $urlfile ='';
-        $module = (!empty($mod)?$mod:$this->name);
-        $pathfile = (!empty($filename)?$filename:$this->name.'.css');
-        $name_dir = '/css/';
-        if(file_exists(($applaction=='F'?_SITE_THEME_FO_MOD_DIR_:_SITE_THEME_BO_MOD_DIR_).$module.$name_dir.$applaction.$pathfile))
-            $urlfile =($applaction=='F'?_THEME_FO_MOD_DIR_:_THEME_BO_MOD_DIR_).$module.'/web'.$name_dir.$applaction.$pathfile;
-        elseif(file_exists(_SITE_MOD_DIR.$module.'/web'.$name_dir.$applaction.$pathfile))
-            $urlfile =_MOD_DIR_.$module.'/'.$name_dir.$applaction.$pathfile;
-        if(!array_key_exists($urlfile, $this->tabCSS)){
-            $this->tabCSS[$urlfile] = 'all';
-            $this->addVar(array('tabCSS' => 'tabCSS'));
+
+        if (!defined('_PS_BASE_URL_SSL_')) {
+            define('_PS_BASE_URL_SSL_', Tools::getShopDomainSsl(true));
         }
-        
     }
 
     /**
-     * permet de traduire une chaine
-     * @param type $string
-     * @return type
+     * Do the page treatment: process input, process AJAX, etc.
      */
-    public function l($string){
-		$config = $this->getConfig();
-        if(is_array($config)&& array_key_exists('lang', $config)&& !empty($config['lang']))
-            $defaultlang = $config['lang'];
-        else
-            $defaultlang = 'fr';
+    abstract public function postProcess();
+
+    /**
+     * Displays page view
+     */
+    abstract public function display();
+
+    /**
+     * Sets default media list for this controller
+     */
+    abstract public function setMedia();
+
+    /**
+     * returns a new instance of this controller
+     *
+     * @param string $class_name
+     * @param bool $auth
+     * @param bool $ssl
+     * @return Controller
+     */
+    public static function getController($class_name, $auth = false, $ssl = false)
+    {
+        return new $class_name($auth, $ssl);
+    }
+
+    public function __construct()
+    {
+        if (is_null($this->display_header)) {
+            $this->display_header = true;
+        }
+
+        if (is_null($this->display_header_javascript)) {
+            $this->display_header_javascript = true;
+        }
+
+        if (is_null($this->display_footer)) {
+            $this->display_footer = true;
+        }
+
+        $this->context = Context::getContext();
+        $this->context->controller = $this;
+
+        // Usage of ajax parameter is deprecated
+        $this->ajax = Tools::getValue('ajax') || Tools::isSubmit('ajax');
+
+        if (!headers_sent()
+            && isset($_SERVER['HTTP_USER_AGENT'])
+            && (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false
+            || strpos($_SERVER['HTTP_USER_AGENT'], 'Trident') !== false)) {
+            header('X-UA-Compatible: IE=edge,chrome=1');
+        }
+    }
+
+    /**
+     * Starts the controller process (this method should not be overridden!)
+     */
+    public function run()
+    {
+        $this->init();
+        if ($this->checkAccess()) {
+            // setMedia MUST be called before postProcess
+            if (!$this->content_only && ($this->display_header || (isset($this->className) && $this->className))) {
+                $this->setMedia();
+            }
+
+            // postProcess handles ajaxProcess
+            $this->postProcess();
+
+            if (!empty($this->redirect_after)) {
+                $this->redirect();
+            }
+
+            if (!$this->content_only && ($this->display_header || (isset($this->className) && $this->className))) {
+                $this->initHeader();
+            }
+
+            if ($this->viewAccess()) {
+                $this->initContent();
+            } else {
+                $this->errors[] = Tools::displayError('Access denied.');
+            }
+
+            if (!$this->content_only && ($this->display_footer || (isset($this->className) && $this->className))) {
+                $this->initFooter();
+            }
+
+            // Default behavior for ajax process is to use $_POST[action] or $_GET[action]
+            // then using displayAjax[action]
+            if ($this->ajax) {
+                $action = Tools::toCamelCase(Tools::getValue('action'), true);
+
+                if (!empty($action) && method_exists($this, 'displayAjax'.$action)) {
+                    $this->{'displayAjax'.$action}();
+                } elseif (method_exists($this, 'displayAjax')) {
+                    $this->displayAjax();
+                }
+            } else {
+                $this->display();
+            }
+        } else {
+            $this->initCursedPage();
+            $this->smartyOutputContent($this->layout);
+        }
+    }
+
+    /**
+     * Sets page header display
+     *
+     * @param bool $display
+     */
+    public function displayHeader($display = true)
+    {
+        $this->display_header = $display;
+    }
+
+    /**
+     * Sets page header javascript display
+     *
+     * @param bool $display
+     */
+    public function displayHeaderJavaScript($display = true)
+    {
+        $this->display_header_javascript = $display;
+    }
+
+    /**
+     * Sets page header display
+     *
+     * @param bool $display
+     */
+    public function displayFooter($display = true)
+    {
+        $this->display_footer = $display;
+    }
+
+    /**
+     * Sets template file for page content output
+     *
+     * @param string $template
+     */
+    public function setTemplate($template)
+    {
+        $this->template = $template;
+    }
+
+    /**
+     * Assigns Smarty variables for the page header
+     */
+    abstract public function initHeader();
+
+    /**
+     * Assigns Smarty variables for the page main content
+     */
+    abstract public function initContent();
+
+    /**
+     * Assigns Smarty variables when access is forbidden
+     */
+    abstract public function initCursedPage();
+
+    /**
+     * Assigns Smarty variables for the page footer
+     */
+    abstract public function initFooter();
+
+    /**
+     * Redirects to $this->redirect_after after the process if there is no error
+     */
+    abstract protected function redirect();
+
+    /**
+     * Set $this->redirect_after that will be used by redirect() after the process
+     */
+    public function setRedirectAfter($url)
+    {
+        $this->redirect_after = $url;
+    }
+
+    /**
+     * Adds a new stylesheet(s) to the page header.
+     *
+     * @param string|array $css_uri Path to CSS file, or list of css files like this : array(array(uri => media_type), ...)
+     * @param string $css_media_type
+     * @param int|null $offset
+     * @param bool $check_path
+     * @return true
+     */
+    public function addCSS($css_uri, $css_media_type = 'all', $offset = null, $check_path = true)
+    {
+        if (!is_array($css_uri)) {
+            $css_uri = array($css_uri);
+        }
+
+        foreach ($css_uri as $css_file => $media) {
+            if (is_string($css_file) && strlen($css_file) > 1) {
+                if ($check_path) {
+                    $css_path = Media::getCSSPath($css_file, $media);
+                } else {
+                    $css_path = array($css_file => $media);
+                }
+            } else {
+                if ($check_path) {
+                    $css_path = Media::getCSSPath($media, $css_media_type);
+                } else {
+                    $css_path = array($media => $css_media_type);
+                }
+            }
+
+            $key = is_array($css_path) ? key($css_path) : $css_path;
+            if ($css_path && (!isset($this->css_files[$key]) || ($this->css_files[$key] != reset($css_path)))) {
+                $size = count($this->css_files);
+                if ($offset === null || $offset > $size || $offset < 0 || !is_numeric($offset)) {
+                    $offset = $size;
+                }
+
+                $this->css_files = array_merge(array_slice($this->css_files, 0, $offset), $css_path, array_slice($this->css_files, $offset));
+            }
+        }
+    }
+
+    /**
+     * Removes CSS stylesheet(s) from the queued stylesheet list
+     *
+     * @param string|array $css_uri Path to CSS file or an array like: array(array(uri => media_type), ...)
+     * @param string $css_media_type
+     * @param bool $check_path
+     */
+    public function removeCSS($css_uri, $css_media_type = 'all', $check_path = true)
+    {
+        if (!is_array($css_uri)) {
+            $css_uri = array($css_uri);
+        }
+
+        foreach ($css_uri as $css_file => $media) {
+            if (is_string($css_file) && strlen($css_file) > 1) {
+                if ($check_path) {
+                    $css_path = Media::getCSSPath($css_file, $media);
+                } else {
+                    $css_path = array($css_file => $media);
+                }
+            } else {
+                if ($check_path) {
+                    $css_path = Media::getCSSPath($media, $css_media_type);
+                } else {
+                    $css_path = array($media => $css_media_type);
+                }
+            }
+
+            if ($css_path && isset($this->css_files[key($css_path)]) && ($this->css_files[key($css_path)] == reset($css_path))) {
+                unset($this->css_files[key($css_path)]);
+            }
+        }
+    }
+
+    /**
+     * Adds a new JavaScript file(s) to the page header.
+     *
+     * @param string|array $js_uri Path to JS file or an array like: array(uri, ...)
+     * @param bool $check_path
+     * @return void
+     */
+    public function addJS($js_uri, $check_path = true)
+    {
+        if (is_array($js_uri)) {
+            foreach ($js_uri as $js_file) {
+                $js_file = explode('?', $js_file);
+                $version = '';
+                if (isset($js_file[1]) && $js_file[1]) {
+                    $version = $js_file[1];
+                }
+                $js_path = $js_file = $js_file[0];
+                if ($check_path) {
+                    $js_path = Media::getJSPath($js_file);
+                }
+
+                // $key = is_array($js_path) ? key($js_path) : $js_path;
+                if ($js_path && !in_array($js_path, $this->js_files)) {
+                    $this->js_files[] = $js_path.($version ? '?'.$version : '');
+                }
+            }
+        } else {
+            $js_uri = explode('?', $js_uri);
+            $version = '';
+            if (isset($js_uri[1]) && $js_uri[1]) {
+                $version = $js_uri[1];
+            }
+            $js_path = $js_uri = $js_uri[0];
+            if ($check_path) {
+                $js_path = Media::getJSPath($js_uri);
+            }
+
+            if ($js_path && !in_array($js_path, $this->js_files)) {
+                $this->js_files[] = $js_path.($version ? '?'.$version : '');
+            }
+        }
+    }
+
+    /**
+     * Removes JS file(s) from the queued JS file list
+     *
+     * @param string|array $js_uri Path to JS file or an array like: array(uri, ...)
+     * @param bool $check_path
+     */
+    public function removeJS($js_uri, $check_path = true)
+    {
+        if (is_array($js_uri)) {
+            foreach ($js_uri as $js_file) {
+                $js_path = $js_file;
+                if ($check_path) {
+                    $js_path = Media::getJSPath($js_file);
+                }
+
+                if ($js_path && in_array($js_path, $this->js_files)) {
+                    unset($this->js_files[array_search($js_path, $this->js_files)]);
+                }
+            }
+        } else {
+            $js_path = $js_uri;
+            if ($check_path) {
+                $js_path = Media::getJSPath($js_uri);
+            }
+
+            if ($js_path) {
+                unset($this->js_files[array_search($js_path, $this->js_files)]);
+            }
+        }
+    }
+
+    /**
+     * Adds jQuery library file to queued JS file list
+     *
+     * @param string|null $version jQuery library version
+     * @param string|null $folder jQuery file folder
+     * @param bool $minifier If set tot true, a minified version will be included.
+     */
+    public function addJquery($version = null, $folder = null, $minifier = true)
+    {
+        $this->addJS(Media::getJqueryPath($version, $folder, $minifier), false);
+    }
+
+    /**
+     * Adds jQuery UI component(s) to queued JS file list
+     *
+     * @param string|array $component
+     * @param string $theme
+     * @param bool $check_dependencies
+     */
+    public function addJqueryUI($component, $theme = 'base', $check_dependencies = true)
+    {
+        if (!is_array($component)) {
+            $component = array($component);
+        }
+
+        foreach ($component as $ui) {
+            $ui_path = Media::getJqueryUIPath($ui, $theme, $check_dependencies);
+            $this->addCSS($ui_path['css'], 'all', false);
+            $this->addJS($ui_path['js'], false);
+        }
+    }
+
+    /**
+     * Adds jQuery plugin(s) to queued JS file list
+     *
+     * @param string|array $name
+     * @param string null $folder
+     * @param bool $css
+     */
+    public function addJqueryPlugin($name, $folder = null, $css = true)
+    {
+        if (!is_array($name)) {
+            $name = array($name);
+        }
+        if (is_array($name)) {
+            foreach ($name as $plugin) {
+                $plugin_path = Media::getJqueryPluginPath($plugin, $folder);
+
+                if (!empty($plugin_path['js'])) {
+                    $this->addJS($plugin_path['js'], false);
+                }
+                if ($css && !empty($plugin_path['css'])) {
+                    $this->addCSS(key($plugin_path['css']), 'all', null, false);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if the controller has been called from XmlHttpRequest (AJAX)
+     *
+     * @since 1.5
+     * @return bool
+     */
+    public function isXmlHttpRequest()
+    {
+        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    }
+
+    /**
+     * Renders controller templates and generates page content
+     *
+     * @param array|string $content Template file(s) to be rendered
+     * @throws Exception
+     * @throws SmartyException
+     */
+    protected function smartyOutputContent($content)
+    {
+        $this->context->cookie->write();
+
+        $html = '';
+        $js_tag = 'js_def';
+        $this->context->smarty->assign($js_tag, $js_tag);
+
+        if (is_array($content)) {
+            foreach ($content as $tpl) {
+                $html .= $this->context->smarty->fetch($tpl);
+            }
+        } else {
+            $html = $this->context->smarty->fetch($content);
+        }
+
+        $html = trim($html);
+
+        if (in_array($this->controller_type, array('front', 'modulefront')) && !empty($html) && $this->getLayout()) {
+            $live_edit_content = '';
+            if (!$this->useMobileTheme() && $this->checkLiveEditAccess()) {
+                $live_edit_content = $this->getLiveEditFooter();
+            }
+
+            $dom_available = extension_loaded('dom') ? true : false;
+            $defer = (bool)Configuration::get('PS_JS_DEFER');
+
+            if ($defer && $dom_available) {
+                $html = Media::deferInlineScripts($html);
+            }
+            $html = trim(str_replace(array('</body>', '</html>'), '', $html))."\n";
+
+            $this->context->smarty->assign(array(
+                $js_tag => Media::getJsDef(),
+                'js_files' =>  $defer ? array_unique($this->js_files) : array(),
+                'js_inline' => ($defer && $dom_available) ? Media::getInlineScript() : array()
+            ));
+
+            $javascript = $this->context->smarty->fetch(_PS_ALL_THEMES_DIR_.'javascript.tpl');
+
+            if ($defer && (!isset($this->ajax) || ! $this->ajax)) {
+                echo $html.$javascript;
+            } else {
+                echo preg_replace('/(?<!\$)'.$js_tag.'/', $javascript, $html);
+            }
+            echo $live_edit_content.((!isset($this->ajax) || ! $this->ajax) ? '</body></html>' : '');
+        } else {
+            echo $html;
+        }
+    }
+
+    /**
+     * Checks if a template is cached
+     *
+     * @param string $template
+     * @param string|null $idCache Cache item ID
+     * @return bool
+     */
+    protected function isCached($template, $idCache = '')
+    {
+        return false;
+    }
+	
+	public function ajaxDie($data, $asJson){
 		
-        return ($this->app()->Translate()->getStringTranslation($string,$this->module, $defaultlang));	
-	
-    }
-
-    /**
-     * renvoi le module instancié
-     * @return type
-     */
-    public function getModule(){
-        return $this->module;
-    }
-    
-    /**
-     * affiche le menu de gauche dans le backend ou front 
-     * @return array
-     */
-    protected function leftcolumnMenu(){
-        $out = array();
-        return $out;
-    }
-    /**
-     * méthode de creation et mise à jour d'une entrée
-     * @param \Library\HttpRequest $request
-     */
-    public function executeCreate(HttpRequest $request) {
-        $this->page->addVar('left_content', $this->leftcolumnMenu());
-        $dataArray = array();
-        $manager  = $this->managers->getManagerOf($this->name);
-        $edit = false;
-        $form = $this->name.'Form';
-        //cas de l'édition
-        if($request->getExists('id')){            
-            $edit =true;
-            $dataObjt = $manager->findById(intval($request->getValue('id')));
-            $dataArray = $dataObjt->tabAttrib;
-            $this->page->addVar('title', 'Modification d\'entrée');
-        }else{
-               $dataArray = $_POST;
-        }
-        $dataForm = $form::getForm($dataArray, $edit);
-        if($request->getMethod('post')){
-            if(!$request->getExists('id')){ 
-                if($manager->add($request->getSendData($_POST))){
-                    $this->app()->httpResponse()->redirect($request->refferer());
-                }else{
-                    $this->errors = _RECCORD_SAVE_FILED_;
-                }
-            }else{
-                if($manager->update($request->getSendData($_POST),'id')){
-                    $this->app()->httpResponse()->redirect($request->refferer());
-                }else{
-                    $this->errors = _RECCORD_UPDATE_FILED_;
-                }
-            }
-        }
-        
-        $this->page->addVar('errors', $this->errors);
-        $this->page->addVar('dataForm', $dataForm);
-        
-    }
-    /**
-     * méthode générique pour la suppression
-     * @param \Library\HttpRequest $request
-     */
-    public function executeDelete(HttpRequest $request) {
-        
-    }
-    /**
-     * methode générique pour le listing 
-     * @param \Library\HttpRequest $request
-     */
-    public function executeList(HttpRequest $request) {
-        
-        $this->page->addVar('left_content', $this->leftcolumnMenu());
-        
-        $this->page->addVar('title', 'Listing '.$this->title);
-
-        $manager = $this->managers->getManagerOf($this->name);
-        $datalist = $manager->findAll2();
-
-        $this->page->addVar('datalist', $datalist);
-        $this->page->addVar('pagination', $this->pagination);
-    }
-    /**
-     * retourne les configurations générales de l'application
-     * @return type
-     */
-    public function getConfig(){
-        $filename = _SITE_CONFIG_DIR_.'appconfig.xml';
-        $out = array();
-        if(file_exists($filename)){
-            $xml = simplexml_load_file($filename);
-            $param = $xml->items;
-            foreach ($param->children() as $key => $value) {
-                $out[$key] = $param->$key;
-            }
-        }
-        return $out;
-    }
-    /**
-     * retourne la configuration mail du projet
-     * @return type
-     */
-    public function getMailConfig(){
-        $filename = _SITE_CONFIG_DIR_.'mailconfig.xml';
-        $out = array();
-        if(file_exists($filename)){
-            $xml = simplexml_load_file($filename);
-            $param = $xml->items;            
-            foreach ($param->children() as $key => $value) {
-                $out[$key] = $param->$key;
-            }
-        }
-        return $out;
-    }
-    /**
-     * chargement des variables
-     * @param array $tabVar
-     */
-    private function addVar(array $tabVar){
-        if(is_array($tabVar))
-            foreach ($tabVar as $key => $value) {
-                $this->page->addVar($key, $this->{$value});
-            }
-    }
-	
-	private function getDAOInstance($className, $fromCurrent = true, $module = ''){
-		if($fromCurrent){
-			$module = '';
-			$start = strpos(__NAMESPACE__, 'modules\\') ;
-			if($start !== false){
-				$start += strlen('modules\\');
-				$end = strpos(__NAMESPACE__, '\\', $start);
-				$length = $end - $start;
-				$module = substr(__NAMESPACE__, $start, $length);
-			}
-		}
-        return Factory::getDAOInstance($className, $module);
-    }
-    
-    abstract function run();
+	}
 }
-
-?>

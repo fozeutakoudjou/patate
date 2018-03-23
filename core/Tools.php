@@ -795,7 +795,7 @@ class Tools
 	
 	public static function getClass($class)
     {
-        if (strpos($class, 'core\\') !== false){
+        if ((strpos($class, 'core\\') !== false)){
 			$override = str_replace('core\\','override\\', $class);
 			$file = dirname(__FILE__).'/../'.str_replace('\\', '/', $override);
 			if(file_exists($file)){

@@ -3,6 +3,7 @@ namespace core;
 
 class FileTools
 {
+	const VIRTUAL_CONTROLLERS_FILE = 'virtuals.xml';
     /**
      * Get list of all available controllers
      *
@@ -36,13 +37,15 @@ class FileTools
 
         $controllers = array();
         $controller_files = file_exists($dir) ? scandir($dir) :array();
+		$controllerSuffix = self::getControllerSuffix($isAdmin);
         foreach ($controller_files as $controller_filename) {
             if ($controller_filename[0] != '.') {
-                if (!strpos($controller_filename, '.php') && is_dir($dir.$controller_filename)) {
-                    $controllers += self::getControllersInDirectory($dir.$controller_filename.DIRECTORY_SEPARATOR, $controllerSuffix);
-                } elseif ($controller_filename != 'index.php') {
+				$isPhpFile = strpos($controller_filename, '.php');
+                if (!$isPhpFile && is_dir($dir.$controller_filename)) {
+                    $controllers += self::getControllersInDirectory($dir.$controller_filename.DIRECTORY_SEPARATOR, $isAdmin);
+                } elseif ($isPhpFile && ($controller_filename != 'index.php')) {
                     $key = str_replace(array(strtolower($controllerSuffix).'.php', '.php'), '', strtolower($controller_filename));
-                    $controllers[$key] = basename($controller_filename, '.php');
+                    $controllers[$key] = $dir . basename($controller_filename, '.php');
                 }
             }
         }
@@ -50,20 +53,20 @@ class FileTools
         return $controllers;
     }
 	
-	protected function getRouteFile($module = '')
+	public static function getRouteFile($isAdmin, $module = '')
     {
-		$subFolder = $this->isAdmin ? 'backend/' : 'frontend/';
-		$overrideDir = _SITE_OVERRIDE_DIR_ .(empty($module) ? '' : '/modules/' .$module.'/').'routes/';
-		$overrideFiles = $this->getRoutesInDir($overrideDir);
-		$overrideSubFiles = $this->getRoutesInDir($overrideDir.$subFolder);
+		$subFolder = self::getSubFolder($isAdmin);;
+		$overrideDir =  self::getOverrideDir($module).'routes/';
+		$overrideFiles = self::getRoutesInDir($overrideDir);
+		$overrideSubFiles = self::getRoutesInDir($overrideDir.$subFolder);
 		
 		$defaultDir = (empty($module) ? _SITE_ROUTE_DIR_ : _SITE_MODULES_DIR_ .$module.'/routes/');
-		$baseFiles = $this->getRoutesInDir($defaultDir, $overrideFiles, $overrideDir);
-		$baseSubFiles = $this->getRoutesInDir($defaultDir.$subFolder, $overrideSubFiles, $overrideDir.$subFolder);
+		$baseFiles = self::getRoutesInDir($defaultDir, $overrideFiles, $overrideDir);
+		$baseSubFiles = self::getRoutesInDir($defaultDir.$subFolder, $overrideSubFiles, $overrideDir.$subFolder);
         return array_merge($baseFiles, $baseSubFiles);
     }
 	
-	protected function getRoutesInDir($dir, $files = array(), $existListDir = '')
+	public static function getRoutesInDir($dir, $files = array(), $existListDir = '')
     {
 		$list = file_exists($dir) ? scandir($dir) : array();
 		if($list){
@@ -77,14 +80,14 @@ class FileTools
         return $files;
     }
 	
-	protected  function getRouteFiles()
+	public static function getRouteFiles($isAdmin)
     {
-		$filesRoutes = $this->getRouteFile();
+		$filesRoutes = self::getRouteFile($isAdmin);
         $modules = file_exists(_SITE_MODULES_DIR_) ? scandir(_SITE_MODULES_DIR_) : array();
 		if($modules){
 			foreach ($modules as $module) {
 				if (($module[0] != '.') && is_dir(_SITE_MODULES_DIR_.$module)) {
-					$files = $this->getRouteFile($module);
+					$files = self::getRouteFile($isAdmin, $module);
 					if(!empty($files)){
 						$filesRoutes = array_merge($filesRoutes, $files);
 					}
@@ -94,13 +97,41 @@ class FileTools
         return $filesRoutes;
     }
 	
-	protected static function getControllerSuffix($isAdmin)
+	public static function getControllerSuffix($isAdmin)
     {
-		return $isAdmin ? 'AdminController' : 'Controller'
+		return $isAdmin ? 'AdminController' : 'Controller';
     }
 	
-	protected static function getSubFolder($isAdmin)
+	public static function getSubFolder($isAdmin)
     {
-		return $isAdmin ? 'backend/' : 'frontend/'
+		return $isAdmin ? 'backend/' : 'frontend/';
+    }
+	
+	public static function getOverrideDir($module = '')
+    {
+		return empty($module) ? _SITE_OVERRIDE_DIR_ : _SITE_OVERRIDE_DIR_.'modules/' .$module.'/';
+    }
+	
+	public static function getVirtualControllers($dirs)
+    {
+		$controllers = array();
+		$dirs = is_array($dirs) ? $dirs : array($dirs);
+		foreach ($dirs as $dir) {
+			$file = $dir .self::VIRTUAL_CONTROLLERS_FILE;
+			if(file_exists($file)){
+				$dom = new \DOMDocument;
+				$dom->load($file);
+				$list = $dom->getElementsByTagName('controller');
+				foreach ($list as $item){
+					$name = $item->getAttribute('name');
+					$model = $item->getAttribute('model');
+					if(empty($model)){
+						$model = Tools::toCamelCase($name, true);
+					}
+					$controllers[$name] = $model;
+				}
+			}
+		}
+        return $controllers;
     }
 }
