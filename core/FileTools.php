@@ -104,12 +104,23 @@ class FileTools
 	
 	public static function getSubFolder($isAdmin)
     {
-		return $isAdmin ? 'backend/' : 'frontend/';
+		return ($isAdmin ? _ADMIN_SUB_FOLDER_ : _FRONT_SUB_FOLDER_).'/';
     }
 	
 	public static function getOverrideDir($module = '')
     {
-		return empty($module) ? _SITE_OVERRIDE_DIR_ : _SITE_OVERRIDE_DIR_.'modules/' .$module.'/';
+		return empty($module) ? _SITE_OVERRIDE_DIR_ : _SITE_OVERRIDE_DIR_._MODULE_FOLDER_NAME_.'/' .$module.'/';
+    }
+	
+	public static function getCoreDir($module = '')
+    {
+		return empty($module) ? _SITE_CORE_DIR_ : _SITE_MODULES_DIR_ . $module.'/';
+    }
+	
+	public static function getControllerDir($isAdmin, $module = '')
+    {
+		$subFolder = self::getSubFolder($isAdmin);
+		return (empty($module) ? _SITE_CONTROLLER_DIR_ : self::getCoreDir($module) . 'controllers/') . $subFolder;
     }
 	
 	public static function getVirtualControllers($dirs)
@@ -134,4 +145,73 @@ class FileTools
 		}
         return $controllers;
     }
+	
+	public static function normalizeDirectory($directory)
+    {
+        return rtrim($directory, '/\\').DIRECTORY_SEPARATOR;
+    }
+	
+	public static function getFinalFile($file, $suffix = '')
+    {
+		$module = self::getModuleFromFile($file);
+		$overrideDir = self::getOverrideDir($module);
+		if(strpos($file, $overrideDir)!==0){
+			$coreDir = self::getCoreDir($module);
+			$overrideFile = str_replace($coreDir, $overrideDir, $file);
+			if(file_exists($overrideFile.$suffix)){
+				$file = $overrideFile;
+			}
+		}
+		return $file;
+	}
+	
+	public static function getClass($class)
+    {
+		$file = self::getFileFromNamespace($class);
+		$finalFile = self::getFinalFile($file, '.php');
+        return self::getNamespaceFromFile($finalFile);
+    }
+	
+	public static function getTplFile($file)
+    {
+        return self::getFinalFile($file);
+    }
+	
+	public static function getMediaUri($uri)
+    {
+		$data = Media::getDirFromUri($uri, true);
+		$finalFile = self::getFinalFile($data['fileUri']);
+		return Media::getUriFormDir($finalFile, $data['urlData']);
+    }
+	
+	public static function getFileFromNamespace($namespace)
+    {
+		return _SITE_ROOT_DIR_ . '/'. str_replace('\\', '/', $namespace);
+	}
+	
+	public static function getNamespaceFromFile($file)
+    {
+		$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $file);
+		return str_replace('/', '\\', $namespace);
+	}
+	
+	public static function getModuleFromNamespace($namespace)
+    {
+		return self::getModuleFromFile(self::getFileFromNamespace($namespace));
+	}
+	
+	public static function getModuleFromFile($file)
+    {
+		$module = '';
+		$file = $file;
+		$moduleKey = _MODULE_FOLDER_NAME_.'/';
+		$start = strpos($file, $moduleKey) ;
+		if($start !== false){
+			$start += strlen($moduleKey);
+			$end = strpos($file, '\\', $start);
+			$length = $end - $start;
+			$module = substr($file, $start, $length);
+		}
+		return $module;
+	}
 }

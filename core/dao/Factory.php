@@ -1,6 +1,8 @@
 <?php
 namespace core\dao;
 use core\Tools;
+use core\FileTools;
+use core\StringTools;
 
 abstract class Factory {
     private static $daoClasses = array();
@@ -67,32 +69,27 @@ abstract class Factory {
         if (!isset(self::$daoClasses[$key]) || (self::$daoClasses[$key] === null)){
             $daoSource = self::getDAOSource();
             $class = '';
-			if(empty($module)){
-				$directories = array(_SITE_OVERRIDE_DIR_. 'dao/', _SITE_CORE_DIR_. 'dao/');
-			}else{
-				$directories = array(_SITE_MODULES_DIR_ . $module . '/dao/');
-			}
+			$directories = array(FileTools::getOverrideDir($module). 'dao/', FileTools::getCoreDir($module). 'dao/');
 			$finalClassName = '';
 			foreach($directories as $directory){
-				$folder = str_replace(_SITE_ROOT_DIR_ . '/', '', $directory);
-				$namespace = str_replace('/', '\\', $folder);
+				$namespace = FileTools::getNamespaceFromFile($directory);
 				$defaultNamespace = $namespace;
 				$defaultClassName = $className;
 				if($useImplementation){
 					if($daoStructure==_DAO_STRUCTURE_FOLDER_){
-						$namespace.=Tools::strtolower($daoSource).'\\';
+						$namespace.=strtolower($daoSource).'\\';
 						$sourceClass = $className . $daoSource;
-						$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $sourceClass . '.php';
+						$fileName = FileTools::getFileFromNamespace($namespace).$sourceClass .'.php';
 						$className = (file_exists($fileName)) ? $sourceClass : $className;
 					}else{
 						$className .= $daoSource;
 					}
-					$fileName = _SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $namespace) . $className . '.php';
+					$fileName = FileTools::getFileFromNamespace($namespace) . $className . '.php';
 				}
 				$finalClassName = '';
 				if($useImplementation && file_exists($fileName)){
 					$finalClassName = $namespace.$className;
-				}elseif($useDefault && file_exists(_SITE_ROOT_DIR_ . '/' . str_replace('\\', '/', $defaultNamespace) . $defaultClassName . '.php')){
+				}elseif($useDefault && file_exists(FileTools::getFileFromNamespace($defaultNamespace) . $defaultClassName . '.php')){
 					$finalClassName = $defaultNamespace.$defaultClassName;
 				}
 				if(!empty($finalClassName)){
@@ -101,7 +98,7 @@ abstract class Factory {
 			}
             if(empty($finalClassName)){
 				if($throwException){
-					throw new \Exception('DAO file does not exist');
+					throw new \Exception('DAO file "'.$className.'" does not exist');
 				}else{
 					self::$daoClasses[$key] = null;
 				}
@@ -126,7 +123,7 @@ abstract class Factory {
             $string = $this->_escape($string);
             
             if (!$html_ok) {
-                $string = strip_tags(Tools::nl2br($string));
+                $string = strip_tags(StringTools::nl2br($string));
             }
             
             if ($bq_sql === true) {

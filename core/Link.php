@@ -401,7 +401,7 @@ class Link
     */
     public static function getCurrentUrlProtocolPrefix()
     {
-        if (Tools::usingSecureMode()) {
+        if (self::usingSecureMode()) {
             return 'https://';
         } else {
             return 'http://';

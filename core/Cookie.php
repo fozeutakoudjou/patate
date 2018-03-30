@@ -1,6 +1,9 @@
 <?php
 namespace core;
 
+use core\models\Configuration;
+use core\models\Language;
+
 class Cookie
 {
     /** @var array Contain cookie content in a key => value format */
@@ -19,7 +22,7 @@ class Cookie
     protected $_path;
 
     /** @var array cipher tool instance */
-    protected $cipherTool;
+    protected $_cipherTool;
 
     protected $_modified = false;
 
@@ -42,7 +45,7 @@ class Cookie
         $this->_content = array();
         $this->_standalone = $standalone;
         $this->_expire = is_null($expire) ? time() + 1728000 : (int) $expire;
-        $this->_path = trim(($this->_standalone ? '' : Context::getContext()->shop->physical_uri).$path, '/\\').'/';
+        $this->_path = trim(($this->_standalone ? '' : _BASE_DIR_).$path, '/\\').'/';
         if ($this->_path{0} != '/') {
             $this->_path = '/'.$this->_path;
         }
@@ -50,13 +53,18 @@ class Cookie
         $this->_path = str_replace('%2F', '/', $this->_path);
         $this->_path = str_replace('%7E', '~', $this->_path);
         $this->_domain = $this->getDomain($shared_urls);
-        $this->_name = 'PrestaShop-'.md5(($this->_standalone ? '' : _PS_VERSION_).$name.$this->_domain);
+        $this->_name = 'Framework-'.md5(($this->_standalone ? '' : _VERSION_).$name.$this->_domain);
         $this->_allow_writing = true;
-        $this->_salt = $this->_standalone ? str_pad('', 8, md5('ps'.__FILE__)) : _COOKIE_IV_;
+        $this->_salt = $this->_standalone ? str_pad('', 8, md5('lib'.__FILE__)) : _COOKIE_IV_;
 
-        $this->cipherTool = new PhpEncryption(_NEW_COOKIE_KEY_);
-
-        $this->_secure = (bool) $secure;
+        if ($this->_standalone) {
+            $this->_cipherTool = new Blowfish(str_pad('', 56, md5('lib'.__FILE__)), str_pad('', 56, md5('iv'.__FILE__)));
+        } elseif (!Configuration::get('CIPHER_ALGORITHM') || !defined('_RIJNDAEL_KEY_')) {
+            $this->_cipherTool = new Blowfish(_COOKIE_KEY_, _COOKIE_IV_);
+        } else {
+            $this->_cipherTool = new Rijndael(_RIJNDAEL_KEY_, _RIJNDAEL_IV_);
+        }
+        $this->_secure = (bool)$secure;
 
         $this->update();
     }
@@ -70,7 +78,7 @@ class Cookie
     {
         $r = '!(?:(\w+)://)?(?:(\w+)\:(\w+)@)?([^/:]+)?(?:\:(\d*))?([^#?]+)?(?:\?([^#]+))?(?:#(.+$))?!i';
 
-        if (!preg_match($r, Tools::getHttpHost(false, false), $out) || !isset($out[4])) {
+        if (!preg_match($r, Link::getHttpHost(false, false), $out) || !isset($out[4])) {
             return false;
         }
 
@@ -79,7 +87,7 @@ class Cookie
             '{2}((25[0-5]|2[0-4][0-9]|[1]{1}[0-9]{2}|[1-9]{1}[0-9]|[0-9]){1}))$/', $out[4])) {
             return false;
         }
-        if (!strstr(Tools::getHttpHost(false, false), '.')) {
+        if (!strstr(Link::getHttpHost(false, false), '.')) {
             return false;
         }
 
@@ -260,7 +268,7 @@ class Cookie
     {
         if (isset($_COOKIE[$this->_name])) {
             /* Decrypt cookie content */
-            $content = $this->cipherTool->decrypt($_COOKIE[$this->_name]);
+            $content = $this->_cipherTool->decrypt($_COOKIE[$this->_name]);
             //printf("\$content = %s<br />", $content);
 
             /* Get cookie checksum */
@@ -291,8 +299,8 @@ class Cookie
         }
 
         //checks if the language exists, if not choose the default language
-        if (!$this->_standalone && !Language::getLanguage((int) $this->id_lang)) {
-            $this->id_lang = Configuration::get('PS_LANG_DEFAULT');
+        if (!$this->_standalone && !isset(Language::getLanguages(true)[$this->lang])) {
+            $this->lang = Configuration::get('PS_LANG_DEFAULT');
             // set detect_language to force going through Tools::setCookieLanguage to figure out browser lang
             $this->detect_language = true;
         }
@@ -329,7 +337,7 @@ class Cookie
             return false;
         }
         if ($cookie) {
-            $content = $this->cipherTool->encrypt($cookie);
+            $content = $this->_cipherTool->encrypt($cookie);
             $time = $this->_expire;
         } else {
             $content = 0;

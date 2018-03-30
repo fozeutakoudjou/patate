@@ -1,14 +1,7 @@
 <?php
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 function autoload($class){
-	var_dump(__CLASS__);
-	require_once dirname(__FILE__).'/Tools.php';
-	$class = core\Tools::getClass($class);
+	require_once dirname(__FILE__).'/FileTools.php';
+	$class = core\FileTools::getClass($class);
 	$file = dirname(__FILE__).'/../'.str_replace('\\', '/', $class);
 	require_once $file . '.php';
 }

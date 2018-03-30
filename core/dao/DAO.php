@@ -1,7 +1,7 @@
 <?php
 namespace core\dao;
 
-use core\Tools;
+use core\FileTools;
 use core\constant\dao\Operator;
 use core\constant\dao\LogicalOperator;
 use core\constant\dao\OrderWay;
@@ -157,13 +157,14 @@ class DAO{
      * @param int|array $id
      * @return Model
      */
-    public function getById($id) {
+    public function getById($id, $onlyActive = false) {
         $this->setDefinition();
         if(is_array($this->definition['primary'])){
             $fields = $id;
         }else{
             $fields =array($this->definition['primary']=>$id);
         }
+		$fields = $this->addActiveParam($fields, $onlyActive);
         $result = $this->getByFields($fields);
         return empty($result)?null:$result[0];
     }
@@ -219,6 +220,13 @@ class DAO{
 		}
 		return $params;
 	}
+	
+	protected function addActiveParam($params, $onlyActive){
+		if($onlyActive && isset($this->definition['fields']['active'])){
+            $params['active'] = true;
+        }
+		return $params;
+	}
     
     /**
      * getByField object
@@ -227,13 +235,17 @@ class DAO{
      * @param type $value
      * @return array
      */
-    public function getByField($field, $value, $returnTotal = false, $start = 0, $limit = 0,
+    public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $start = 0, $limit = 0,
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
-        return $this->getByFields($this->createFieldArray($field, $value, $operator), $returnTotal, $start, $limit, $orderBy, $orderWay);
+		$fields = $this->createFieldArray($field, $value, $operator);
+		$fields = $this->addActiveParam($fields, $onlyActive);
+        return $this->getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay);
     }
     
-    public function getByFieldCount($field, $value, $operator = Operator::EQUALS) {
-        return $this->getByFieldsCount($this->createFieldArray($field, $value, $operator), $operator);
+    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS) {
+		$fields = $this->createFieldArray($field, $value, $operator);
+		$fields = $this->addActiveParam($fields, $onlyActive);
+        return $this->getByFieldsCount($fields, $operator);
     }
 	
 	public function createFieldArray($field, $value, $operator) {
@@ -246,15 +258,13 @@ class DAO{
      * @return \models\Model
      */
     public function createModel($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false) {
-		$folder = (empty($this->module) ? _SITE_CORE_DIR_ : _SITE_MODULES_DIR_ . $this->module . '/'). 'models/';
-		$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $folder);
-		$namespace = str_replace('/', '\\', $namespace);
-		$finalClass = Tools::getClass($namespace.$this->className);
-		$file = str_replace('\\', '/', _SITE_ROOT_DIR_ . '/' .$finalClass).'.php';
+		$folder = FileTools::getCoreDir($this->module). 'models/';
+		$finalClass = FileTools::getClass(FileTools::getNamespaceFromFile($folder.$this->className));
+		$file = FileTools::getFileFromNamespace($finalClass).'.php';
 		if(file_exists($file)){
 			return new $finalClass($param, $fromDB, $lang, $useOfAllLang);
 		}else{
-			throw new \Exception('Model file does not exist');
+			throw new \Exception('Model "'.$this->className.'" does not exist');
 		}
     }
     

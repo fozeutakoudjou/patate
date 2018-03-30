@@ -1,5 +1,5 @@
 <?php
-namespace core\controllers;
+namespace core;
 
 class Template{
     
@@ -14,16 +14,17 @@ class Template{
      * @param type $value value of parameter
      */
 	public function assign($param, $value = null){
-		$values = is_array($param) ? $param ? array($param => $value);
+		$values = is_array($param) ? $param : array($param => $value);
 		foreach($values as $key=> $val){
 			$this->data[$key] = $val;
 		}
     }
 	
 	
-    public function render($file){
+    public function render($file, $checkPath = true){
 		$file = $this->getFileFullName($file);
-        if(file_exists($file))){
+		$file = $checkPath ? FileTools::getTplFile($file) : $file;
+        if(file_exists($file)){
             extract($this->data);
             ob_start();
             include $file;

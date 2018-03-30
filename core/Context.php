@@ -19,12 +19,22 @@ class Context
 
     /** @var String */
     protected $lang;
+	
+    protected $link;
+	
+    protected $controller;
+	
+	protected $langSetted = false;
+	
+    protected $initialized = false;
+	
+    protected $template = false;
     
     public static function getInstance()
     {
         if (!isset(self::$instance)) {
             self::$instance = new Context();
-            self::$instance->init();
+            self::$instance->firtInit();
         }
 
         return self::$instance;
@@ -34,35 +44,44 @@ class Context
     {
         return clone($this);
     }
-    
-    public function init()
+	
+	protected function firtInit()
     {
-		$this->lang = 'en';
-		$isAdmin = true;
 		$factory = Factory::getInstance();
-		$languageDAO = Factory::getDAOInstance('Language');
-		
+		$this->lang = Configuration::get('DEFAULT_LANG');
 		// GET ALL Language
 		$languages = Language::getLanguages();
 		$factory->setLanguages($languages);
 		$factory->setLang($this->lang);
-		$languageDAO->setLanguages($languages);
-		$languageDAO->setLang($this->lang);
-		
-		
-		
-		/* Instantiate cookie */
-		/*$cookie_lifetime = $isAdmin ? (int)Configuration::get('PS_COOKIE_LIFETIME_BO') : (int)Configuration::get('PS_COOKIE_LIFETIME_FO');
-		if ($cookie_lifetime > 0) {
-			$cookie_lifetime = time() + (max($cookie_lifetime, 1) * 3600);
+		$https_link = (Link::usingSecureMode() && Configuration::get('SSL_ENABLED')) ? 'https://' : 'http://';
+		$this->link = new Link($https_link, $https_link);
+		$this->template = new Template();
+    }
+    
+    public function init($isAdmin)
+    {
+		if(!$this->initialized){
+			$cookieLifetime = $isAdmin ? (int)Configuration::get('COOKIE_LIFETIME_BO') : (int)Configuration::get('COOKIE_LIFETIME_FO');
+			if ($cookieLifetime > 0) {
+				$cookieLifetime = time() + (max($cookieLifetime, 1) * 3600);
+			}
+			$cookieName = $isAdmin ? 'Admin' : 'Front';
+			$this->cookie = new Cookie('Front', '', $cookieLifetime);
+			
+			$daoUser = Factory::getDAOInstance('User');
+			$user = $daoUser->getById($this->cookie->id_user, true);
+			if($user != null){
+				$cookie->lang = $user->getPrefferedLang();
+			}
+			$activedLanguages = Language::getLanguages(true);
+			$lang = (isset($this->cookie->lang) && $this->cookie->lang && isset($activedLanguages[$this->cookie->lang])) ? $this->cookie->lang : Configuration::get('DEFAULT_LANG');
+			$this->cookie->lang = $lang;
+			if (!Validate::isLoadedObject($user)) {
+				$this->cookie->logout();
+			} else {
+				$customer->logged = true;
+			}
 		}
-
-		if ($isAdmin) {
-			$cookie = new Cookie('Admin', '', $cookie_lifetime);
-		} else {
-			$cookie = new Cookie('Front', '', $cookie_lifetime);
-		}
-		$this->cookie = $cookie;*/
     }
 	
 	public function setLang($lang)
@@ -70,8 +89,30 @@ class Context
 		$this->lang = $lang;
     }
 	
+	public function resetFactoryLang()
+    {
+		$factory = Factory::getInstance();
+		$factory->setLang($this->lang);
+		Factory::getDAOInstance('Configuration')->setLang($this->lang);
+    }
+	
 	public function getLang()
     {
 		return $this->lang;
+    }
+	
+	public function getCookie()
+    {
+		return $this->cookie;
+    }
+	
+	public function setController($controller)
+    {
+		$this->controller = $controller;
+    }
+	
+	public function getTemplate()
+    {
+		return $this->template;
     }
 }

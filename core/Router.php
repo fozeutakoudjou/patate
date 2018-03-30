@@ -129,11 +129,13 @@ class Router{
 		$this->useRoutes = true;
 		$this->adminVirtual = (defined('_VIRTUAL_ADMIN_DIR_') && !empty(_VIRTUAL_ADMIN_DIR_)) ? _VIRTUAL_ADMIN_DIR_ : 'admin';
         $this->setRequestUri();
-
+		
+		Context::getInstance()->init($this->isAdmin);
         // Switch language if needed (only on front)
         if (!$this->isAdmin) {
             Tools::switchLanguage();
         }
+		Context::getInstance()->resetFactoryLang();
 		if (Language::isMultiLanguageActivated()) {
             $this->multilangActivated = true;
         }
@@ -163,11 +165,12 @@ class Router{
         if (!$this->controller) {
             $this->controller = $this->useDefaultController();
         }
+		var_dump($this->moduleName);
+		var_dump($this->controller);
 		$isVirtual = false;
 		$subFolder = FileTools::getSubFolder($this->isAdmin);
-		$directories = ($this->isModule && !empty($this->moduleName)) ?
-			array(_SITE_MODULES_DIR_.$this->moduleName.'/'.$subFolder, FileTools::getOverrideDir($this->moduleName).$subFolder) :
-			array(_SITE_CONTROLLER_DIR_.$subFolder, _SITE_OVERRIDE_DIR_.'controllers/'.$subFolder);
+		$this->moduleName = $this->isModule ? $this->moduleName : '';
+		$directories = array(FileTools::getControllerDir($this->isAdmin, $this->moduleName), FileTools::getOverrideDir($this->moduleName).'controllers/'.$subFolder);
 		$controllers = FileTools::getControllers($directories, $this->isAdmin);
 		if($this->isAdmin && !isset($controllers[$this->controller])){
 			$virtuals = FileTools::getVirtualControllers($directories);
@@ -179,11 +182,11 @@ class Router{
 			$this->controller = $this->controllerNotFound;
 		}
 		if(!isset($controllers[$this->controller])){
-			throw new \Exception('Controller does not exist');
+			throw new \Exception('Controller "'.$this->controller.'" does not exist');
 		}else{
-			$class = str_replace(_SITE_ROOT_DIR_.'/', '', $controllers[$this->controller]);
-			$class = str_replace('/', '\\', $class);
-			var_dump($class);
+			$class = FileTools::getNamespaceFromFile($controllers[$this->controller]);
+			$controller = new $class();
+			$controller->run();
 		}
     }
 
@@ -200,10 +203,9 @@ class Router{
         }
         $this->requestUri = rawurldecode($this->requestUri);
 		$this->requestUri = preg_replace('#^'.preg_quote(_BASE_DIR_, '#').'#i', '/', $this->requestUri);
-		$adminUri = '/'.$this->adminVirtual.'/';
-		$endWithSlash = Tools::endsWith($this->requestUri, '/');
+		$endWithSlash = StringTools::endsWith($this->requestUri, '/');
 		$this->requestUri = $endWithSlash ? $this->requestUri : $this->requestUri . '/';
-		$this->requestUri = preg_replace('#^'.preg_quote($adminUri, '#').'#i', '/', $this->requestUri, 1, $count);
+		$this->requestUri = preg_replace('#^'.preg_quote('/'.$this->adminVirtual, '#').'[/?]#i', '/', $this->requestUri, 1, $count);
 		$this->requestUri = $endWithSlash ? $this->requestUri : substr($this->requestUri, 0, strlen($this->requestUri)-1);
 		$this->isAdmin = ($count>0);
         // If there are several languages, get language from uri
@@ -224,7 +226,7 @@ class Router{
 
         $languages = Language::getLanguages(true);
 		$lang = $context->getLang();
-		$langKeys = array_keys($languages);
+		$langKeys = $this->isAdmin ? array() : array_keys($languages);
         if (!in_array($lang,$langKeys)) {
             $langKeys[$lang] = null;
         }
@@ -531,7 +533,7 @@ class Router{
             // If the request_uri matches a static file, then there is no need to check the routes, we keep "controller_not_found" (a static file should not go through the dispatcher)
             if (!preg_match('/\.(gif|jpe?g|png|css|js|ico)$/i', parse_url($testRequestUri, PHP_URL_PATH))) {
                 // Add empty route as last route to prevent this greedy regexp to match request uri before right time
-				$lang = Context::getInstance()->getLang();
+				$lang = (string)Context::getInstance()->getLang();
                 if ($this->emptyRoute) {
                     $this->addRoute($this->emptyRoute['routeID'], $this->emptyRoute['rule'], $this->emptyRoute['controller'], $lang, array(), array());
                 }
