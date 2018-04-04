@@ -400,14 +400,14 @@ abstract class Controller
 		$assetsDef = array(
 			'css' => _CSS_PATH_,
 			'js' => _JS_PATH_,
-			'img' => _IMG_PATH_
+			'img' => _IMG_PATH_,
+			'libraries' => _ASSET_LIBRARIES_PATH_
 		);
 		$dirDef = array(
 			'tpl' => _TEMPLATES_PATH_
 		);
 		$otherPathsDef = array(
-			'upload' => _UPLOAD_PATH_,
-			'libraries' => _ASSET_LIBRARIES_PATH_,
+			'upload' => _UPLOAD_PATH_
 		);
 		$dataDir = array();
 		$typeSuffix = $this->isAdmin ? 'Admin' : 'Front';
