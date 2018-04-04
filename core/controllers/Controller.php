@@ -8,6 +8,10 @@ use core\StringTools;
 use core\FileTools;
 use core\dao\Factory;
 
+use core\models\Language;
+
+use core\models\Configuration;
+
 abstract class Controller
 {
     /** @var Context */
@@ -18,10 +22,18 @@ abstract class Controller
 	protected $templateName;
 
     protected $cssFiles = array();
+	
+    protected $cssContents = array();
 
     protected $jsFiles = array();
 	
+	protected $jsContents = array();
+	
+    protected $jsVariables = array();
+	
 	protected $additionalHeaders = array();
+	
+	protected $additionalFooters = array();
 
     protected $useOfHeader = true;
 
@@ -55,12 +67,22 @@ abstract class Controller
 	
     abstract protected function ProcessAction();
 	
+	protected $useModuleLayout = false;
+
+    protected $useModuleHeader = false;
+	
+    protected $useModuleFooter = false;
+	
+    protected $isAdmin = false;
+	
+    protected $isModule = false;
+	
     /**
      * Initialize the page
      */
     protected function init()
     {
-        
+        $this->assignBaseVariables();
     }
 
     /**
@@ -71,7 +93,11 @@ abstract class Controller
     /**
      * Sets default media list for this controller
      */
-    abstract protected function setMedia();
+    protected function setMedia(){
+		$link = $this->context->getLink();
+		$this->addJquery();
+		$this->addJSVariable('baseUrl', $link->getBaseLink(), false, Media::POSITION_FIRST);
+	}
 
     public function __construct($action = null, $ajax = null, $onlyProcess = false, $changeContextController = true)
     {
@@ -124,6 +150,7 @@ abstract class Controller
 				if (!$this->contentOnly && ($this->useOfFooter )) {
 					$this->initFooter();
 				}
+				$this->assignMedia();
 			}
             // then using ajaxDisplay[action]
             if ($this->ajax) {
@@ -193,6 +220,9 @@ abstract class Controller
      */
     public function addCSS($cssUri, $params = array(), $checkPath = true)
     {
+		if(!isset($params['media'])){
+			$params['media'] = 'all';
+		}
 		$this->cssFiles = Media::addMedia($this->cssFiles, $cssUri, $params, $checkPath);
     }
 
@@ -217,7 +247,10 @@ abstract class Controller
      */
     public function addJS($jsUri, $params = array(), $checkPath = true)
     {
-        $this->jsFiles = Media::addMedia($this->jsFiles, $jsUri, $params, $checkPath);
+		if(!isset($params['displayInHead'])){
+			$params['displayInHead'] = false;
+		}
+		$this->jsFiles = Media::addMedia($this->jsFiles, $jsUri, $params, $checkPath);
     }
 
     /**
@@ -240,7 +273,8 @@ abstract class Controller
      */
     public function addJquery($version = null, $folder = null, $minifier = true)
     {
-        $this->addJS(Media::getJqueryPath($version, $folder, $minifier), false);
+		$params = array('position' => Media::POSITION_FIRST, 'isLibrary' => true);
+        $this->addJS(Media::getJqueryPath($version, $folder, $minifier), $params, false);
     }
 
     /**
@@ -250,15 +284,15 @@ abstract class Controller
      * @param string null $folder
      * @param bool $css
      */
-    public function addJqueryPlugin($name, $folder = null, $css = true)
+    public function addJqueryPlugin($name, $folder = null, $css = true, $module = '')
     {
         if (!is_array($name)) {
             $name = array($name);
         }
-		$params = array();
+		$params = array('isLibrary' => true);
         if (is_array($name)) {
             foreach ($name as $plugin) {
-                $pluginPath = Media::getJqueryPluginPath($plugin, $folder);
+                $pluginPath = Media::getJqueryPluginPath($plugin, $folder, $css, $module);
 				if (!empty($pluginPath['js'])) {
                     $this->addJS($pluginPath['js'], $params, false);
                 }
@@ -267,6 +301,32 @@ abstract class Controller
                 }
             }
         }
+    }
+	
+	protected function addJSVariable($name, $value, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+    {
+		$this->jsVariables[$name] = array(
+			'value' => $value,
+			'displayInHead' => $displayInHead,
+			'position' => $position,
+		);
+    }
+	
+	protected function addJSContent($content, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+    {
+		$this->jsContents[] = array(
+			'content' => $content,
+			'displayInHead' => $displayInHead,
+			'position' => $position,
+		);
+    }
+	
+	protected function addCSSContent($content, $position = MEDIA::POSITION_LAST)
+    {
+		$this->cssContents[] = array(
+			'content' => $content,
+			'position' => $position,
+		);
     }
 
     /**
@@ -287,7 +347,7 @@ abstract class Controller
      * @throws Exception
      * @throws SmartyException
      */
-    protected function OutputContent($content)
+    protected function outputContent($content)
     {
         $this->context->getCookie()->write();
 
@@ -316,6 +376,7 @@ abstract class Controller
     {
         if($this->moduleName===null){
 			$this->moduleName = FileTools::getModuleFromNamespace(get_class($this));
+			$this->isModule = !empty($this->moduleName);
 		}
     }
 	
@@ -325,4 +386,70 @@ abstract class Controller
 		}
         return Factory::getDAOInstance($className, $module);
     }
+	
+	protected function assignBaseVariables()
+    {
+		$languages = Language::getLanguages();
+		$lang = /*$this->context->getLang()*/'en';
+		$language = $languages[$lang];
+		$link = $this->context->getLink();
+		$folders = array('');
+		if($this->isModule){
+			$folders[] = $this->moduleName;
+		}
+		$assetsDef = array(
+			'css' => _CSS_PATH_,
+			'js' => _JS_PATH_,
+			'img' => _IMG_PATH_
+		);
+		$dirDef = array(
+			'tpl' => _TEMPLATES_PATH_
+		);
+		$otherPathsDef = array(
+			'upload' => _UPLOAD_PATH_,
+			'libraries' => _ASSET_LIBRARIES_PATH_,
+		);
+		$dataDir = array();
+		$typeSuffix = $this->isAdmin ? 'Admin' : 'Front';
+		$pathSuffix = 'Dir';
+		$themeSuffix = 'Theme';
+		$dirSuffix = $pathSuffix;
+		foreach($folders as $module){
+			$moduleSuffix = empty($module) ? '' : 'Module';
+			foreach($assetsDef as $key => $path){
+				$dataDir[$key.$moduleSuffix.$pathSuffix] = $link->getURI($path, null, $module, false);
+				$dataDir[$key.$typeSuffix.$moduleSuffix.$pathSuffix] = $link->getURI($path, $this->isAdmin, $module, false);
+				$dataDir[$key.$typeSuffix.$themeSuffix.$moduleSuffix.$pathSuffix] = $link->getURI($path, $this->isAdmin, $module, true);
+			}
+			foreach($dirDef as $key => $path){
+				$dataDir[$key.$moduleSuffix.$dirSuffix] = FileTools::getDirectory($path, null, $module, false);
+				$dataDir[$key.$typeSuffix.$moduleSuffix.$dirSuffix] = FileTools::getDirectory($path, $this->isAdmin, $module, false);
+				$dataDir[$key.$typeSuffix.$themeSuffix.$moduleSuffix.$dirSuffix] = FileTools::getDirectory($path, $this->isAdmin, $module, true);
+			}
+			foreach($otherPathsDef as $key => $path){
+				$dataDir[$key.$moduleSuffix.$pathSuffix] = $link->getURI($path, null, $module, false);
+			}
+		}
+		$this->template->assign($dataDir);
+        $this->template->assign(array(
+			'iso' => $language->getIsoCode(),
+            'version' => _VERSION_,
+            'langIso' => $language->getIsoCode(),
+            'fullLanguageCode' => $language->getLanguageCode(),
+            'link' => $link,
+            'baseUrl' => $link->getBaseLink(),
+            'headKey' => Media::HEAD_KEY,
+            'notHeadKey' => Media::NOT_HEAD_KEY,
+            'libraryKey' => Media::LIBRARY_KEY,
+            'notLibraryKey' => Media::NOT_LIBRARY_KEY
+        ));
+    }
+	
+	protected function assignMedia(){
+		$this->template->assign('jsFiles', Media::formatList($this->jsFiles));
+		$this->template->assign('jsVariables', Media::formatList($this->jsVariables, true, false));
+		$this->template->assign('jsContents', Media::formatList($this->jsContents, true, false));
+		$this->template->assign('cssFiles', Media::formatList($this->cssFiles, false));
+		$this->template->assign('cssContents', Media::sortList($this->cssContents));
+	}
 }

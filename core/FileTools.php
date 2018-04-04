@@ -4,6 +4,7 @@ namespace core;
 class FileTools
 {
 	const VIRTUAL_CONTROLLERS_FILE = 'virtuals.xml';
+	protected static $modulesTheme = array();
     /**
      * Get list of all available controllers
      *
@@ -55,12 +56,12 @@ class FileTools
 	
 	public static function getRouteFile($isAdmin, $module = '')
     {
-		$subFolder = self::getSubFolder($isAdmin);;
+		$subFolder = self::getSubFolder($isAdmin);
 		$overrideDir =  self::getOverrideDir($module).'routes/';
 		$overrideFiles = self::getRoutesInDir($overrideDir);
 		$overrideSubFiles = self::getRoutesInDir($overrideDir.$subFolder);
 		
-		$defaultDir = (empty($module) ? _SITE_ROUTE_DIR_ : _SITE_MODULES_DIR_ .$module.'/routes/');
+		$defaultDir = self::getRouteDir($module);
 		$baseFiles = self::getRoutesInDir($defaultDir, $overrideFiles, $overrideDir);
 		$baseSubFiles = self::getRoutesInDir($defaultDir.$subFolder, $overrideSubFiles, $overrideDir.$subFolder);
         return array_merge($baseFiles, $baseSubFiles);
@@ -107,20 +108,46 @@ class FileTools
 		return ($isAdmin ? _ADMIN_SUB_FOLDER_ : _FRONT_SUB_FOLDER_).'/';
     }
 	
+	public static function getThemeName($isAdmin, $module = '')
+    {
+		$theme = ($isAdmin ? _ADMIN_THEME_NAME_ : _FRONT_THEME_NAME_);
+		if(!empty($module)){
+			if(!isset(self::$modulesTheme[$module])){
+				$path = _TEMPLATES_PATH_.'/'.self::getSubFolder($isAdmin).'themes/'.$theme;
+				if(!file_exists(self::getCoreDir($module).$path) && !file_exists(self::getOverrideDir($module) . $path)){
+					$theme = self::getDefaultThemeName($isAdmin);
+				}
+				self::$modulesTheme[$module] = $theme;
+			}
+			$theme = self::$modulesTheme[$module];
+		}
+		return $theme;
+    }
+	
+	public static function getDefaultThemeName($isAdmin)
+    {
+		return ($isAdmin ? _ADMIN_DEFAULT_NAME_ : _FRONT_DEFAULT_NAME_);
+    }
+	
 	public static function getOverrideDir($module = '')
     {
-		return empty($module) ? _SITE_OVERRIDE_DIR_ : _SITE_OVERRIDE_DIR_._MODULE_FOLDER_NAME_.'/' .$module.'/';
+		return empty($module) ? _SITE_OVERRIDE_DIR_ : _SITE_OVERRIDE_DIR_._MODULES_PATH_.'/' .$module.'/';
     }
 	
 	public static function getCoreDir($module = '')
     {
-		return empty($module) ? _SITE_CORE_DIR_ : _SITE_MODULES_DIR_ . $module.'/';
+		return empty($module) ? _SITE_ROOT_DIR_ . _CORE_PATH_.'/' : _SITE_MODULES_DIR_ . $module.'/';
     }
 	
 	public static function getControllerDir($isAdmin, $module = '')
     {
-		$subFolder = self::getSubFolder($isAdmin);
-		return (empty($module) ? _SITE_CONTROLLER_DIR_ : self::getCoreDir($module) . 'controllers/') . $subFolder;
+		return self::getCoreDir($module) . _CONTROLLERS_PATH_ .'/' . self::getSubFolder($isAdmin);
+    }
+	
+	
+	public static function getTemplateDir($isAdmin = null, $module = '', $useOfTheme = true)
+    {
+		return self::getDirectory(_TEMPLATES_PATH_, $isAdmin, $module, $useOfTheme);
     }
 	
 	public static function getVirtualControllers($dirs)
@@ -137,7 +164,7 @@ class FileTools
 					$name = $item->getAttribute('name');
 					$model = $item->getAttribute('model');
 					if(empty($model)){
-						$model = Tools::toCamelCase($name, true);
+						$model = StringTools::toCamelCase($name, true);
 					}
 					$controllers[$name] = $model;
 				}
@@ -151,12 +178,18 @@ class FileTools
         return rtrim($directory, '/\\').DIRECTORY_SEPARATOR;
     }
 	
+	public static function standardizeFile($directory)
+    {
+        return str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $directory);
+    }
+	
 	public static function getFinalFile($file, $suffix = '')
     {
+		$file = self::standardizeFile($file);
 		$module = self::getModuleFromFile($file);
-		$overrideDir = self::getOverrideDir($module);
+		$overrideDir = self::standardizeFile(self::getOverrideDir($module));
 		if(strpos($file, $overrideDir)!==0){
-			$coreDir = self::getCoreDir($module);
+			$coreDir = self::standardizeFile(self::getCoreDir($module));
 			$overrideFile = str_replace($coreDir, $overrideDir, $file);
 			if(file_exists($overrideFile.$suffix)){
 				$file = $overrideFile;
@@ -179,19 +212,19 @@ class FileTools
 	
 	public static function getMediaUri($uri)
     {
-		$data = Media::getDirFromUri($uri, true);
+		$data = self::getDirFromUri($uri, true);
 		$finalFile = self::getFinalFile($data['fileUri']);
-		return Media::getUriFormDir($finalFile, $data['urlData']);
+		return Context::getInstance()->getLink()->getURIFormDir($finalFile);
     }
 	
 	public static function getFileFromNamespace($namespace)
     {
-		return _SITE_ROOT_DIR_ . '/'. str_replace('\\', '/', $namespace);
+		return self::standardizeFile(_SITE_ROOT_DIR_ . $namespace);
 	}
 	
 	public static function getNamespaceFromFile($file)
     {
-		$namespace = str_replace(_SITE_ROOT_DIR_ . '/', '', $file);
+		$namespace = str_replace(self::standardizeFile(_SITE_ROOT_DIR_), '', self::standardizeFile($file));
 		return str_replace('/', '\\', $namespace);
 	}
 	
@@ -203,15 +236,60 @@ class FileTools
 	public static function getModuleFromFile($file)
     {
 		$module = '';
-		$file = $file;
-		$moduleKey = _MODULE_FOLDER_NAME_.'/';
+		$file = self::standardizeFile($file);
+		$moduleKey = self::standardizeFile(_MODULES_PATH_.DIRECTORY_SEPARATOR);
 		$start = strpos($file, $moduleKey) ;
 		if($start !== false){
 			$start += strlen($moduleKey);
-			$end = strpos($file, '\\', $start);
+			$end = strpos($file, DIRECTORY_SEPARATOR, $start);
 			$length = $end - $start;
 			$module = substr($file, $start, $length);
 		}
 		return $module;
+	}
+	
+	public static function resolveFilename($fileName)
+	{
+		$fileName = str_replace('//', '/', $fileName);
+		$parts = explode('/', $fileName);
+		$out = array();
+		foreach ($parts as $part){
+			if ($part == '.') continue;
+			if ($part == '..') {
+				array_pop($out);
+				continue;
+			}
+			$out[] = $part;
+		}
+		return implode('/', $out);
+	}
+	public static function getRouteDir($module = '', $isAdmin = null)
+    {
+		return self::getDirectory(_ROUTES_PATH_, $isAdmin, $module);
+	}
+	public static function getLibrariesDir($module = '')
+    {
+		return self::getDirectory(_LIBRARIES_PATH_, null, $module);
+	}
+	public static function getDirectory($path, $isAdmin = null, $module = '', $useOfTheme = true)
+    {
+		return self::getCoreDir($module) . self::getPath($path, $isAdmin, $module, $useOfTheme);
+    }
+	
+	public static function getPath($path, $isAdmin = null, $module = '', $useOfTheme = true)
+    {
+		$returnPath = $path.'/';
+		if($isAdmin!==null){
+			$returnPath .= self::getSubFolder($isAdmin) . ($useOfTheme ? 'themes/'.self::getThemeName($isAdmin, $module).'/' : '');
+		}
+		return $returnPath;
+    }
+	
+	public static function getDirFromUri($uri, $asArray = false)
+    {
+		$urlData = parse_url($uri);
+        $fileUri = self::standardizeFile(_SITE_ROOT_DIR_.StringTools::strReplaceOnce(_BASE_DIR_, '', $urlData['path']));
+		$result = ($asArray ? array('urlData' => $urlData, 'fileUri' => $fileUri) : $fileUri);
+		return $result;
 	}
 }

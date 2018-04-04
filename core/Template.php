@@ -7,6 +7,29 @@ class Template{
 	
 	protected $data = array();
 	
+	protected $tools;
+	
+	protected static $instance;
+	
+	protected $lastRenderedTpl;
+	
+	protected function __construct(){
+		$this->tools = new TemplateTools();
+    }
+	
+	public static function getInstance()
+    {
+        if (!isset(self::$instance)) {
+            self::$instance = new Template();
+        }
+        return self::$instance;
+    }
+	
+	public function getLastRenderedTpl()
+    {
+        return $this->lastRenderedTpl;
+    }
+	
 	/**
      * Add parameters in file 
      *
@@ -25,6 +48,8 @@ class Template{
 		$file = $this->getFileFullName($file);
 		$file = $checkPath ? FileTools::getTplFile($file) : $file;
         if(file_exists($file)){
+			$this->lastRenderedTpl = $file;
+			$this->assign('tools', $this->tools);
             extract($this->data);
             ob_start();
             include $file;
@@ -34,6 +59,28 @@ class Template{
         } else {
             throw new \Exception('Template file "' . $file . '" does not exist');
         }
+    }
+	
+	public function includeTpl($file, $isAbsolutePath = true, $data = array(), $useCurrentData = true, $checkPath = true){
+		$initialLastRenderedTpl = $this->lastRenderedTpl;
+		$initialData = $this->data;
+		if(!$isAbsolutePath){
+			$file = FileTools::resolveFilename(dirname($initialLastRenderedTpl).'/'.$file);
+		}
+		$file = $this->getFileFullName($file);
+		$file = $checkPath ? FileTools::getTplFile($file) : $file;
+		$data = $useCurrentData ? array_merge($initialData, $data) : $data;
+        if(file_exists($file)){
+			$data['tools'] = $this->tools;
+            extract($data);
+			$this->lastRenderedTpl = $file;
+			$this->data = $data;
+            include $file;
+        } else {
+            throw new \Exception('Template file "' . $file . '" does not exist');
+        }
+		$this->lastRenderedTpl = $initialLastRenderedTpl;
+		$this->data = $initialData;
     }
 	
 	public function getFileExtention(){

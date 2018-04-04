@@ -4,14 +4,18 @@ namespace core\controllers\backend;
 use core\controllers\Controller;
 
 use core\Tools;
+use core\Media;
 use core\StringTools;
+use core\FileTools;
 use core\models\Configuration;
 
 abstract class AdminController extends Controller
 {
 
     /** @var array */
-    protected $modelActions = array();
+    protected $modelActions;
+	
+    protected $modelDefinition;
 
     /** @var string */
     protected $layout = 'layout';
@@ -22,8 +26,10 @@ abstract class AdminController extends Controller
 
     public function __construct()
     {
+		$this->isAdmin = true;
         global $timer_start;
         $this->timer_start = $timer_start;
+        $this->modelActions = array();
         parent::__construct();
 
         /*$default_theme_name = 'default';
@@ -140,10 +146,7 @@ abstract class AdminController extends Controller
 	} 
 	
 	protected function initFooter(){
-		$this->template->assign('cssFiles', $this->cssFiles);
-        $this->template->assign('jsFiles', $this->jsFiles);
-
-        $this->template->assign(array(
+		$this->template->assign(array(
             'modals' => $this->renderModal(),
         ));
 	}
@@ -158,6 +161,7 @@ abstract class AdminController extends Controller
         }
         return $modalRender;
     }
+	
 	protected function redirect(){
 		
 	}
@@ -167,9 +171,15 @@ abstract class AdminController extends Controller
 	}
 
     protected function setMedia(){
-		$this->addJquery();
+		parent::setMedia();
+		$link = $this->context->getLink();
+		$librariesUri = $link->getAssetLibrariesURI();
         $this->addjQueryPlugin(array('scrollTo', 'alerts', 'chosen', 'autosize', 'fancybox' ));
         $this->addjQueryPlugin('growl', null, false);
+		$this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'bootstrap/bootstrap.min.js', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'js/modernizr.min.js', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'js/moment-with-langs.min.js', array('isLibrary' => true), false);
 	}
 
     protected function display()
@@ -193,27 +203,25 @@ abstract class AdminController extends Controller
 		if(isset($this->processResult['content'])){
 			$page = $this->processResult['content'];
 		}
-
-        $this->template->assign(
+		$this->template->assign(
             array(
                 'page' => $page,
-                'header' => $this->renderTpl('header'),
-                'footer' => $this->renderTpl('footer'),
+                'header' => $this->renderTpl('header', $this->useModuleHeader),
+                'footer' => $this->renderTpl('footer', $this->useModuleFooter),
             )
         );
 
-        $this->outputContent($this->getTemplateFile($this->layout));
+        $this->outputContent($this->getTemplateFile($this->layout, $this->useModuleLayout));
     }
 	
-	protected function renderTpl($name)
+	protected function renderTpl($name, $useModule = true)
     {
-		return $this->template->render($this->getTemplateFile($name));
+		return $this->template->render($this->getTemplateFile($name, $useModule));
 	}
 	
-	protected function getTemplateFile($name)
+	protected function getTemplateFile($name, $useModule = true)
     {
-		$file = empty($this->moduleName) ? _SITE_ADMIN_THEME_TPL_DIR_ :  _SITE_MODULES_DIR_ . $this->moduleName . '/' . 'templates/'._ADMIN_SUB_FOLDER_.'/'._ADMIN_THEME_NAME_.'/';
-		$file .=$name;
-		return $file;
+		$module = $useModule ? $this->moduleName:'';
+		return FileTools::getTemplateDir($this->isAdmin, $module) . $name;
 	}
 }

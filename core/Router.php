@@ -165,12 +165,13 @@ class Router{
         if (!$this->controller) {
             $this->controller = $this->useDefaultController();
         }
-		var_dump($this->moduleName);
-		var_dump($this->controller);
 		$isVirtual = false;
 		$subFolder = FileTools::getSubFolder($this->isAdmin);
 		$this->moduleName = $this->isModule ? $this->moduleName : '';
-		$directories = array(FileTools::getControllerDir($this->isAdmin, $this->moduleName), FileTools::getOverrideDir($this->moduleName).'controllers/'.$subFolder);
+		$directories = array(
+			FileTools::getControllerDir($this->isAdmin, $this->moduleName),
+			FileTools::getOverrideDir($this->moduleName)._CONTROLLERS_PATH_.'/'.$subFolder
+		);
 		$controllers = FileTools::getControllers($directories, $this->isAdmin);
 		if($this->isAdmin && !isset($controllers[$this->controller])){
 			$virtuals = FileTools::getVirtualControllers($directories);

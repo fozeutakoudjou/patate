@@ -39,11 +39,6 @@ class Context
 
         return self::$instance;
     }
-    
-    public function cloneContext()
-    {
-        return clone($this);
-    }
 	
 	protected function firtInit()
     {
@@ -55,7 +50,7 @@ class Context
 		$factory->setLang($this->lang);
 		$https_link = (Link::usingSecureMode() && Configuration::get('SSL_ENABLED')) ? 'https://' : 'http://';
 		$this->link = new Link($https_link, $https_link);
-		$this->template = new Template();
+		$this->template = Template::getInstance();
     }
     
     public function init($isAdmin)
@@ -114,5 +109,9 @@ class Context
 	public function getTemplate()
     {
 		return $this->template;
+    }
+	public function getLink()
+    {
+		return $this->link;
     }
 }

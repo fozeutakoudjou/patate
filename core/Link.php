@@ -9,22 +9,22 @@ class Link
     protected $url;
     public static $cache = array('page' => array());
 
-    public $protocol_link;
-    public $protocol_content;
+    protected $protocolLink;
+    protected $protocolContent;
 
-    protected $ssl_enable;
+    protected $sslEnable;
 
     /**
      * Constructor (initialization only)
      */
-    public function __construct($protocol_link = null, $protocol_content = null)
+    public function __construct($protocolLink = null, $protocolContent = null)
     {
         $this->allow = (int)Configuration::get('REWRITING_SETTINGS');
         $this->url = $_SERVER['SCRIPT_NAME'];
-        $this->protocol_link = $protocol_link;
-        $this->protocol_content = $protocol_content;
+        $this->protocolLink = $protocolLink;
+        $this->protocolContent = $protocolContent;
 
-        $this->ssl_enable = Configuration::get('SSL_ENABLED');
+        $this->sslEnable = Configuration::get('SSL_ENABLED');
     }
 
     /**
@@ -323,24 +323,24 @@ class Link
         return $lang.'/';
     }
 
-    public function getBaseLink($ssl = null, $relative_protocol = false)
+    public function getBaseLink($ssl = null, $relativeProtocol = false)
     {
-        static $force_ssl = null;
+        static $forceSsl = null;
 
         if ($ssl === null) {
-            if ($force_ssl === null) {
-                $force_ssl = (Configuration::get('SSL_ENABLED') && Configuration::get('SSL_ENABLED_EVERYWHERE'));
+            if ($forceSsl === null) {
+                $forceSsl = (Configuration::get('SSL_ENABLED') && Configuration::get('SSL_ENABLED_EVERYWHERE'));
             }
-            $ssl = $force_ssl;
+            $ssl = $forceSsl;
         }
 
-        if ($relative_protocol) {
-            $base = '//'.($ssl && $this->ssl_enable ? $shop->domain_ssl : $shop->domain);
+        if ($relativeProtocol) {
+            $base = '//';
         } else {
-            $base = (($ssl && $this->ssl_enable) ? 'https://'.$shop->domain_ssl : 'http://'.$shop->domain);
+            $base = ($ssl && $this->sslEnable) ? 'https://': 'http://';
         }
 
-        return $base.$shop->getBaseURI();
+        return $base._BASE_DOMAIN_._BASE_DIR_;
     }
 	
 	/**
@@ -417,4 +417,24 @@ class Link
     {
         return (!is_null($use_ssl) && $use_ssl ? 'https://' : 'http://');
     }
+	
+	public function getAssetLibrariesURI($module = '', $ssl = null, $relativeProtocol = false)
+    {
+       return $this->getURI(_ASSET_LIBRARIES_PATH_, null, $module, false, $ssl, $relativeProtocol);
+    }
+	
+	public function getURI($path, $isAdmin = null, $module = '', $useOfTheme = true, $ssl = null, $relativeProtocol = false)
+    {
+		$base = $this->getBaseLink($ssl, $relativeProtocol).(empty($module)?_CORE_PATH_:_MODULES_PATH_.'/'.$module).'/';
+        return $base.FileTools::getPath($path, $isAdmin, $module, $useOfTheme);
+    }
+	
+	public function getURIFormDir($dir)
+    {
+		$fileUri = FileTools::standardizeFile($dir);
+		$finalUri = str_replace(FileTools::standardizeFile(_SITE_ROOT_DIR_), '', $fileUri);
+		$finalUri = str_replace('\\', '/', $finalUri);
+		$finalUri = $this->getBaseLink() .$finalUri;
+		return $finalUri;
+	}
 }

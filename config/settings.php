@@ -11,10 +11,10 @@ define('_DB_PREFIX_', 'c2w_');
 define('_MYSQL_ENGINE_', 'InnoDB');
 
 define('_BASE_DIR_', '/');
-define('_BASE_URI_', 'http://patate.localhost'._BASE_DIR_);
+define('_BASE_DOMAIN_', 'patate.localhost');
 
 /*define('_BASE_DIR_', '/patate/');
-define('_BASE_URI_', 'http://localhost'._BASE_DIR_);*/
+define('_BASE_URI_', 'localhost'._BASE_DIR_);*/
 
 /* Constantes principales*/
 define('_VIRTUAL_ADMIN_DIR_', 'admin');
@@ -31,15 +31,13 @@ define('_RIJNDAEL_IV_', 'xZmVW5aMgqSn7cia3gFH0g==');
 
 
 /*configuration des données du site*/
-define('__NAME__', 'Crystals Framework');
-define('__EMAIL__', 'contact@crystals-services.com');
+define('__NAME__', 'NAME');
+define('__EMAIL__', 'contact@gmail.com');
 define('__AUTHOR__', 'Crystals Services Sarl');
-define('__AUTHOR_URL__', 'http://crystals-services.com');
+define('__AUTHOR_URL__', 'https://www.google.com');
 define('__DEFAULT_DEVISE__', '€;');
 define('__DEFAULT_ISODEVISE__', 'euro');
-define('__LIMIT_PER_PAGE__', 8);
-define('__CACHE_LIFETIME__', 3600);
-define('__TITLE__', 'Crystals framework');
+define('__TITLE__', 'NAME');
 define('__LOGO__', 'logo.png');
 define('__LOGO_MAIL__', 'logo-mail.png');
 ?>

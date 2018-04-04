@@ -3,29 +3,24 @@ namespace core;
 
 class TemplateTools{
 	
-	public function include($file){
-		$file = $this->getFileFullName($file);
-        if(file_exists($file))){
-            extract($this->data);
-            ob_start();
-            include $file;
-            $buffer = ob_get_contents();
-            @ob_end_clean();
-            return $buffer;
-        } else {
-            throw new \Exception('Template file "' . $file . '" does not exist');
-        }
+	public function includeTpl($template, $isAbsolutePath = true, $data = array(), $useCurrentData = true, $checkPath = true){
+		
+		Template::getInstance()->includeTpl($template, $isAbsolutePath, $data, $useCurrentData, $checkPath);
     }
 	
-	public function getFileExtention(){
-		return $this->fileExtention;
+	public function jsonEncode($value){
+		return Tools::jsonEncode($value);
 	}
 	
-	public function exist($file){
-		return file_exists($this->getFileFullName($file));
+	public function escapeHtml($value){
+		return $value;
 	}
 	
-	public function getFileFullName($file){
-		return $file.'.'.$this->fileExtention;
+	public function getMedia($uri){
+		return FileTools::getMediaUri($uri);
+	}
+	
+	public function l($string){
+		return $string;
 	}
 }

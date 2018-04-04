@@ -217,7 +217,7 @@ class Tools
         if (function_exists('json_decode')) {
             return json_decode($json, $assoc);
         } else {
-            include_once(_SITE_LIBRARIES_DIR.'json/json.php');
+            include_once(FileTools::getLibrariesDir().'json/json.php');
             $pear_json = new \Services_JSON(($assoc) ? SERVICES_JSON_LOOSE_TYPE : 0);
             return $pear_json->decode($json);
         }
@@ -234,7 +234,7 @@ class Tools
         if (function_exists('json_encode')) {
             return json_encode($data);
         } else {
-            include_once(_SITE_LIBRARIES_DIR.'json/json.php');
+            include_once(FileTools::getLibrariesDir().'json/json.php');
             $pear_json = new \Services_JSON();
             return $pear_json->encode($data);
         }
@@ -265,7 +265,7 @@ class Tools
 
     public static function purifyHTML($html, $uri_unescape = null, $allow_style = false)
     {
-        require_once(_SITE_LIBRARIES_DIR.'htmlpurifier/HTMLPurifier.standalone.php');
+        require_once(FileTools::getLibrariesDir().'htmlpurifier/HTMLPurifier.standalone.php');
 
         static $use_html_purifier = null;
         static $purifier = null;

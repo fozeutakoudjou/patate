@@ -398,12 +398,12 @@ class DAO{
 		return $this->isImplementation ? $this : $this->implementation;
     }
 	
-	public function reset($params = array())
+	public function reset()
     {
-        $this->lang = $this->defaultLang;
-        $this->languages = $this->defaultLanguages;
-		$this->useOfLang = true;
-		$this->useOfAllLang = false;
-		$this->saveOfLangField = true;
+        $this->setLang($this->defaultLang);
+        $this->setLanguages($this->defaultLanguages);
+		$this->setUseOfLang(true);
+		$this->setUseOfAllLang(false);
+		$this->setSaveOfLangField(true);
     }
 }

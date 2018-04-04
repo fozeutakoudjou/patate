@@ -2,9 +2,29 @@
 
 define('_FRONT_SUB_FOLDER_', 'frontend');
 define('_ADMIN_SUB_FOLDER_', 'backend');
-define('_OVERRIDE_FOLDER_NAME_', 'override');
-define('_MODULE_FOLDER_NAME_', 'modules');
-define('_CORE_FOLDER_NAME_', 'core');
+define('_OVERRIDE_PATH_', 'override');
+define('_MODULES_PATH_', 'modules');
+define('_TEMPLATES_PATH_', 'templates');
+define('_CONTROLLERS_PATH_', 'controllers');
+define('_CORE_PATH_', 'core');
+define('_ROUTES_PATH_', 'routes');
+define('_LIBRARIES_PATH_', 'libraries');
+
+
+define('_WEB_PATH_', 'web');
+define('_ASSETS_PATH_', _WEB_PATH_.'/assets');
+define('_UPLOAD_PATH_', _WEB_PATH_.'/upload');
+define('_UPLOAD_TMP_PATH_',  _UPLOAD_PATH_.'/tmp');
+
+/* JS */
+define('_JS_PATH_', _ASSETS_PATH_.'/js');
+define('_ASSET_LIBRARIES_PATH_', _ASSETS_PATH_.'/libraries');
+
+/* CSS */
+define('_CSS_PATH_', _ASSETS_PATH_.'/css');
+
+/* Image URLs */
+define('_IMG_PATH_', _ASSETS_PATH_.'/img');
 $currentDir = dirname(__FILE__);
 
 if( !defined('IN') )
@@ -29,33 +49,9 @@ else
 define('_VERSION_', '1.0.0');
 define('_JQUERY_VERSION_', '1.11.0');
 
-/* Directories : repertoire physique, toute constante _SITE_ doit pointer sur un repertoire physique*/
-define('_SITE_ROOT_DIR_',    realpath($currentDir.'/..'));
-define('_SITE_LIBRARIES_DIR_',_SITE_ROOT_DIR_.'/libraries/');
-define('_SITE_CORE_DIR_',_SITE_ROOT_DIR_.'/'._CORE_FOLDER_NAME_.'/');
-define('_SITE_CACHE_DIR_',_SITE_ROOT_DIR_.'/cache/');
-define('_SITE_OVERRIDE_DIR_',_SITE_ROOT_DIR_.'/'._OVERRIDE_FOLDER_NAME_.'/');
-define('_SITE_CONTROLLER_DIR_',_SITE_CORE_DIR_.'controllers/');
-define('_SITE_ROUTE_DIR_',_SITE_CORE_DIR_.'routes/');
-define('_SITE_MODULES_DIR_',_SITE_ROOT_DIR_.'/'._MODULE_FOLDER_NAME_.'/');
-define('_SITE_MAIL_TPL_DIR_', _SITE_ROOT_DIR_.'/Mails/');
-define('_SITE_LOG_DIR_', _SITE_ROOT_DIR_.'/log/');
+define('_SITE_ROOT_DIR_',    realpath($currentDir.'/..').DIRECTORY_SEPARATOR);
 
-define('_SITE_WEB_DIR_',  _SITE_ROOT_DIR_.'/web/');
-define('_SITE_UPLOAD_DIR_',  _SITE_WEB_DIR_.'upload/');
-define('_SITE_UPLOAD_TMP_DIR_',  _SITE_UPLOAD_DIR_.'tmp/');
-define('_SITE_ASSETS_DIR_',_SITE_WEB_DIR_.'assets/');
 
-/* IMG */
-define('_SITE_IMG_DIR_', _SITE_ASSETS_DIR_.'img/');
-define('_SITE_FRONT_IMG_DIR_', _SITE_ASSETS_DIR_._FRONT_SUB_FOLDER_.'/');
-define('_SITE_ADMIN_IMG_DIR_', _SITE_ASSETS_DIR_._ADMIN_SUB_FOLDER_.'/');
-
-define('_SITE_TPL_DIR_',  _SITE_CORE_DIR_.'templates/');
-define('_SITE_FRONT_TPL_DIR_', _SITE_TPL_DIR_._FRONT_SUB_FOLDER_.'/');
-define('_SITE_FRONT_THEMES_TPL_DIR_', _SITE_FRONT_TPL_DIR_.'themes/');
-define('_SITE_FRONT_THEME_TPL_DIR_', _SITE_FRONT_THEMES_TPL_DIR_._FRONT_THEME_NAME_.'/');
-
-define('_SITE_ADMIN_TPL_DIR_', _SITE_TPL_DIR_._ADMIN_SUB_FOLDER_.'/');
-define('_SITE_ADMIN_THEMES_TPL_DIR_', _SITE_ADMIN_TPL_DIR_.'themes/');
-define('_SITE_ADMIN_THEME_TPL_DIR_', _SITE_ADMIN_THEMES_TPL_DIR_._ADMIN_THEME_NAME_.'/');
+define('_SITE_CACHE_DIR_',_SITE_ROOT_DIR_.'cache/');
+define('_SITE_OVERRIDE_DIR_',_SITE_ROOT_DIR_._OVERRIDE_PATH_.'/');
+define('_SITE_MODULES_DIR_',_SITE_ROOT_DIR_._MODULES_PATH_.'/');
