@@ -9,6 +9,8 @@ use core\constant\dao\OrderBy;
 
 class DAO{
     
+	const FOREIGN_SEPARATOR = '___';
+	
     /** @var Factory factory */
     protected $factory;
 	
@@ -69,6 +71,14 @@ class DAO{
         }
     }
 	
+	public function save($model) {
+		$this->setDefinition($model);
+		$result = null;
+		if(!is_array($this->definition['primary'])){
+			$result = empty($model->getPropertyValue($this->definition['primary'])) ? $this->add($model) : $this->update($model);
+		}
+		return $result;
+	}
     /**
      * Add object
      *
@@ -92,7 +102,7 @@ class DAO{
 		if($result){
 			$result = $this->getImplementation()->saveMultilangFields($model, false);
 		}
-		$this->saveOfLangField = true;
+		$this->setSaveOfLangField(true);
         return $result;
     }
 	
@@ -127,7 +137,7 @@ class DAO{
 		if($result){
 			$result = $this->getImplementation()->saveMultilangFields($model, true, $newLangFields);
 		}
-		$this->saveOfLangField = true;
+		$this->setSaveOfLangField(true);
         return $result;
     }
     
@@ -157,7 +167,7 @@ class DAO{
      * @param int|array $id
      * @return Model
      */
-    public function getById($id, $onlyActive = false) {
+    public function getById($id, $onlyActive = false, $associations = array()) {
         $this->setDefinition();
         if(is_array($this->definition['primary'])){
             $fields = $id;
@@ -165,7 +175,7 @@ class DAO{
             $fields =array($this->definition['primary']=>$id);
         }
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        $result = $this->getByFields($fields);
+        $result = $this->getByFields($fields, false, $associations);
         return empty($result)?null:$result[0];
     }
     
@@ -176,13 +186,13 @@ class DAO{
      * @return array
      */
     public function getAll($returnTotal = false, $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $onlyActive = false) {
+            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $onlyActive = false, $associations = array()) {
         $this->setDefinition();
         $fields = array();
         if($onlyActive && isset($this->definition['fields']['active'])){
             $fields['active'] = true;
         }
-        return $this->getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay);
+        return $this->getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay);
     }
     
     /**
@@ -191,13 +201,13 @@ class DAO{
      * @param array $fields
      * @return array
      */
-    public function getByFields($fields, $returnTotal = false, $start = 0, $limit = 0,
+    public function getByFields($fields, $returnTotal = false, $associations = array(), $start = 0, $limit = 0,
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
         $this->setDefinition();
 		$fields = $this->addDelectedParam($fields);
-        $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay, $logicalOperator);
-		$this->useOfLang = true;
-		$this->useOfAllLang = false;
+        $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay, $logicalOperator);
+		$this->setUseOfLang(true);
+		$this->setUseOfAllLang(false);
 		return $result;
     }
     
@@ -214,6 +224,30 @@ class DAO{
         return $this->getImplementation()->_getByFieldsCount($fields, $logicalOperator);
     }
 	
+	 /**
+     * getByField object
+     *
+     * @param string $field
+     * @param type $value
+     * @return array
+     */
+    public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $associations = array(), $start = 0, $limit = 0,
+            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
+		$fields = $this->createFieldArray($field, $value, $operator);
+		$fields = $this->addActiveParam($fields, $onlyActive);
+        return $this->getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay);
+    }
+    
+    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS) {
+		$fields = $this->createFieldArray($field, $value, $operator);
+		$fields = $this->addActiveParam($fields, $onlyActive);
+        return $this->getByFieldsCount($fields, $operator);
+    }
+	
+	public function createFieldArray($field, $value, $operator) {
+        return array($field => array('value' => $value, 'operator' => $operator));
+    }
+	
 	protected function addDelectedParam($params){
 		if(isset($this->definition['fields']['deleted'])){
 			$params['deleted'] = 0;
@@ -227,30 +261,6 @@ class DAO{
         }
 		return $params;
 	}
-    
-    /**
-     * getByField object
-     *
-     * @param string $field
-     * @param type $value
-     * @return array
-     */
-    public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
-		$fields = $this->createFieldArray($field, $value, $operator);
-		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFields($fields, $returnTotal, $start, $limit, $orderBy, $orderWay);
-    }
-    
-    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS) {
-		$fields = $this->createFieldArray($field, $value, $operator);
-		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFieldsCount($fields, $operator);
-    }
-	
-	public function createFieldArray($field, $value, $operator) {
-        return array($field => array('value' => $value, 'operator' => $operator));
-    }
     
     /**
      * Create object
@@ -405,5 +415,23 @@ class DAO{
 		$this->setUseOfLang(true);
 		$this->setUseOfAllLang(false);
 		$this->setSaveOfLangField(true);
+    }
+	
+	public function formatForeignField($field, $externalField)
+    {
+        return $field . self::FOREIGN_SEPARATOR . $externalField;
+    }
+	
+	public function extractForeignField($string)
+    {
+		$result = array('field'=>$string);
+		if(strpos($string, self::FOREIGN_SEPARATOR)){
+			$tab = explode(self::FOREIGN_SEPARATOR, $string);
+			$result['field'] = $tab[0];
+			if(isset($tab[1]) && !empty($tab[1])){
+				$result['externalField'] = $tab[1];
+			}
+		}
+        return $result;
     }
 }

@@ -438,4 +438,15 @@ class StringTools
         }
         return substr_replace($haystack, $replace, $pos, strlen($needle));
     }
+	
+	/**
+     * Convert \n and \r\n and \r to <br />
+     *
+     * @param string $string String to transform
+     * @return string New string
+     */
+    public static function nl2br($str)
+    {
+        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
+    }
 }

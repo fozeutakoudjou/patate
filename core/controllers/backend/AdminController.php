@@ -88,6 +88,54 @@ abstract class AdminController extends Controller
         $this->admin_webpath = preg_replace('/^'.preg_quote(DIRECTORY_SEPARATOR, '/').'/', '', $this->admin_webpath);*/
     }
 	
+	public function init()
+    {
+        parent::init();
+		$dao = $this->getDAOInstance('Right', false);
+		//$dao->setUseOfAllLang(true);
+		/*$fields = array(
+			'id'=>1,
+			'idContainer___name'=>'user'
+		);
+		$association = array(
+			'idContainer'=>array()
+		);
+		$data = $dao->getByFields($fields, false, $association);
+		
+		var_dump($data);die();*/
+		/*if (isset($_GET['logout'])) {
+            $this->context->employee->logout();
+        }
+
+        if (isset(Context::getContext()->cookie->last_activity)) {
+            if ($this->context->cookie->last_activity + 900 < time()) {
+                $this->context->employee->logout();
+            } else {
+                $this->context->cookie->last_activity = time();
+            }
+        }
+
+        if ($this->controller_name != 'AdminLogin' && (!isset($this->context->employee) || !$this->context->employee->isLoggedBack())) {
+            if (isset($this->context->employee)) {
+                $this->context->employee->logout();
+            }
+
+            $email = false;
+            if (Tools::getValue('email') && Validate::isEmail(Tools::getValue('email'))) {
+                $email = Tools::getValue('email');
+            }
+
+            Tools::redirect($this->context->link->getAdminLink('AdminLogin').((!isset($_GET['logout']) && $this->controller_name != 'AdminNotFound' && Tools::getValue('controller')) ? '&redirect='.$this->controller_name : '').($email ? '&email='.$email : ''));
+        }
+
+        // Set current index
+        $current_index = 'index.php'.(($controller = Tools::getValue('controller')) ? '?controller='.$controller : '');
+        if ($back = Tools::getValue('back')) {
+            $current_index .= '&back='.urlencode($back);
+        }
+        Employee::setLastConnectionDate($this->context->employee->id);*/
+    }
+	
 	protected function getRightCode()
     {
         $action = Tools::getValue('action');
@@ -177,13 +225,18 @@ abstract class AdminController extends Controller
         $this->addjQueryPlugin(array('scrollTo', 'alerts', 'chosen', 'autosize', 'fancybox' ));
         $this->addjQueryPlugin('growl', null, false);
 		$this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
-		$this->addJS($librariesUri.'bootstrap/bootstrap.min.js', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'bootstrap/js/bootstrap.min.js', array('isLibrary' => true), false);
 		$this->addJS($librariesUri.'js/modernizr.min.js', array('isLibrary' => true), false);
 		$this->addJS($librariesUri.'js/moment-with-langs.min.js', array('isLibrary' => true), false);
 	}
 
     protected function display()
     {
+		/*$dao = $this->getDAOInstance('Group', false);
+		$dao->setUseOfAllLang(true);
+		$group = $dao->getById(21);
+		
+		var_dump($group);*/
         $this->template->assign(array(
             'useOfHeader' => $this->useOfHeader,
             'useOfHeaderJavascript'=> $this->useOfHeaderJavascript,

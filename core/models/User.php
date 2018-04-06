@@ -39,7 +39,46 @@ class User extends Model{
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'deleted' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '0')
 		)
-	);	
+	);
+	
+	/**
+     * Check employee informations saved into cookie and return employee validity
+     *
+     * @return bool employee validity
+     */
+    public function isLoggedBack()
+    {
+        if (!Cache::isStored('isLoggedBack'.$this->id)) {
+            /* Employee is valid only if it can be load and if cookie password is the same as database one */
+            $result = (
+				$this->id && Validate::isUnsignedId($this->id) && Employee::checkPassword($this->id, Context::getContext()->cookie->passwd)
+				&& (!isset(Context::getContext()->cookie->remote_addr) || Context::getContext()->cookie->remote_addr == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
+			);
+            Cache::store('isLoggedBack'.$this->id, $result);
+            return $result;
+        }
+        return Cache::retrieve('isLoggedBack'.$this->id);
+    }
+	
+	/**
+     * Check if employee password is the right one
+     *
+     * @param string $passwd Password
+     * @return bool result
+     */
+    public static function checkPassword($id_employee, $passwd)
+    {
+        if (!Validate::isUnsignedId($id_employee) || !Validate::isPasswd($passwd, 8)) {
+            die(Tools::displayError());
+        }
+
+        return Db::getInstance()->getValue('
+		SELECT `id_employee`
+		FROM `'._DB_PREFIX_.'employee`
+		WHERE `id_employee` = '.(int)$id_employee.'
+		AND `passwd` = \''.pSQL($passwd).'\'
+		AND `active` = 1');
+    }
 
 	public function getId(){
 		return $this->id;

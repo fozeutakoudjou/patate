@@ -47,7 +47,7 @@ interface DAOImplementation{
      * @param array $fields
      * @return array
      */
-    function _getByFields($fields, $returnTotal = false, $start = 0, $limit = 0,
+    function _getByFields($fields, $returnTotal = false, $association = array(), $start = 0, $limit = 0,
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_);
     
     

@@ -12,9 +12,10 @@ class Right extends Model{
 		'primary' => 'id',
 		'auto_increment' => true,
 		'multilang' => true,
+		'referenced' => true,
 		'fields' => array(
-			'idContainer' => array('type' => self::TYPE_INT, 'foreign' => true, 'validate' => 'isUnsignedInt'),
-			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
+			'idContainer' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'RightContainer'), 'validate' => 'isUnsignedInt'),
+			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
 			'label' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
 			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)

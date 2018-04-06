@@ -1,12 +1,16 @@
 <?php
 namespace core\models;
 
+use core\dao\Factory;
+
 class Configuration extends Model{
 	private $id;
 	private $name;
 	private $value;
 	private $dateUpdate;
 	private $valueLang;
+	protected static $values = array();
+	protected static $dao = null;
 	protected $definition = array(
 		'table' => 'configuration',
 		'primary' => 'id',
@@ -19,9 +23,53 @@ class Configuration extends Model{
 			'valueLang' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)
 	);	
+	protected static function getDAO(){
+		if(self::$dao === null){
+			self::$dao = Factory::getDAOInstance('Configuration');
+		}
+		return self::$dao;
+	}
+	public static function get($name, $useOfAllLang = false, $lang = ''){
+		if(!isset(self::$values[$name])){
+			$dao = self::getDAO();
+			$dao->setUseOfAllLang(true);
+            $config = $dao->getByField('name',$name);
+			if(empty($config)){
+				$value = false;
+			}else{
+				$config = $config[0];
+				$valueLang = $config->getValueLang();
+				$value = empty($valueLang) ? $config->getValue() : $valueLang;
+			}
+			self::$values[$name] = $value;
+		}
+		$value = self::$values[$name];
+		if(!$useOfAllLang && !empty($lang)){
+			$value = (is_array($value) && isset($value[$lang]))?$value[$lang] : false;
+		}
+		return $value;
+	}
 	
-	public static function get($name){
-		return false;
+	public static function set($name, $value, $isLangValue = false){
+		$dao = Factory::getDAOInstance('Configuration');
+		$config = $dao->getByField('name',$name);
+		if(empty($config)){
+			$config = new Configuration();
+			$config->setName($name);
+		}else{
+			$config = $config[0];
+		}
+		if($isLangValue){
+			$config->setValueLang($value);
+		}else{
+			$dao->setSaveOfLangField(false);
+			$config->setValue($value);
+		}
+		$result = $dao->save($config);
+		if($result && isset(self::$values[$name])){
+			unset(self::$values[$name]);
+		}
+		return $result;
 	}
 
 	public function getId(){

@@ -43,13 +43,12 @@ class Context
 	protected function firtInit()
     {
 		$factory = Factory::getInstance();
-		$this->lang = Configuration::get('DEFAULT_LANG');
-		// GET ALL Language
 		$languages = Language::getLanguages();
 		$factory->setLanguages($languages);
+		$this->lang = Configuration::get('DEFAULT_LANG');
 		$factory->setLang($this->lang);
-		$https_link = (Link::usingSecureMode() && Configuration::get('SSL_ENABLED')) ? 'https://' : 'http://';
-		$this->link = new Link($https_link, $https_link);
+		$httpsLink = (Link::usingSecureMode() && Configuration::get('SSL_ENABLED')) ? 'https://' : 'http://';
+		$this->link = new Link($httpsLink, $httpsLink);
 		$this->template = Template::getInstance();
     }
     

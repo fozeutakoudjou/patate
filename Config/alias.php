@@ -9,6 +9,7 @@ use core\dao\Factory;
  */
 function pSQL($string, $htmlOK = false)
 {
+	return $string;
     return Factory::getInstance()->escape($string, $htmlOK);
 }
 

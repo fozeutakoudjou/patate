@@ -8,6 +8,6 @@ function autoload($class){
 
 spl_autoload_register('autoload');
 
-require_once dirname(__FILE__).'/../config/config.php';
 require_once dirname(__FILE__).'/../config/alias.php';
+require_once dirname(__FILE__).'/../config/config.php';
 ?>

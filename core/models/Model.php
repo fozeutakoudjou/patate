@@ -18,6 +18,10 @@ class Model{
     
     protected $fieldsValidated = false;
     protected $definition = array();
+	
+    protected $langFields = null;
+	
+    protected $simpleFields = null;
     
     public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
 		if(!empty($data)){
@@ -58,7 +62,7 @@ class Model{
 		$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		$field = str_replace($preffix, '', $field);
 		if (isset($this->definition['fields'][$field]) || in_array($field, $primaries)){
-			if($this->isLangField($field) && $useOfAllLang){
+			if($this->isLangField($field) && $useOfAllLang && !empty($lang)){
 				$fieldValue = $this->getPropertyValue($field);
 				$tmpValue = is_array($fieldValue) ? $fieldValue: array();
 				$tmpValue[$lang] = $value;
@@ -258,19 +262,33 @@ class Model{
     }
 	
 	public function getLangFields() {
-		if(!isset($this->langFields)){
-			$this->langFields = array();
-			foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
-				if($this->isLangField($fieldName)){
-					$this->langFields[] = $fieldName;
-				}
-			}
+		if($this->langFields === null){
+			$this->splitFields();
 		}
         return $this->langFields;
     }
 	
+	public function getSimpleFields() {
+		if($this->simpleFields === null){
+			$this->splitFields();
+		}
+        return $this->simpleFields;
+    }
+	
+	protected function splitFields() {
+		$this->langFields = array();
+		$this->simpleFields = array();
+		foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
+			if($this->isLangField($fieldName)){
+				$this->langFields[] = $fieldName;
+			}else{
+				$this->simpleFields[] = $fieldName;
+			}
+		}
+    }
+	
 	public function isLangField($field) {
-		return $this->isMultilang() && isset($this->definition['fields'][$field]['lang']) && $this->definition['fields'][$field]['lang'];
+		return $this->isMultilang() && isset($this->definition['fields'][$field]) && isset($this->definition['fields'][$field]['lang']) && $this->definition['fields'][$field]['lang'];
     }
 	
 	public function isMultilang() {

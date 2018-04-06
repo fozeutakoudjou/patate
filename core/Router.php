@@ -125,8 +125,7 @@ class Router{
      */
     protected function __construct()
     {
-        $this->useRoutes = (bool)Configuration::get('REWRITING_SETTINGS');
-		$this->useRoutes = true;
+		$this->useRoutes = (bool)Configuration::get('REWRITING_SETTINGS');
 		$this->adminVirtual = (defined('_VIRTUAL_ADMIN_DIR_') && !empty(_VIRTUAL_ADMIN_DIR_)) ? _VIRTUAL_ADMIN_DIR_ : 'admin';
         $this->setRequestUri();
 		
@@ -229,7 +228,7 @@ class Router{
 		$lang = $context->getLang();
 		$langKeys = $this->isAdmin ? array() : array_keys($languages);
         if (!in_array($lang,$langKeys)) {
-            $langKeys[$lang] = null;
+            $langKeys[] = $lang;
         }
 		
 		$metaRoutes = array();
@@ -237,18 +236,6 @@ class Router{
 			if ($row['url_rewrite']) {
 				$this->addRoute($row['page'], $row['url_rewrite'], $row['page'], $row['lang'], array(), array());
 			}
-		}
-		$this->defaultRoutes = $this->isAdmin ? $this->adminDefaultRoutes : $this->frontDefaultRoutes;
-        // Set default routes
-        foreach ($this->defaultRoutes as $id => $route) {
-			$this->addRoute(
-				$id,
-				$route['rule'],
-				$route['controller'],
-				$langKeys,
-				$route['keywords'],
-				isset($route['params']) ? $route['params'] : array()
-			);
 		}
 		$routesFiles = FileTools::getRouteFiles($this->isAdmin);
 		$dom = new \DOMDocument;
@@ -274,7 +261,18 @@ class Router{
 				$this->addRoute($item->getAttribute('name'), $item->getAttribute('rule'), $item->getAttribute('controller'),  $langKeys, $keywords, $params);
 			}
         }
-
+		$this->defaultRoutes = $this->isAdmin ? $this->adminDefaultRoutes : $this->frontDefaultRoutes;
+        // Set default routes
+        foreach ($this->defaultRoutes as $id => $route) {
+			$this->addRoute(
+				$id,
+				$route['rule'],
+				$route['controller'],
+				$langKeys,
+				$route['keywords'],
+				isset($route['params']) ? $route['params'] : array()
+			);
+		}
         // Load the custom routes prior the defaults to avoid infinite loops
         if ($this->useRoutes) {
            // Set default empty route if no empty route (that's weird I know)
@@ -333,10 +331,6 @@ class Router{
         $regexp = '#^/'.$regexp.'$#u';
 		$langKeys = is_array($lang)? $lang : array($lang);
 		foreach($langKeys as $langKey){
-			if (!isset($this->routes[$langKey])) {
-				$this->routes[$langKey] = array();
-			}
-
 			$this->routes[$langKey][$idRoute] = array(
 				'rule' =>        $rule,
 				'regexp' =>        $regexp,
@@ -345,7 +339,6 @@ class Router{
 				'params' =>        $params,
 			);
 		}
-        
     }
 
     /**

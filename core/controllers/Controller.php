@@ -390,7 +390,7 @@ abstract class Controller
 	protected function assignBaseVariables()
     {
 		$languages = Language::getLanguages();
-		$lang = /*$this->context->getLang()*/'en';
+		$lang = $this->context->getLang();
 		$language = $languages[$lang];
 		$link = $this->context->getLink();
 		$folders = array('');

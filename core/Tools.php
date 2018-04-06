@@ -271,7 +271,7 @@ class Tools
         static $purifier = null;
 
         if ($use_html_purifier === null) {
-            $use_html_purifier = (bool)Configuration::get('PS_USE_HTMLPURIFIER');
+            $use_html_purifier = (bool)Configuration::get('USE_HTMLPURIFIER');
         }
 
         if ($use_html_purifier) {
@@ -286,7 +286,7 @@ class Tools
                     $config->set('URI.UnescapeCharacters', implode('', $uri_unescape));
                 }
 
-                if (Configuration::get('PS_ALLOW_HTML_IFRAME')) {
+                if (Configuration::get('ALLOW_HTML_IFRAME')) {
                     $config->set('HTML.SafeIframe', true);
                     $config->set('HTML.SafeObject', true);
                     $config->set('URI.SafeIframeRegexp', '/.*/');
@@ -367,5 +367,16 @@ class Tools
 	
 	public static function getRightCode($code){
 		return strtoupper(StringTools::toUnderscoreCase($code));
+    }
+
+    /**
+    * Redirect user to another admin page
+    *
+    * @param string $url Desired URL
+    */
+    public static function redirect($url)
+    {
+        header('Location: '.$url);
+        exit;
     }
 }
