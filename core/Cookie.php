@@ -215,7 +215,7 @@ class Cookie
         return $this->id_employee
             && Validate::isUnsignedId($this->id_employee)
             && Employee::checkPassword((int) $this->id_employee, $this->passwd)
-            && (!isset($this->_content['remote_addr']) || $this->_content['remote_addr'] == ip2long(Tools::getRemoteAddr()) || !Configuration::get('PS_COOKIE_CHECKIP'))
+            && (!isset($this->_content['remote_addr']) || $this->_content['remote_addr'] == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
         ;
     }
 
@@ -300,7 +300,7 @@ class Cookie
 
         //checks if the language exists, if not choose the default language
         if (!$this->_standalone && !isset(Language::getLanguages(true)[$this->lang])) {
-            $this->lang = Configuration::get('PS_LANG_DEFAULT');
+            $this->lang = Configuration::get('DEFAULT_LANG');
             // set detect_language to force going through Tools::setCookieLanguage to figure out browser lang
             $this->detect_language = true;
         }

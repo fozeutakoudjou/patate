@@ -91,18 +91,19 @@ abstract class AdminController extends Controller
 	public function init()
     {
         parent::init();
-		$dao = $this->getDAOInstance('Right', false);
+		/*$dao = $this->getDAOInstance('Right', false);
 		//$dao->setUseOfAllLang(true);
-		/*$fields = array(
+		$fields = array(
 			'id'=>1,
 			'idContainer___name'=>'user'
 		);
 		$association = array(
 			'idContainer'=>array()
 		);
-		$data = $dao->getByFields($fields, false, $association);
+		$data = $dao->getByFields(array(), false, $association);
 		
-		var_dump($data);die();*/
+		var_dump($data);
+		var_dump($data[3]->getAssociated('idContainer'));die();*/
 		/*if (isset($_GET['logout'])) {
             $this->context->employee->logout();
         }

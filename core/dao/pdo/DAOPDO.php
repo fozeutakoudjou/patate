@@ -127,6 +127,7 @@ class DAOPDO extends DAO implements DAOImplementation{
     protected function formatAssociations($fields, $associations){
 		$result = array();
 		$result['associationsToGet'] = array();
+		$result['associationsLang'] = array();
 		$result['associationSelect'] = '';
 		$result['associationJoin'] = '';
 		$result['fields'] = $fields;
@@ -136,9 +137,10 @@ class DAOPDO extends DAO implements DAOImplementation{
 				$values = is_array($value) ? $value : array('value'=>$value);
 				$tab = $this->extractForeignField($field);
 				if(isset($tab['externalField'])){
-					$values['foreign'] = $tab['field'];
-					$values['externalField'] = $tab['externalField'];
+					$values['preffix'] = $tab['field'];
+					$values['modelField'] = $tab['externalField'];
 					$associations[$tab['field']]['join'] = isset($values['join']) ? $values['join'] : JoinType::LEFT;
+					$associations[$tab['field']]['restrictionKey'] = $field;
 				}
 				$newFields[$field] = $values;
 			}
@@ -146,15 +148,22 @@ class DAOPDO extends DAO implements DAOImplementation{
 			foreach($associations as $field => $association){
 				$reference = $this->definition['fields'][$field]['reference'];
 				$module = isset($reference['module']) ? $reference['module'] : '';
-				$dao = Factory::getDAOInstance($reference['class'], $module);
 				$useOfLang = isset($association['useOfLang']) ? $association['useOfLang'] : $this->useOfLang;
-				$dao->setUseOfLang($useOfLang);
 				$useOfAllLang = isset($association['useOfAllLang']) ? $association['useOfAllLang'] : $this->useOfAllLang;
+				$dao = Factory::getDAOInstance($reference['class'], $module);
+				$dao->setUseOfLang($useOfLang);
 				$dao->setUseOfAllLang($useOfAllLang);
 				$dao->setDefinition();
+				if(isset($association['restrictionKey']) && isset($result['fields'][$association['restrictionKey']]) &&
+					$dao->defaultModel->isLangField($result['fields'][$association['restrictionKey']]['modelField'])){
+					$result['fields'][$association['restrictionKey']]['preffix'].='_l';
+				}
 				if(!isset($association['get']) || $association['get']){
 					$result['associationSelect'] .= ', '.$dao->getSelect($field, false, true);
-					$result['associationsToGet'][$field] = array('dao' =>$dao);
+					$result['associationsToGet'][$field] = array('dao' =>$dao, 'useOfAllLang' =>$useOfAllLang, 'useOfLang' =>$useOfLang);
+				}
+				if($dao->useOfLang && $dao->defaultModel->isMultilang() && !$dao->useOfAllLang){
+					$result['associationsLang'][] = $field;
 				}
 				$join = isset($association['join']) ? $association['join'] : JoinType::LEFT;
 				$result['associationJoin'] .= ' '.$dao->getTableSelect($field, true, $field, self::DEFAULT_PREFFIX, $join);
@@ -171,25 +180,18 @@ class DAOPDO extends DAO implements DAOImplementation{
     public function _getByFields($fields, $returnTotal = false, $associations = array(), $start = 0, $limit = 0,
             $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
 		$formatted = $this->formatAssociations($fields, $associations);
-        $restriction=$this->getRestrictionFromArray($fields, $logicalOperator);
+        $restriction=$this->getRestrictionFromArray($formatted['fields'], $logicalOperator);
         $sql = 'SELECT ' . $this->getSelect() . $formatted['associationSelect'] .$this->getTableSelect() . $formatted['associationJoin'] .
 		(empty($restriction)?'':' WHERE '.$restriction).
         $this->getOrderString($orderBy, $orderWay) . $this->getLimitString($start, $limit);
-		var_dump($sql);
 		$query =$this->db->prepare($sql);
-		$this->addParamsFromArray($query, $fields);
-		$this->addLangParam($query);
+		$this->addParamsFromArray($query, $formatted['fields']);
+		$this->addLangParam($query, $formatted['associationsLang']);
         $query->execute();
 		$result = $this->getAllAsObjectFromQuery($query, $formatted['associationsToGet']);
 		if($returnTotal){
 			$total = $this->getByFieldsCount($fields, $logicalOperator);
 			$result = array('list' => $result, 'total' => $total);
-		}
-		if($this->className == 'Language'){
-			$dao = Factory::getDAOInstance('Group');
-			$dao->setDefinition();
-			$sql = $dao->getSelect() . $dao->getTableSelect();
-			var_dump($sql);
 		}
 		return $result;
     }
@@ -226,7 +228,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 		return $string;
     }
 	
-	protected function formatSelectFields($fields, $preffix, $foreign = false)
+	protected function formatSelectFields($fields, $preffix, $foreign = false, $lang = false)
     {
 		$string = '';
 		$first = true;
@@ -240,7 +242,8 @@ class DAOPDO extends DAO implements DAOImplementation{
 			}else{
 				$string.=', ';
 			}
-			$string .= '`'. $protectedPreffix .'`.`'.bqSQL($field).'` ' .($foreign ? ' AS `'.bqSQL($this->formatForeignField($preffix, $field)).'`' : '');
+			$string .= '`'. $protectedPreffix .($lang ? '_l':'') .'`.`'.bqSQL($field).'` ' .
+				($foreign ? ' AS `'.$protectedPreffix.$field.'`' : '');
         }
         return $string;
     }
@@ -253,7 +256,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 			$protectedPreffix = bqSQL($preffix);
 			$langPreffix = $protectedPreffix.'_l';
 			$join .= ' LEFT JOIN `'.bqSQL(_DB_PREFIX_ . $this->definition['table']).'_lang` `'.$langPreffix.'` ON ((`'.$langPreffix.'`.`'.bqSQL('id_' .$this->definition['table']) .'` = `'.
-			$protectedPreffix.'`.`' . $this->definition['primary'] . '`) '. ($this->useOfAllLang ? '' : ' AND (`'.$langPreffix.'`.lang = :lang)').') ';
+			$protectedPreffix.'`.`' . $this->definition['primary'] . '`) '. ($this->useOfAllLang ? '' : ' AND (`'.$langPreffix.'`.lang = :'.$preffix.'lang)').') ';
 		}
         return $join;
     }
@@ -263,14 +266,17 @@ class DAOPDO extends DAO implements DAOImplementation{
 		if($this->defaultModel->isMultilang() && $this->useOfLang && !is_array($this->definition['primary'])){
 			$langFields = $this->defaultModel->getLangFields();
 			$langFields[]='lang';
-			$sql = ', '.($useMultipleSelect ? bqSQL($preffix.'_l').'.*' : $this->formatSelectFields($langFields, $preffix.'_l', $foreign));
+			$sql = ', '.($useMultipleSelect ? bqSQL($preffix.'_l').'.*' : $this->formatSelectFields($langFields, $preffix, $foreign, true));
 		}
         return $sql;
     }
-	protected function addLangParam($query)
+	protected function addLangParam($query, $others = array())
     {
 		if($this->useOfLang && $this->defaultModel->isMultilang() && !$this->useOfAllLang && !is_array($this->definition['primary'])){
-			$query->bindValue(':lang', $this->lang);
+			$others[] = self::DEFAULT_PREFFIX;
+		}
+		foreach($others as $preffix){
+			$query->bindValue(':'.$preffix.'lang', $this->lang);
 		}
     }
     
@@ -279,20 +285,42 @@ class DAOPDO extends DAO implements DAOImplementation{
 		$ids = array();
 		$i = 0;
 		$primary = is_array($this->definition['primary']) ? $this->definition['primary'][0] : $this->definition['primary'];
-        while ($data = $query->fetch(\PDO::FETCH_ASSOC)){
+		$currentDef = array(
+			'' => array('dao'=>$this, 'useOfAllLang' =>$this->useOfAllLang, 'useOfLang' =>$this->useOfLang)
+		);
+		$objectsToget = array_merge($currentDef, $associationsToGet);
+		while ($data = $query->fetch(\PDO::FETCH_ASSOC)){
 			$id = $data[$primary];
-			if($this->useOfAllLang && isset($ids[$id])){
-				$langFields = $result[$ids[$id]]->getLangFields();
-				foreach($langFields as $field){
-					$result[$ids[$id]]->setFieldValue($field, $data[$field], $data['lang'], $this->useOfAllLang);
+			$useOfAllLang = false;
+			$increment = false;
+			$associateds = array();
+			foreach($objectsToget as $preffix => $params){
+				if($params['dao']->defaultModel->isMultilang() && $params['useOfAllLang'] && isset($ids[$id])){
+					$model = empty($preffix) ? $result[$ids[$id]] : $result[$ids[$id]]->getAssociated($preffix);
+					$langFields = $model->getLangFields();
+					foreach($langFields as $field){
+						$model->setFieldValue($field, $data[$preffix.$field], $data[$preffix.'lang'], $params['useOfAllLang']);
+					}
+				}else{
+					if(!empty($preffix)){
+						$data[$preffix.$params['dao']->definition['primary']] = $data[$preffix];
+					}
+					$lang = ($params['dao']->defaultModel->isMultilang() && $params['useOfLang'] && isset($data[$preffix.'lang'])) ? $data[$preffix.'lang'] : '';
+					$model = $params['dao']->createModel($data, true, $lang, $params['useOfAllLang'], array(),$preffix);
+					if(empty($preffix)){
+						$mainModel = $model;
+						$result[] = $model;
+						$increment = true;
+					}else{
+						$mainModel->setAssociated($preffix, $model);
+					}
+					
 				}
-			}else{
-				$lang = ($this->defaultModel->isMultilang() && $this->useOfLang && isset($data['lang'])) ? $data['lang'] : '';
-				$result[] = $this->createModel($data, true, $lang, $this->useOfAllLang);
-				if($this->useOfAllLang){
-					$ids[$id] = $i;
-					$i++;
-				}
+				$useOfAllLang = ($useOfAllLang || $params['useOfAllLang']);
+			}
+			if($increment && $useOfAllLang){
+				$ids[$id] = $i;
+				$i++;
 			}
         }
         $query->closeCursor();
@@ -314,7 +342,7 @@ class DAOPDO extends DAO implements DAOImplementation{
     }
     
     protected function getRestrictionFromArray($params, $logicalOperator = LogicalOperator::AND_) {
-        $condition = '';
+		$condition = '';
         $first = true;
         foreach ($params as $field => $value) {
 			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
@@ -329,22 +357,24 @@ class DAOPDO extends DAO implements DAOImplementation{
 			}else{
 				$preffix = $value['preffix'];
 			}
-            $condition .= $this->getOperatorQuery($field, $value, $operator, $preffix);
+			$modelField = is_array($value) && isset($value['modelField']) ? $value['modelField'] : $field;
+            $condition .= $this->getOperatorQuery($field, $value, $operator, $preffix, $modelField);
         }
         return $condition;
     }
 	
-    protected function getOperatorQuery($field, $value, $operator, $preffix) {
+    protected function getOperatorQuery($field, $value, $operator, $preffix, $modelField) {
 		$sql = '(';
+		$protectedPreffix = bqSQL($preffix);
 		if(isset(self::$operatorList[$operator])){
 			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['field'] : self::$operatorList[$operator];
-			$sql .= sprintf($formatter, $field, ':'.$field);
+			$sql .= sprintf($formatter, '`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`', ':'.$field);
 		}elseif($operator == Operator::BETWEEN){
 			$i = 1;
 			$values = is_array($value) ? $value['value'] : $value;
 			$values = is_array($values) ? $values : array('' => $values);
 			foreach($values as $key => $val){
-				$sql .= ($i==1) ? $field.' BETWEEN :' .$field . $key : ' AND :' . $field . $key;
+				$sql .= ($i==1) ? ('`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`'.' BETWEEN :' .$field . $key) : (' AND :' . $field . $key);
 				$i++;
 				if($i==3){
 					break;

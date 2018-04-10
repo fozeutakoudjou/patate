@@ -267,12 +267,12 @@ class DAO{
      *
      * @return \models\Model
      */
-    public function createModel($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false) {
+    public function createModel($param = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = '') {
 		$folder = FileTools::getCoreDir($this->module). 'models/';
 		$finalClass = FileTools::getClass(FileTools::getNamespaceFromFile($folder.$this->className));
 		$file = FileTools::getFileFromNamespace($finalClass).'.php';
 		if(file_exists($file)){
-			return new $finalClass($param, $fromDB, $lang, $useOfAllLang);
+			return new $finalClass($param, $fromDB, $lang, $useOfAllLang, $languages, $preffix);
 		}else{
 			throw new \Exception('Model "'.$this->className.'" does not exist');
 		}

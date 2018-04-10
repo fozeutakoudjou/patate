@@ -22,6 +22,8 @@ class Model{
     protected $langFields = null;
 	
     protected $simpleFields = null;
+	
+    protected $associateds = array();
     
     public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
 		if(!empty($data)){
@@ -59,16 +61,18 @@ class Model{
 		$this->hydrate($data, false, '', true, $languages, $preffix);
     }
     public function setFieldValue($field, $value, $lang = '', $useOfAllLang = false, $preffix = ''){
-		$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
-		$field = str_replace($preffix, '', $field);
-		if (isset($this->definition['fields'][$field]) || in_array($field, $primaries)){
-			if($this->isLangField($field) && $useOfAllLang && !empty($lang)){
-				$fieldValue = $this->getPropertyValue($field);
-				$tmpValue = is_array($fieldValue) ? $fieldValue: array();
-				$tmpValue[$lang] = $value;
-				$value = $tmpValue;
+		if(empty($preffix) || (strpos($field, $preffix) === 0)){
+			$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
+			$field = str_replace($preffix, '', $field);
+			if (isset($this->definition['fields'][$field]) || in_array($field, $primaries)){
+				if($this->isLangField($field) && $useOfAllLang && !empty($lang)){
+					$fieldValue = $this->getPropertyValue($field);
+					$tmpValue = is_array($fieldValue) ? $fieldValue: array();
+					$tmpValue[$lang] = $value;
+					$value = $tmpValue;
+				}
+				$this->setPropertyValue($field, $value); 
 			}
-			$this->setPropertyValue($field, $value); 
 		}
     }
 	
@@ -312,5 +316,13 @@ class Model{
 	public function setPropertyValue($field, $value){
 		$setter = 'set' . ucfirst($field);
 		return $this->$setter($value);
+	}
+	
+	public function setAssociated($field, $value){
+		$this->associateds[$field] = $value;
+	}
+	
+	public function getAssociated($field){
+		return isset($this->associateds[$field]) ? $this->associateds[$field] : null;
 	}
 }
