@@ -2,6 +2,7 @@
 namespace core;
 
 use core\models\Configuration;
+use core\models\Language;
 class Link
 {
     /** @var bool Rewriting activation */
@@ -27,144 +28,48 @@ class Link
         $this->sslEnable = Configuration::get('SSL_ENABLED');
     }
 
-    /**
-     * Create a link to a module
-     *
-     * @since 1.5.0
-     * @param string $module Module name
-     * @param string $process Action name
-     * @param int $id_lang
-     * @return string
-     */
-    public function getModuleLink($module, $controller = 'default', array $params = array(), $ssl = null, $id_lang = null, $relative_protocol = false)
+    public function getModuleLink($module, $controller = 'default', $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false, $isAdmin = false)
     {
-        if (!$id_lang) {
-            $id_lang = Context::getContext()->language->id;
-        }
-
-        $url = $this->getBaseLink($ssl, $relative_protocol).$this->getLangLink($id_lang, null);
-
-        // Set available keywords
-        $params['module'] = $module;
-        $params['controller'] = $controller ? $controller : 'default';
-
-        // If the module has its own route ... just use it !
-        if (Router::getInstance()->hasRoute('module-'.$module.'-'.$controller, $id_lang)) {
-            return $this->getPageLink('module-'.$module.'-'.$controller, $ssl, $id_lang, $params, false);
-        } else {
-            $allow = $this->allow;
-            return $url.Router::getInstance()->createUrl('module', $id_lang, $params, $allow, '');
-        }
+        return $this->getPageLink($controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, $module, $isAdmin);
+    }
+	
+	public function getAdminModuleLink($module, $controller = 'default', $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
+    {
+        return $this->getModuleLink($module, $controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, true);
     }
 
-    /**
-     * Use controller name to create a link
-     *
-     * @param string $controller
-     * @param bool $with_token include or not the token in the url
-     * @return string url
-     */
-    public function getAdminLink($controller, $with_token = true)
+    public function getAdminLink($controller, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
     {
-        $id_lang = Context::getContext()->language->id;
-
-        $params = $with_token ? array('token' => Tools::getAdminTokenLite($controller)) : array();
-        return Dispatcher::getInstance()->createUrl($controller, $id_lang, $params, false);
+		return $this->getPageLink($controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, '', true);
     }
 
-    /**
-     * Returns a link to a product image for display
-     * Note: the new image filesystem stores product images in subdirectories of img/p/
-     *
-     * @param string $name rewrite link of the image
-     * @param string $ids id part of the image filename - can be "id_product-id_image" (legacy support, recommended) or "id_image" (new)
-     * @param string $type
-     */
-    public function getImageLink($name, $ids, $type = null)
-    {
-        $not_default = false;
-
-        // Check if module is installed, enabled, customer is logged in and watermark logged option is on
-        if (($type != '') && Configuration::get('WATERMARK_LOGGED') && (Module::isInstalled('watermark') && Module::isEnabled('watermark')) && isset(Context::getContext()->customer->id)) {
-            $type .= '-'.Configuration::get('WATERMARK_HASH');
-        }
-
-        // legacy mode or default image
-        $theme = ((Shop::isFeatureActive() && file_exists(_PS_PROD_IMG_DIR_.$ids.($type ? '-'.$type : '').'-'.(int)Context::getContext()->shop->id_theme.'.jpg')) ? '-'.Context::getContext()->shop->id_theme : '');
-        if ((Configuration::get('PS_LEGACY_IMAGES')
-            && (file_exists(_PS_PROD_IMG_DIR_.$ids.($type ? '-'.$type : '').$theme.'.jpg')))
-            || ($not_default = strpos($ids, 'default') !== false)) {
-            if ($this->allow == 1 && !$not_default) {
-                $uri_path = __PS_BASE_URI__.$ids.($type ? '-'.$type : '').$theme.'/'.$name.'.jpg';
-            } else {
-                $uri_path = _THEME_PROD_DIR_.$ids.($type ? '-'.$type : '').$theme.'.jpg';
-            }
-        } else {
-            // if ids if of the form id_product-id_image, we want to extract the id_image part
-            $split_ids = explode('-', $ids);
-            $id_image = (isset($split_ids[1]) ? $split_ids[1] : $split_ids[0]);
-            $theme = ((Shop::isFeatureActive() && file_exists(_PS_PROD_IMG_DIR_.Image::getImgFolderStatic($id_image).$id_image.($type ? '-'.$type : '').'-'.(int)Context::getContext()->shop->id_theme.'.jpg')) ? '-'.Context::getContext()->shop->id_theme : '');
-            if ($this->allow == 1) {
-                $uri_path = __PS_BASE_URI__.$id_image.($type ? '-'.$type : '').$theme.'/'.$name.'.jpg';
-            } else {
-                $uri_path = _THEME_PROD_DIR_.Image::getImgFolderStatic($id_image).$id_image.($type ? '-'.$type : '').$theme.'.jpg';
-            }
-        }
-
-        return $this->protocol_content.Tools::getMediaServer($uri_path).$uri_path;
-    }
-
-    public function getMediaLink($filepath)
-    {
-        return $this->protocol_content.Tools::getMediaServer($filepath).$filepath;
-    }
-
-    /**
-     * Create a simple link
-     *
-     * @param string $controller
-     * @param bool $ssl
-     * @param int $id_lang
-     * @param string|array $request
-     * @param bool $request_url_encode Use URL encode
-     *
-     * @return string Page link
-     */
-    public function getPageLink($controller, $ssl = null, $id_lang = null, $request = null, $request_url_encode = false, $relative_protocol = false)
+    public function getPageLink($controller, $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false, $module = '', $isAdmin = false)
     {
         //If $controller contains '&' char, it means that $controller contains request data and must be parsed first
         $p = strpos($controller, '&');
         if ($p !== false) {
             $request = substr($controller, $p + 1);
-            $request_url_encode = false;
+            $requestUrlEncode = false;
             $controller = substr($controller, 0, $p);
         }
 
-        $controller = Tools::strReplaceFirst('.php', '', $controller);
-        if (!$id_lang) {
-            $id_lang = (int)Context::getContext()->language->id;
+        $controller = StringTools::strReplaceFirst('.php', '', $controller);
+        if (!$lang) {
+            $lang = Context::getInstance()->getLang();
         }
 
-        //need to be unset because getModuleLink need those params when rewrite is enable
-        if (is_array($request)) {
-            if (isset($request['module'])) {
-                unset($request['module']);
-            }
-            if (isset($request['controller'])) {
-                unset($request['controller']);
-            }
-        } else {
+        if (!is_array($request)) {
             // @FIXME html_entity_decode has been added due to '&amp;' => '%3B' ...
             $request = html_entity_decode($request);
-            if ($request_url_encode) {
+            if ($requestUrlEncode) {
                 $request = urlencode($request);
             }
             parse_str($request, $request);
         }
 
-        $uri_path = Dispatcher::getInstance()->createUrl($controller, $id_lang, $request, false, '');
+        $uriPath = Router::getInstance()->createUrl($controller, $lang, $request, false, '', $module, $isAdmin);
 
-        return $this->getBaseLink($ssl, $relative_protocol).$this->getLangLink($id_lang, null).ltrim($uri_path, '/');
+        return $this->getBaseLink($ssl, $relativeProtocol).$this->getLangLink($lang, null, $isAdmin).ltrim($uriPath, '/');
     }
 
     /**
@@ -306,13 +211,13 @@ class Link
         return $url.(!strstr($url, '?') ? '?' : '&').'orderby='.urlencode($orderby).'&orderway='.urlencode($orderway);
     }
 
-    protected function getLangLink($lang = null, Context $context = null)
+    protected function getLangLink($lang = null, Context $context = null, $isAdmin = false)
     {
-        if (!$context) {
-            $context = Context::getContext();
+		if (!$context) {
+            $context = Context::getInstance();
         }
 
-        if (!$this->allow || !Language::isMultiLanguageActivated() || !(int)Configuration::get('REWRITING_SETTINGS')) {
+        if ($isAdmin || !$this->allow || !Language::isMultiLanguageActivated() || !(int)Configuration::get('REWRITING_SETTINGS')) {
             return '';
         }
 

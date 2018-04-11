@@ -1,51 +1,25 @@
 <?php
-/**
- * 2007-2016 PrestaShop
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
- * versions in the future. If you wish to customize PrestaShop for your
- * needs please refer to http://www.prestashop.com for more information.
- *
- *  @author 	PrestaShop SA <contact@prestashop.com>
- *  @copyright  2007-2016 PrestaShop SA
- *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- *  International Registered Trademark & Property of PrestaShop SA
- */
+namespace core\controllers\backend;
 
-class AdminLoginControllerCore extends AdminController
+class LoginAdminController extends AdminController
 {
+	protected $layout = 'login/layout';
     public function __construct()
     {
         $this->bootstrap = true;
         $this->errors = array();
-        $this->context = Context::getContext();
         $this->display_header = false;
         $this->display_footer = false;
-        $this->meta_title = $this->l('Administration panel');
+        $this->metaTitle = $this->l('Administration panel');
         $this->css_files = array();
         parent::__construct();
-        $this->layout = _PS_ADMIN_DIR_.DIRECTORY_SEPARATOR.'themes'.DIRECTORY_SEPARATOR.$this->bo_theme
-            .DIRECTORY_SEPARATOR.'template'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'login'
-            .DIRECTORY_SEPARATOR.'layout.tpl';
 
         if (!headers_sent()) {
             header('Login: true');
         }
     }
 
-    public function setMedia()
+    /*public function setMedia()
     {
         $this->addJquery();
         $this->addjqueryPlugin('validate');
@@ -54,16 +28,11 @@ class AdminLoginControllerCore extends AdminController
         $this->addCSS(__PS_BASE_URI__.$this->admin_webpath.'/themes/'.$this->bo_theme.'/css/overrides.css', 'all', PHP_INT_MAX);
         $this->addJS(_PS_JS_DIR_.'vendor/spin.js');
         $this->addJS(_PS_JS_DIR_.'vendor/ladda.js');
-        Media::addJsDef(array('img_dir' => _PS_IMG_));
-        Media::addJsDefL('one_error', $this->l('There is one error.', null, true, false));
-        Media::addJsDefL('more_errors', $this->l('There are several errors.', null, true, false));
-
-        Hook::exec('actionAdminLoginControllerSetMedia');
-    }
+    }*/
 
     public function initContent()
     {
-        if (!Tools::usingSecureMode() && Configuration::get('PS_SSL_ENABLED')) {
+        /*if (!Tools::usingSecureMode() && Configuration::get('PS_SSL_ENABLED')) {
             // You can uncomment these lines if you want to force https even from localhost and automatically redirect
             // header('HTTP/1.1 301 Moved Permanently');
             // header('Location: '.Tools::getShopDomainSsl(true).$_SERVER['REQUEST_URI']);
@@ -137,7 +106,7 @@ class AdminLoginControllerCore extends AdminController
         $this->initFooter();
 
         //force to disable modals
-        $this->context->smarty->assign('modals', null);
+        $this->context->smarty->assign('modals', null);*/
     }
 
     public function checkToken()

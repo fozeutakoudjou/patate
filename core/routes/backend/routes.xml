@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <route name="admintest" controller="adminControll" rule="{id}-{rewrite}">
+		<keywords name="id" regexp="[0-9]+" param="id_product"/>
+		<keywords name="rewrite" regexp="[_a-zA-Z0-9\pL\pS-]*"/>
+		
+		<params name="fc" param="module"/>
+		<params name="fc2" regexp="module555"/>
+	</route>
+</routes>

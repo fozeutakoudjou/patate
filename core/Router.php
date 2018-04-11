@@ -19,12 +19,12 @@ class Router{
      */
 	 
 	protected $frontDefaultRoutes = array(
-		'module' => array(
+		'module_rule' => array(
             'controller' =>    null,
             'rule' =>        'module/{module}{/:controller}',
             'keywords' => array(
                 'module' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'module'),
-                'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
+                'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller', 'optional' => true),
             ),
             'params' => array(
                 'is_module' => '1',
@@ -39,14 +39,14 @@ class Router{
         )
 	);
 	protected $adminDefaultRoutes = array(
-		'module' => array(
+		'module_rule' => array(
             'controller' =>    null,
             'rule' =>        'module/{module}{/:controller}{/:action}{/:id}',
             'keywords' => array(
                 'module' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'module'),
                 'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
-                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action'),
-                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id'),
+                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action', 'optional' => true),
+                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id', 'optional' => true),
             ),
             'params' => array(
                 'is_module' => '1',
@@ -57,8 +57,8 @@ class Router{
             'rule' =>        '{controller}{/:action}{/:id}',
             'keywords' => array(
                 'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
-                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action'),
-                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id'),
+                'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action', 'optional' => true),
+                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id', 'optional' => true),
             )
         )
 	);
@@ -74,6 +74,8 @@ class Router{
      * @var array List of loaded routes
      */
     protected $routes = array();
+	
+    protected $otherRoutes = array();
 
     /**
      * @var string Current controller name
@@ -126,7 +128,8 @@ class Router{
     protected function __construct()
     {
 		$this->useRoutes = (bool)Configuration::get('REWRITING_SETTINGS');
-		$this->adminVirtual = (defined('_VIRTUAL_ADMIN_DIR_') && !empty(_VIRTUAL_ADMIN_DIR_)) ? _VIRTUAL_ADMIN_DIR_ : 'admin';
+		//$this->adminVirtual = (defined('_VIRTUAL_ADMIN_DIR_') && !empty(_VIRTUAL_ADMIN_DIR_)) ? _VIRTUAL_ADMIN_DIR_ : 'admin';
+		$this->adminVirtual = defined('_VIRTUAL_ADMIN_DIR_')  ? _VIRTUAL_ADMIN_DIR_ : '';
         $this->setRequestUri();
 		
 		Context::getInstance()->init($this->isAdmin);
@@ -203,11 +206,15 @@ class Router{
         }
         $this->requestUri = rawurldecode($this->requestUri);
 		$this->requestUri = preg_replace('#^'.preg_quote(_BASE_DIR_, '#').'#i', '/', $this->requestUri);
-		$endWithSlash = StringTools::endsWith($this->requestUri, '/');
-		$this->requestUri = $endWithSlash ? $this->requestUri : $this->requestUri . '/';
-		$this->requestUri = preg_replace('#^'.preg_quote('/'.$this->adminVirtual, '#').'[/?]#i', '/', $this->requestUri, 1, $count);
-		$this->requestUri = $endWithSlash ? $this->requestUri : substr($this->requestUri, 0, strlen($this->requestUri)-1);
-		$this->isAdmin = ($count>0);
+		if(empty($this->adminVirtual)){
+			$this->isAdmin = true;
+		}else{
+			$endWithSlash = StringTools::endsWith($this->requestUri, '/');
+			$this->requestUri = $endWithSlash ? $this->requestUri : $this->requestUri . '/';
+			$this->requestUri = preg_replace('#^'.preg_quote('/'.$this->adminVirtual, '#').'[/?]#i', '/', $this->requestUri, 1, $count);
+			$this->requestUri = $endWithSlash ? $this->requestUri : substr($this->requestUri, 0, strlen($this->requestUri)-1);
+			$this->isAdmin = ($count>0);
+		}
         // If there are several languages, get language from uri
         if (!$this->isAdmin && $this->useRoutes && Language::isMultiLanguageActivated()) {
             if (preg_match('#^/([a-z]{2})(?:/.*)?$#', $this->requestUri, $m)) {
@@ -220,13 +227,14 @@ class Router{
     /**
      * Load default routes group by languages
      */
-    protected function loadRoutes()
+    protected function loadRoutes($isAdmin = null)
     {
+		$isAdmin = ($isAdmin===null)?$this->isAdmin : $isAdmin;
         $context = Context::getInstance();
 
         $languages = Language::getLanguages(true);
 		$lang = $context->getLang();
-		$langKeys = $this->isAdmin ? array() : array_keys($languages);
+		$langKeys = $isAdmin ? array() : array_keys($languages);
         if (!in_array($lang,$langKeys)) {
             $langKeys[] = $lang;
         }
@@ -234,34 +242,40 @@ class Router{
 		$metaRoutes = array();
 		foreach ($metaRoutes as $row) {
 			if ($row['url_rewrite']) {
-				$this->addRoute($row['page'], $row['url_rewrite'], $row['page'], $row['lang'], array(), array());
+				$this->addRoute($row['page'], $row['url_rewrite'], $row['page'], $row['lang'], array(), array(), $isAdmin);
 			}
 		}
-		$routesFiles = FileTools::getRouteFiles($this->isAdmin);
+		$routesFiles = FileTools::getRouteFiles($isAdmin);
 		$dom = new \DOMDocument;
 		foreach ($routesFiles as $file){
             $dom->load($file);
 			$list = $dom->getElementsByTagName('route');
+			$module = FileTools::getModuleFromFile($file);
 			foreach ($list as $item){
 				$keywords = array();
 				$params = array();
+				$idRoute = Tools::getRouteId($item->getAttribute('name'), $module);
 				$keywordsElement = $item->getElementsByTagName('keywords');
 				foreach ($keywordsElement as $keywordsItem){
 					$name = $keywordsItem->getAttribute('name');
 					$param = $keywordsItem->getAttribute('param');
+					$optional = $keywordsItem->getAttribute('optional');
 					$keywords[$name]['regexp'] =$keywordsItem->getAttribute('regexp');
 					if(!empty($param)){
 						$keywords[$name]['param'] =$param;
+					}
+					if($optional!==''){
+						$keywords[$name]['optional'] = (strtolower($optional) == 'true') ? true : false;
 					}
 				}
 				$paramsElement = $item->getElementsByTagName('keywords');
 				foreach ($paramsElement as $paramsItem){
 					$params[$paramsItem->getAttribute('name')] =$paramsItem->getAttribute('value');
 				}
-				$this->addRoute($item->getAttribute('name'), $item->getAttribute('rule'), $item->getAttribute('controller'),  $langKeys, $keywords, $params);
+				$this->addRoute($idRoute, $item->getAttribute('rule'), $item->getAttribute('controller'),  $langKeys, $keywords, $params, $isAdmin);
 			}
         }
-		$this->defaultRoutes = $this->isAdmin ? $this->adminDefaultRoutes : $this->frontDefaultRoutes;
+		$this->defaultRoutes = $isAdmin ? $this->adminDefaultRoutes : $this->frontDefaultRoutes;
         // Set default routes
         foreach ($this->defaultRoutes as $id => $route) {
 			$this->addRoute(
@@ -270,7 +284,8 @@ class Router{
 				$route['controller'],
 				$langKeys,
 				$route['keywords'],
-				isset($route['params']) ? $route['params'] : array()
+				isset($route['params']) ? $route['params'] : array(),
+				$isAdmin
 			);
 		}
         // Load the custom routes prior the defaults to avoid infinite loops
@@ -293,7 +308,7 @@ class Router{
      * @param string $controller Controller to call if request uri match the rule
      * @param string $lang
      */
-    public function addRoute($idRoute, $rule, $controller, $lang = null, array $keywords = array(), array $params = array())
+    public function addRoute($idRoute, $rule, $controller, $lang = null, array $keywords = array(), array $params = array(), $isAdmin = null)
     {
         if ($lang === null) {
             $lang = Context::getInstance()->getLang();
@@ -307,12 +322,12 @@ class Router{
                 $prepend = $m[2][$i];
                 $keyword = $m[3][$i];
                 $append = $m[5][$i];
+				
                 $transformKeywords[$keyword] = array(
-                    'required' =>    isset($keywords[$keyword]['param']),
+                    'required' =>    (isset($keywords[$keyword]['param']) && (!isset($keywords[$keyword]['optional']) || !$keywords[$keyword]['optional'])),
                     'prepend' =>    stripslashes($prepend),
                     'append' =>        stripslashes($append),
                 );
-
                 $prependRegexp = $appendRegexp = '';
                 if ($prepend || $append) {
                     $prependRegexp = '('.$prepend;
@@ -331,30 +346,19 @@ class Router{
         $regexp = '#^/'.$regexp.'$#u';
 		$langKeys = is_array($lang)? $lang : array($lang);
 		foreach($langKeys as $langKey){
-			$this->routes[$langKey][$idRoute] = array(
+			$data = array(
 				'rule' =>        $rule,
 				'regexp' =>        $regexp,
 				'controller' =>    $controller,
 				'keywords' =>    $keywords,
 				'params' =>        $params,
 			);
+			if(($isAdmin!==null) && ($isAdmin!=$this->isAdmin)){
+				$this->otherRoutes[$langKey][$idRoute] = $data;
+			}else{
+				$this->routes[$langKey][$idRoute] = $data;
+			}
 		}
-    }
-
-    /**
-     * Check if a route exists
-     *
-     * @param string $idRoute
-     * @param string $lang
-     * @return bool
-     */
-    public function hasRoute($idRoute, $lang = null)
-    {
-        if ($lang === null) {
-            $lang = (int)Context::getInstance()->getLang();
-        }
-
-        return isset($this->routes[$lang]) && isset($this->routes[$lang][$idRoute]);
     }
 
     /**
@@ -410,21 +414,37 @@ class Router{
      * @param bool $forceRoutes If false, don't use to create this url
      * @param string $anchor Optional anchor to add at the end of this url
      */
-    public function createUrl($idRoute, $lang = null, array $params = array(), $forceRoutes = false, $anchor = '')
+    public function createUrl($idRoute, $lang = null, array $params = array(), $forceRoutes = false, $anchor = '', $module = '', $isAdmin = false)
     {
         if ($lang === null) {
             $lang = (int)Context::getInstance()->getLang();
         }
-        if (empty($this->routes)) {
-            $this->loadRoutes();
-        }
-
-        if (!isset($this->routes[$lang][$idRoute])) {
+		if($isAdmin!=$this->isAdmin){
+			if (empty($this->otherRoutes)) {
+				$this->loadRoutes($isAdmin);
+			}
+			$routes = $this->otherRoutes;
+		}else{
+			if (empty($this->routes)) {
+				$this->loadRoutes();
+			}
+			$routes = $this->routes;
+		}
+		$params['controller'] = $idRoute;
+		if(!empty($module)){
+			$params['module'] = $module;
+		}
+        $idRoute = Tools::getRouteId($idRoute, $module);
+		if(!isset($routes[$lang][$idRoute])){
+			$idRoute = empty($module) ? 'controller_rule' :'module_rule';
+		}
+		$preffix = ($isAdmin && !empty($this->adminVirtual))?$this->adminVirtual.'/':'';
+        if (!isset($routes[$lang][$idRoute])) {
             $query = http_build_query($params, '', '&');
             $indexLink = $this->useRoutes ? '' : 'index.php';
-            return ($idRoute == 'index') ? $indexLink.(($query) ? '?'.$query : '') : ((trim($idRoute) == '') ? '' : 'index.php?controller='.$idRoute).(($query) ? '&'.$query : '').$anchor;
+            return ($idRoute == 'index') ? $preffix . $indexLink.(($query) ? '?'.$query : '') : ((trim($idRoute) == '') ? '' : 'index.php?controller='.$idRoute).(($query) ? '&'.$query : '').$anchor;
         }
-        $route = $this->routes[$lang][$idRoute];
+        $route = $routes[$lang][$idRoute];
         // Check required fields
         $queryParams = isset($route['params']) ? $route['params'] : array();
         foreach ($route['keywords'] as $key => $data) {
@@ -433,7 +453,7 @@ class Router{
             }
 
             if (!array_key_exists($key, $params)) {
-                throw new PrestaShopException('self::createUrl() miss required parameter "'.$key.'" for route "'.$idRoute.'"');
+                throw new \Exception('self::createUrl() miss required parameter "'.$key.'" for route "'.$idRoute.'"');
             }
             if (isset($this->defaultRoutes[$idRoute])) {
                 $queryParams[$this->defaultRoutes[$idRoute]['keywords'][$key]['param']] = $params[$key];
@@ -483,7 +503,7 @@ class Router{
             $url = 'index.php?'.$query;
         }
 
-        return $url.$anchor;
+        return $preffix . $url.$anchor;
     }
 
     /**

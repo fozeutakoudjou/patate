@@ -104,19 +104,19 @@ abstract class AdminController extends Controller
 		
 		var_dump($data);
 		var_dump($data[3]->getAssociated('idContainer'));die();*/
-		/*if (isset($_GET['logout'])) {
+		if (isset($_GET['logout'])) {
             $this->context->employee->logout();
         }
-
-        if (isset(Context::getContext()->cookie->last_activity)) {
-            if ($this->context->cookie->last_activity + 900 < time()) {
+		$cookie = $this->context->getCookie();
+        if (isset($cookie->last_activity)) {
+            if ($cookie->last_activity + 900 < time()) {
                 $this->context->employee->logout();
             } else {
-                $this->context->cookie->last_activity = time();
+                $cookie->last_activity = time();
             }
         }
 
-        if ($this->controller_name != 'AdminLogin' && (!isset($this->context->employee) || !$this->context->employee->isLoggedBack())) {
+        if ($this->controllerClass != 'Login' && (!isset($this->context->employee) || !$this->context->employee->isLoggedBack())) {
             if (isset($this->context->employee)) {
                 $this->context->employee->logout();
             }
@@ -125,16 +125,15 @@ abstract class AdminController extends Controller
             if (Tools::getValue('email') && Validate::isEmail(Tools::getValue('email'))) {
                 $email = Tools::getValue('email');
             }
-
-            Tools::redirect($this->context->link->getAdminLink('AdminLogin').((!isset($_GET['logout']) && $this->controller_name != 'AdminNotFound' && Tools::getValue('controller')) ? '&redirect='.$this->controller_name : '').($email ? '&email='.$email : ''));
+			$redirectParams = array();
+			if(!isset($_GET['logout']) && ($this->controllerClass != 'PageNotFound') && Tools::getValue('controller')){
+				$redirectParams['redirect'] = strtolower($this->controllerClass);
+			}
+			if($email){
+				$redirectParams['email'] = $email;
+			}
+            Tools::redirect($this->context->getLink()->getAdminLink('login', $redirectParams));
         }
-
-        // Set current index
-        $current_index = 'index.php'.(($controller = Tools::getValue('controller')) ? '?controller='.$controller : '');
-        if ($back = Tools::getValue('back')) {
-            $current_index .= '&back='.urlencode($back);
-        }
-        Employee::setLastConnectionDate($this->context->employee->id);*/
     }
 	
 	protected function getRightCode()

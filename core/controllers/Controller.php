@@ -77,6 +77,8 @@ abstract class Controller
 	
     protected $isModule = false;
 	
+    protected $controllerClass = false;
+	
     /**
      * Initialize the page
      */
@@ -118,6 +120,7 @@ abstract class Controller
             header('X-UA-Compatible: IE=edge,chrome=1');
         }
 		$this->setModuleName();
+		$this->setControllerName();
     }
 
     /**
@@ -182,6 +185,11 @@ abstract class Controller
     {
         $this->onlyProcess = true;
     }
+	
+	protected function l($string)
+    {
+		return $string;
+	}
 
     /**
      * Assigns Smarty variables for the page header
@@ -378,6 +386,13 @@ abstract class Controller
 			$this->moduleName = FileTools::getModuleFromNamespace(get_class($this));
 			$this->isModule = !empty($this->moduleName);
 		}
+    }
+	protected function setControllerName()
+    {
+		$class = get_class($this);
+        $bits = explode('\\', $class);
+        $this->controllerClass = end($bits);
+        $this->controllerClass = str_replace(FileTools::getControllerSuffix($this->isAdmin), '', $this->controllerClass);
     }
 	
 	protected function getDAOInstance($className, $fromCurrent = true, $module = ''){

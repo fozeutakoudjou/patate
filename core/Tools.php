@@ -346,7 +346,7 @@ class Tools
         }
 
         if (($iso = Tools::getValue('isolang')) && Validate::isLanguageIsoCode($iso)) {
-            $_GET['lang'] = $lang;
+            $_GET['lang'] = $iso;
         }
 
         // update language only if new id is different from old id
@@ -369,14 +369,14 @@ class Tools
 		return strtoupper(StringTools::toUnderscoreCase($code));
     }
 
-    /**
-    * Redirect user to another admin page
-    *
-    * @param string $url Desired URL
-    */
     public static function redirect($url)
     {
         header('Location: '.$url);
         exit;
+    }
+	
+	public static function getRouteId($page, $module = '')
+    {
+        return (empty($module)?'':'module-'.$module.'-').$page;
     }
 }
