@@ -344,8 +344,8 @@ class Tools
         if (!isset($cookie)) {
             return;
         }
-
-        if (($iso = Tools::getValue('isolang')) && Validate::isLanguageIsoCode($iso)) {
+		$activedLanguages = Language::getLanguages(true);
+        if (($iso = Tools::getValue('isolang')) && Validate::isLanguageIsoCode($iso) && isset($activedLanguages[$iso])) {
             $_GET['lang'] = $iso;
         }
 

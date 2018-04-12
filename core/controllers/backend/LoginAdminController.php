@@ -1,15 +1,17 @@
 <?php
 namespace core\controllers\backend;
-
+use core\generator\html\HtmlGenerator;
+use core\generator\html\Block;
 class LoginAdminController extends AdminController
 {
 	protected $layout = 'login/layout';
+	protected $defaultAction = 'test';
     public function __construct()
     {
         $this->bootstrap = true;
         $this->errors = array();
-        $this->display_header = false;
-        $this->display_footer = false;
+        $this->useOfHeader = false;
+        $this->useOfFooter = false;
         $this->metaTitle = $this->l('Administration panel');
         $this->css_files = array();
         parent::__construct();
@@ -29,6 +31,27 @@ class LoginAdminController extends AdminController
         $this->addJS(_PS_JS_DIR_.'vendor/spin.js');
         $this->addJS(_PS_JS_DIR_.'vendor/ladda.js');
     }*/
+	
+	protected function processTest()
+    {
+		$generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'));
+		$block = $generator->createBlock(true, 'Bonjour ukhyuieosp', 'pencil');
+		$block = $generator->createForm(true, true,  '#', true, 'User', 'user');
+		/*$block->setDecorated(true);
+		$block->setLabel('Bonjour');
+		$block->setIcon($generator->createIcon('user'));*/
+		$block->addClass('test');
+		$block->setContentOnly(false);
+		$block->setAttribute('test2', '');
+		$block->addChild($generator->createButton('Btn1', true, 'pencil'));
+		$block->addChild($generator->createLink('link'));
+		$this->processResult['content'] = $block->generate();
+    }
+	
+	protected function checkUserAccess()
+    {
+		return true;
+    }
 
     public function initContent()
     {

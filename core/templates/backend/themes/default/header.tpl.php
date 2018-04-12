@@ -37,8 +37,8 @@
 <?php endif;?>
 </head>
 
-<?php if($useOfHeader):?>
 <body>
+<?php if($useOfHeader):?>
 	<div class="page-header navbar navbar-fixed-top">
 		<!-- BEGIN HEADER INNER -->
 		<div class="page-header-inner">

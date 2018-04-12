@@ -19,6 +19,8 @@ abstract class AdminController extends Controller
 
     /** @var string */
     protected $layout = 'layout';
+    protected $header = 'header';
+    protected $footer = 'footer';
     protected $defaultAction = 'list';
 	protected $modals = array();
 	protected $metaTitle = array();
@@ -104,21 +106,22 @@ abstract class AdminController extends Controller
 		
 		var_dump($data);
 		var_dump($data[3]->getAssociated('idContainer'));die();*/
+		$user = $this->context->getUser();
 		if (isset($_GET['logout'])) {
-            $this->context->employee->logout();
+            $this->user->logout();
         }
 		$cookie = $this->context->getCookie();
         if (isset($cookie->last_activity)) {
             if ($cookie->last_activity + 900 < time()) {
-                $this->context->employee->logout();
+                $this->user->logout();
             } else {
                 $cookie->last_activity = time();
             }
         }
 
-        if ($this->controllerClass != 'Login' && (!isset($this->context->employee) || !$this->context->employee->isLoggedBack())) {
-            if (isset($this->context->employee)) {
-                $this->context->employee->logout();
+        if ($this->controllerClass != 'Login' && (!isset($this->user) || !$this->user->isLoggedBack())) {
+            if (isset($this->user)) {
+                $this->user->logout();
             }
 
             $email = false;
@@ -138,17 +141,15 @@ abstract class AdminController extends Controller
 	
 	protected function getRightCode()
     {
-        $action = Tools::getValue('action');
-		$action = empty($action) ? $this->defaultAction : $action;
-		$rightCode = $action;
-		if(in_array($action, $this->modelActions)){
+		$rightCode = $this->action;
+		if(in_array($this->action, $this->modelActions)){
 			$rightCode .= $this->modelClassName;
 		}
 		return Tools::getRightCode($rightCode);
     }
 	protected function processAction()
     {
-		$action = StringTools::toCamelCase(Tools::getValue('action'), true);
+		$action = StringTools::toCamelCase($this->action, true);
 		$ajaxProcessUsed = false;
 		if($this->ajax && method_exists($this, 'ajaxProcess'.$action)){
 			$this->{'ajaxProcess'.$action}();
@@ -259,8 +260,8 @@ abstract class AdminController extends Controller
 		$this->template->assign(
             array(
                 'page' => $page,
-                'header' => $this->renderTpl('header', $this->useModuleHeader),
-                'footer' => $this->renderTpl('footer', $this->useModuleFooter),
+                'header' => $this->renderTpl($this->header, $this->useModuleHeader),
+                'footer' => $this->renderTpl($this->footer, $this->useModuleFooter),
             )
         );
 

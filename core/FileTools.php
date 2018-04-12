@@ -250,8 +250,8 @@ class FileTools
 	
 	public static function resolveFilename($fileName)
 	{
-		$fileName = str_replace('//', '/', $fileName);
-		$parts = explode('/', $fileName);
+		$fileName = self::standardizeFile(str_replace('//', '/', $fileName));
+		$parts = explode(DIRECTORY_SEPARATOR, $fileName);
 		$out = array();
 		foreach ($parts as $part){
 			if ($part == '.') continue;
@@ -261,7 +261,7 @@ class FileTools
 			}
 			$out[] = $part;
 		}
-		return implode('/', $out);
+		return implode(DIRECTORY_SEPARATOR, $out);
 	}
 	public static function getRouteDir($module = '', $isAdmin = null)
     {

@@ -1,36 +1,16 @@
 <?php
-namespace form\generator;
-class Command extends HtmlElement{
-	private $label;
-	private $icon;
-	private $isLink=false;
-	function __construct() {
+namespace core\generator\html;
+abstract class Command extends Element{
+	protected $customContent;
+	
+	public function getCustomContent() {
+		return $this->customContent;
 	}
-	public function getValue() {
-		return $this->value;
-	}
-	public function getLabel() {
-		return $this->label;
+	public function setCustomContent($customContent) {
+		$this->customContent=$customContent;
 	}
 	
-	public function setLabel($label) {
-		$this->label=$label;
-	}
-	
-	public function generate() {
-		;
-	}
-	
-	public function isLink() {
-		return $this->isLink;
-	}
-	public function setIsLink($isLink) {
-		$this->isLink=$isLink;
-	}
-	public function getIcon() {
-		return $this->icon;
-	}
-	public function setIcon($icon) {
-		$this->icon=$icon;
+	public function hasCustomContent(){
+		return ($this->customContent!=null);
 	}
 }

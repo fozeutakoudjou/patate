@@ -1,6 +1,6 @@
 <?php
 namespace form\generator;
-class Field extends HtmlElement{
+class Field extends Element{
 	private $value;
 	private $label;
 	private $icon;

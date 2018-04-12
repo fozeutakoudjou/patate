@@ -20,11 +20,12 @@
 	<?php echo $modals;?>
 </div>
 <?php endif;?>
+<?php $tools->includeTpl('javascript', false, array('partKey'=>$notHeadKey, 'libraryKey'=>$libraryKey, 'notLibraryKey'=>$notLibraryKey, 'jsFiles'=>$jsFiles, 'jsContents'=>$jsContents, 'jsVariables'=>$jsVariables), false);?>
+
 <!--[if lt IE 9]>
 <script src="<?php echo $librariesDir;?>js/respond.min.js"></script>
 <script src="<?php echo $librariesDir;?>js/excanvas.min.js"></script> 
 <![endif]-->
-<?php $tools->includeTpl('javascript', false, array('partKey'=>$notHeadKey, 'libraryKey'=>$libraryKey, 'notLibraryKey'=>$notLibraryKey, 'jsFiles'=>$jsFiles, 'jsContents'=>$jsContents, 'jsVariables'=>$jsVariables), false);?>
 <script src="<?php echo $librariesDir;?>js/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/jquery.blockui.min.js" type="text/javascript"></script>

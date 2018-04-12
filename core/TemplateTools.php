@@ -4,7 +4,6 @@ namespace core;
 class TemplateTools{
 	
 	public function includeTpl($template, $isAbsolutePath = true, $data = array(), $useCurrentData = true, $checkPath = true){
-		
 		Template::getInstance()->includeTpl($template, $isAbsolutePath, $data, $useCurrentData, $checkPath);
     }
 	

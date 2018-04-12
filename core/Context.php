@@ -60,21 +60,28 @@ class Context
 				$cookieLifetime = time() + (max($cookieLifetime, 1) * 3600);
 			}
 			$cookieName = $isAdmin ? 'Admin' : 'Front';
-			$this->cookie = new Cookie('Front', '', $cookieLifetime);
+			$this->cookie = new Cookie($cookieName, '', $cookieLifetime);
 			
 			$daoUser = Factory::getDAOInstance('User');
 			$user = $daoUser->getById($this->cookie->id_user, true);
-			if($user != null){
+			if($isAdmin && ($user != null) && $user->isAdmin()){
 				$cookie->lang = $user->getPrefferedLang();
 			}
 			$activedLanguages = Language::getLanguages(true);
 			$lang = (isset($this->cookie->lang) && $this->cookie->lang && isset($activedLanguages[$this->cookie->lang])) ? $this->cookie->lang : Configuration::get('DEFAULT_LANG');
 			$this->cookie->lang = $lang;
-			if (!Validate::isLoadedObject($user)) {
-				$this->cookie->logout();
-			} else {
-				$customer->logged = true;
+			if($user==null){
+				$user = $daoUser->createModel();
 			}
+			if(!$isAdmin){
+				if (!Validate::isLoadedObject($user)) {
+					$this->cookie->logout();
+				} else {
+					$user->setLogged(true);
+				}
+			}
+			$this->user = $user;
+			$this->initialized = true;
 		}
     }
 	
@@ -98,6 +105,11 @@ class Context
 	public function getCookie()
     {
 		return $this->cookie;
+    }
+	
+	public function getUser()
+    {
+		return $this->user;
     }
 	
 	public function setController($controller)

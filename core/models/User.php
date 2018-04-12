@@ -1,6 +1,10 @@
 <?php
 namespace core\models;
 
+use core\Context;
+use core\Validate;
+use core\Tools;
+
 class User extends Model{
 	private $id;
 	private $idProposer;
@@ -48,16 +52,22 @@ class User extends Model{
      */
     public function isLoggedBack()
     {
-        if (!Cache::isStored('isLoggedBack'.$this->id)) {
-            /* Employee is valid only if it can be load and if cookie password is the same as database one */
-            $result = (
-				$this->id && Validate::isUnsignedId($this->id) && Employee::checkPassword($this->id, Context::getContext()->cookie->passwd)
-				&& (!isset(Context::getContext()->cookie->remote_addr) || Context::getContext()->cookie->remote_addr == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
-			);
-            Cache::store('isLoggedBack'.$this->id, $result);
-            return $result;
+		$cookie = Context::getInstance()->getCookie();
+        $result = (
+			$this->id && Validate::isUnsignedId($this->id) && Employee::checkPassword($this->id, $cookie->passwd) &&
+				(!isset($cookie->remote_addr) || $cookie->remote_addr == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
+		);
+		return $result;
+    }
+	
+	public function logout()
+    {
+		$cookie = Context::getInstance()->getCookie();
+        if ($cookie!=null){
+            $cookie->logout();
+            $cookie->write();
         }
-        return Cache::retrieve('isLoggedBack'.$this->id);
+        $this->id = null;
     }
 	
 	/**

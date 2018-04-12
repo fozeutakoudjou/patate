@@ -79,6 +79,8 @@ abstract class Controller
 	
     protected $controllerClass = false;
 	
+    protected $user;
+	
     /**
      * Initialize the page
      */
@@ -109,6 +111,7 @@ abstract class Controller
 		$this->onlyProcess = $onlyProcess;
 		$this->ajax = ($ajax === null) ? (Tools::getValue('ajax') || Tools::isSubmit('ajax')) : $ajax;
 		$this->context = Context::getInstance();
+		$this->user = $this->context->getUser();
         $this->template = $this->context->getTemplate();
 		if($changeContextController){
 			$this->context->setController($this);
@@ -131,7 +134,7 @@ abstract class Controller
         $this->init();
         if ($this->checkSecurityAccess()) {
             // setMedia MUST be called before postProcess
-            if (!$this->contentOnly && $this->useOfHeader) {
+            if (!$this->contentOnly) {
                 $this->setMedia();
             }
 
