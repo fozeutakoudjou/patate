@@ -45,6 +45,7 @@ class Template{
 	
 	
     public function render($file, $checkPath = true){
+		$initialLastRenderedTpl = $this->lastRenderedTpl;
 		$file = $this->getFileFullName($file);
 		$file = $checkPath ? FileTools::getTplFile($file) : $file;
         if(file_exists($file)){
@@ -55,6 +56,7 @@ class Template{
             include $file;
             $buffer = ob_get_contents();
             @ob_end_clean();
+			$this->lastRenderedTpl = $initialLastRenderedTpl;
             return $buffer;
         } else {
             throw new \Exception('Template file "' . $file . '" does not exist');

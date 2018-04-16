@@ -1,6 +1,8 @@
 <?php if(!$item->isContentOnly()):?>
-<form class="<?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>">
+<form class="<?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> action="<?php echo $item->getFormAction();?>" 
+	method="<?php echo $item->getMethod();?>" style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
+<input type="hidden" name="<?php $item->getSubmitAction();?>" value="1"/>
 <?php if($item->isDecorated()):?>
 	<div class="panel">
 	<?php if($item->hasHeader()):?>

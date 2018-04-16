@@ -362,7 +362,7 @@ class Tools
 	
 	public static function getLangFieldKey($field, $lang){
 		$code = is_string($lang)?$lang:$lang->getKey();
-		return $field.'_'.$code;
+		return $field.(empty($code) ? '' : '_'.$code);
     }
 	
 	public static function getRightCode($code){

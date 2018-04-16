@@ -1,6 +1,7 @@
 <?php
 namespace core\generator\html;
 abstract class Element extends Content{
+	protected $visible = true;
 	protected $id;
 	protected $name;
 	protected $label;
@@ -8,21 +9,31 @@ abstract class Element extends Content{
 	protected $attributes=array();
 	protected $classes=array();
 	
-	public function addClass($name) {
-		if (!in_array($name, $this->classes)) {
-			$this->classes[] =$name;
+	protected $wrapperClasses=array();
+	
+	public function addClass($class) {
+		if (!in_array($class, $this->classes)) {
+			$this->classes[] =$class;
+		}
+	}
+	public function addWrapperClasses($class) {
+		if (!in_array($class, $this->wrapperClasses)) {
+			$this->wrapperClasses[] =$wrapperClasses;
 		}
 	}
 	
 	public function setClasses($classes) {
 		$this->classes =$classes;
 	}
+	public function setWrapperClasses($wrapperClasses) {
+		$this->wrapperClasses =$wrapperClasses;
+	}
 	public function setAttributes($attributes, $clearExisting = false) {
 		if($clearExisting){
 			$this->attributes=array();
 		}
 		foreach ($attributes as $key => $value) {
-			$this->setAttribute($key, $value);
+			$this->addAttribute($key, $value);
 		}
 	}
 	public function addAttribute($name, $value = null) {
@@ -61,6 +72,10 @@ abstract class Element extends Content{
 		return implode(' ', $this->classes);
 	}
 	
+	public function drawWrapperClasses() {
+		return implode(' ', $this->wrapperClasses);
+	}
+	
 	public function getLabel(){
 		return $this->label;
 	}
@@ -73,10 +88,20 @@ abstract class Element extends Content{
 	public function setIcon($icon){
 		$this->icon=$icon;
 	}
+	public function isVisible(){
+		return $this->visible;
+	}
+	public function setVisible($visible){
+		$this->visible=$visible;
+	}
 	public function hasIcon(){
 		return ($this->icon!=null);
 	}
 	public function hasLabel(){
 		return !empty($this->label);
+	}
+	
+	public function drawVisible() {
+		return $this->visible ? '' : 'display:none;';
 	}
 }

@@ -81,6 +81,8 @@ abstract class Controller
 	
     protected $user;
 	
+    protected $lang;
+	
     /**
      * Initialize the page
      */
@@ -113,6 +115,7 @@ abstract class Controller
 		$this->context = Context::getInstance();
 		$this->user = $this->context->getUser();
         $this->template = $this->context->getTemplate();
+		$this->lang = $this->context->getLang();
 		if($changeContextController){
 			$this->context->setController($this);
 		}
@@ -314,7 +317,7 @@ abstract class Controller
         }
     }
 	
-	protected function addJSVariable($name, $value, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+	public function addJSVariable($name, $value, $displayInHead = false, $position = MEDIA::POSITION_LAST)
     {
 		$this->jsVariables[$name] = array(
 			'value' => $value,
@@ -323,7 +326,7 @@ abstract class Controller
 		);
     }
 	
-	protected function addJSContent($content, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+	public function addJSContent($content, $displayInHead = false, $position = MEDIA::POSITION_LAST)
     {
 		$this->jsContents[] = array(
 			'content' => $content,
@@ -332,7 +335,7 @@ abstract class Controller
 		);
     }
 	
-	protected function addCSSContent($content, $position = MEDIA::POSITION_LAST)
+	public function addCSSContent($content, $position = MEDIA::POSITION_LAST)
     {
 		$this->cssContents[] = array(
 			'content' => $content,
@@ -408,8 +411,7 @@ abstract class Controller
 	protected function assignBaseVariables()
     {
 		$languages = Language::getLanguages();
-		$lang = $this->context->getLang();
-		$language = $languages[$lang];
+		$language = $languages[$this->lang];
 		$link = $this->context->getLink();
 		$folders = array('');
 		if($this->isModule){

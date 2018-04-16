@@ -5,6 +5,8 @@ use core\generator\html\Block;
 class LoginAdminController extends AdminController
 {
 	protected $layout = 'login/layout';
+	protected $header = 'login/header';
+	protected $footer = 'login/footer';
 	protected $defaultAction = 'test';
     public function __construct()
     {
@@ -34,18 +36,43 @@ class LoginAdminController extends AdminController
 	
 	protected function processTest()
     {
-		$generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'));
-		$block = $generator->createBlock(true, 'Bonjour ukhyuieosp', 'pencil');
-		$block = $generator->createForm(true, true,  '#', true, 'User', 'user');
-		/*$block->setDecorated(true);
-		$block->setLabel('Bonjour');
-		$block->setIcon($generator->createIcon('user'));*/
-		$block->addClass('test');
-		$block->setContentOnly(false);
-		$block->setAttribute('test2', '');
-		$block->addChild($generator->createButton('Btn1', true, 'pencil'));
-		$block->addChild($generator->createLink('link'));
-		$this->processResult['content'] = $block->generate();
+		$generator = new HtmlGenerator($this->l('Submit'), $this->l('Back'), $this->formLanguages, $this->lang);
+		$formLogin = $generator->createForm(true, false,  '#', true, $this->l('Login'), '', '', 'submitLogin');
+		$inputEmail = $generator->createTextField('email', $this->l('Email'));
+		$inputEmail->setTemplateFile('login/generator/input_text', false);
+		$inputEmail->setLeftIcon($generator->createIcon('envelope'));
+		
+		$inputPassword = $generator->createPasswordField('password', $this->l('Password'));
+		$inputPassword->setTemplateFile('login/generator/input_text', false);
+		$inputPassword->setLeftIcon($generator->createIcon('lock'));
+		
+		$inputStayLogged = $generator->createCheckbox('stay_logged_in', 'Stay logged in', true);
+		$passwordLink = $generator->createLink('Forgot Password?', '#', '', 'forget_password');
+		$passwordLink->setShowHide(true);
+		$passwordLink->setTargetToShow('.form_forget_password');
+		$passwordLink->setTargetToHide('.form_login');
+		$formLogin->getSubmit()->setIcon(null);
+		$formLogin->setTemplateFile('login/generator/form', false);
+		$formLogin->addClass('form_login');
+		$formLogin->addChild($inputEmail);
+		$formLogin->addChild($inputPassword);
+		$formLogin->addChild($inputStayLogged);
+		$formLogin->addChild($passwordLink);
+		
+		$formForgetPass = $generator->createForm(true, true,  '#', true, $this->l('Forget Password ?'), '', '', 'submitForgot');
+		$inputEmail = $generator->createTextField('email_forgot', $this->l('Email'));
+		$inputEmail->setTemplateFile('login/generator/input_text', false);
+		$formForgetPass->setSubLabel($this->l('Enter your e-mail to reset it.'));
+		$formForgetPass->addClass('form_forget_password');
+		$formForgetPass->addChild($inputEmail);
+		$formForgetPass->setTemplateFile('login/generator/form_forget_password', false);
+		$formForgetPass->getSubmit()->setIcon(null);
+		$formForgetPass->getCancel()->setLabel($this->l('Back'));
+		$formForgetPass->getCancel()->setShowHide(true);
+		$formForgetPass->getCancel()->setTargetToShow('.form_login');
+		$formForgetPass->getCancel()->setTargetToHide('.form_forget_password');
+		$formForgetPass->setVisible(false);
+		$this->processResult['content'] = $formLogin->generate().$formForgetPass->generate();
     }
 	
 	protected function checkUserAccess()

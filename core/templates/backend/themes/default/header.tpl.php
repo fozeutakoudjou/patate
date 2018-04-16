@@ -9,8 +9,8 @@
 
 	<meta name="viewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=0">
 	<meta name="apple-mobile-web-app-capable" content="yes">
-	<link rel="icon" type="image/x-icon" href="<?php echo $imgDir;?>favicon.ico" />
-	<link rel="apple-touch-icon" href="<?php echo $imgDir;?>app_icon.png" />
+	<link rel="icon" type="image/x-icon" href="<?php echo $tools->getMedia($imgDir.'favicon.ico');?>" />
+	<link rel="apple-touch-icon" href="<?php echo $tools->getMedia($imgDir.'app_icon.png');?>" />
 
 	<meta name="robots" content="NOFOLLOW, NOINDEX">
 	<title><?php echo $metaTitle;?></title>
@@ -24,9 +24,10 @@
 	
 	<?php $tools->includeTpl('stylesheets', false, array('libraryKey'=>$libraryKey, 'notLibraryKey'=>$notLibraryKey, 'cssFiles'=>$cssFiles, 'cssContents'=>$cssContents), false);?>
 	
-	<link href="<?php echo $cssDir;?>components.css" rel="stylesheet" type="text/css"/>
-    <link href="<?php echo $cssDir;?>plugins.css" rel="stylesheet" type="text/css"/>
-    <link href="<?php echo $cssAdminThemeDir;?>layout.css" rel="stylesheet" type="text/css"/>
+	<link href="<?php echo $tools->getMedia($cssAdminThemeDir.'components.min.css');?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo $tools->getMedia($cssAdminThemeDir.'plugins.min.css');?>" rel="stylesheet" type="text/css"/>
+	
+	<link href="<?php echo $cssAdminThemeDir;?>layout.css" rel="stylesheet" type="text/css"/>
     <link id="style_color" href="<?php echo $cssAdminThemeDir;?>themes/default.css" rel="stylesheet" type="text/css"/>
     <link href="<?php echo $cssAdminThemeDir;?>custom.css" rel="stylesheet" type="text/css"/>
     <link href="<?php echo $cssAdminThemeDir;?>tasks.css" rel="stylesheet" type="text/css"/>

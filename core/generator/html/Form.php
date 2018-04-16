@@ -5,14 +5,18 @@ class Form extends Block{
 	protected $formAction;
 	protected $method;
 	protected $submit;
+	protected $submitAction;
 	protected $cancel;
+	protected $subLabel;
+	protected $enctype='multipart/form-data';
 	
 	protected $contentOnly = false;
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $method = 'post') {
+	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $method = 'post') {
 		parent::__construct($decorated, $label, $icon);
 		$this->setFormAction($formAction);
 		$this->setMethod($method);
+		$this->setSubmitAction($submitAction);
 		
 	}
 	public function hasCancel(){
@@ -26,6 +30,16 @@ class Form extends Block{
 		return ($this->hasCancel() || $this->hasSubmit() || !empty($this->footers));
 	}
 	
+	public function hasSubLabel(){
+		return !empty($this->subLabel);
+	}
+	
+	public function getSubmitAction(){
+		return $this->submitAction;
+	}
+	public function setSubmitAction($submitAction){
+		$this->submitAction=$submitAction;
+	}
 	public function getFormAction(){
 		return $this->formAction;
 	}
@@ -37,6 +51,12 @@ class Form extends Block{
 	}
 	public function setMethod($method){
 		$this->method=$method;
+	}
+	public function getSubLabel(){
+		return $this->subLabel;
+	}
+	public function setSubLabel($subLabel){
+		$this->subLabel=$subLabel;
 	}
 	
 	public function setSubmit($submit){
@@ -58,5 +78,12 @@ class Form extends Block{
 	}
 	public function setContentOnly($contentOnly){
 		$this->contentOnly=$contentOnly;
+	}
+	
+	public function getEnctype(){
+		return $this->enctype;
+	}
+	public function setEnctype($enctype){
+		$this->enctype=$enctype;
 	}
 }

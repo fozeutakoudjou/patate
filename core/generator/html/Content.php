@@ -3,20 +3,24 @@ namespace core\generator\html;
 use core\Context;
 use core\FileTools;
 class Content{
-	protected $content;
+	protected $html;
 	protected $name;
-	protected $templateFile = 'generator/content';
+	protected $templateFile;
+	
+	protected static $languages = array();
+	
+	protected static $activeLang = '';
 	
 	protected $absoluteTemplate = false;
-	public function __construct($content = '') {
-		$this->content=$content;
+	public function __construct($html = '') {
+		$this->setHtml($html);
 	}
 	
-	public function setHtml($content) {
-		$this->content=$content;
+	public function setHtml($html) {
+		$this->html=$html;
 	}
 	public function gethtml() {
-		return $this->content;
+		return $this->html;
 	}
 	public function generate() {
 		$content = '';
@@ -25,6 +29,8 @@ class Content{
 			$template = $context->getTemplate();
 			$file = $this->absoluteTemplate ? $this->templateFile : FileTools::getTemplateDir(true) . $this->templateFile;
 			$template->assign('item', $this);
+			$template->assign('languages', self::$languages);
+			$template->assign('activeLang', self::$activeLang);
 			$content = $template->render($file);
 		}
 		
@@ -45,5 +51,20 @@ class Content{
 	
 	public function getName() {
 		return $this->name;
+	}
+	public function hasName() {
+		return !empty($this->name);
+	}
+	
+	public function setName($name){
+		$this->name=$name;
+	}
+	
+	public static function setLanguages($languages){
+		self::$languages=$languages;
+	}
+	
+	public static function setActiveLang($activeLang){
+		self::$activeLang=$activeLang;
 	}
 }

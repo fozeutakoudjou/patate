@@ -5,10 +5,16 @@ class HtmlGenerator{
 	protected $defaultCancelText;
 	protected $defaultCancelIcon = 'cancel';
 	protected $defaultSubmitIcon='save';
+	protected $languages;
+	protected $activeLang;
 	
-	public function __construct($defaultSubmitText = '', $defaultCancelText = '') {
+	public function __construct($defaultSubmitText = '', $defaultCancelText = '', $languages = array(), $activeLang = '') {
 		$this->setDefaultSubmitText($defaultSubmitText);
 		$this->setDefaultCancelText($defaultCancelText);
+		$this->setLanguages($languages);
+		$this->setActiveLang($activeLang);
+		Content::setLanguages($this->languages);
+		Content::setActiveLang($this->activeLang);
 	}
 	
 	public function setDefaultSubmitText($defaultSubmitText){
@@ -26,14 +32,22 @@ class HtmlGenerator{
 		$this->defaultCancelIcon=$defaultCancelIcon;
 	}
 	
+	public function setLanguages($languages){
+		$this->languages=$languages;
+	}
+	
+	public function setActiveLang($activeLang){
+		$this->activeLang=$activeLang;
+	}
+	
 	
 	public function createBlock($decorated = true, $label = '', $icon = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
 		return new Block($decorated, $label, $icon);
 	}
-	public function createForm($useSubmit = true, $useCancel = true, $cancelLink = '#', $decorated = true, $label = '', $icon = '', $formAction = '', $method = 'post'){
+	public function createForm($useSubmit = true, $useCancel = true, $cancelLink = '#', $decorated = true, $label = '', $icon = '', $formAction = '', $submitAction = '', $method = 'post'){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		$form = new Form($decorated, $label, $icon, $formAction, $method);
+		$form = new Form($decorated, $label, $icon, $formAction, $submitAction, $method);
 		if($useSubmit){
 			$form->setSubmit($this->createButton($this->defaultSubmitText, true, $this->defaultSubmitIcon));
 		}
@@ -54,13 +68,25 @@ class HtmlGenerator{
 		return new Content($content);
 	}
 	
-	public function createButton($label, $isSubmit = false, $icon = ''){
+	public function createButton($label, $isSubmit = false, $icon = '', $name = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Button($label, $isSubmit, $icon);
+		return new Button($label, $isSubmit, $icon, $name);
 	}
 	
-	public function createLink($label, $href = '#', $icon = ''){
+	public function createLink($label, $href = '#', $icon = '', $name = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Link($label, $href, $icon);
+		return new Link($label, $href, $icon, $name);
+	}
+	
+	public function createTextField($name, $label = ''){
+		return new InputText($name, $label, 'text');
+	}
+	
+	public function createPasswordField($name, $label = ''){
+		return new InputText($name, $label, 'password');
+	}
+	
+	public function createCheckbox($name, $label = '', $checked = false){
+		return new Checkbox($name, $label, $checked);
 	}
 }

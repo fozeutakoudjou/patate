@@ -8,6 +8,7 @@ use core\Media;
 use core\StringTools;
 use core\FileTools;
 use core\models\Configuration;
+use core\models\Language;
 
 abstract class AdminController extends Controller
 {
@@ -24,16 +25,16 @@ abstract class AdminController extends Controller
     protected $defaultAction = 'list';
 	protected $modals = array();
 	protected $metaTitle = array();
-	protected $toolbarTitle;
+	protected $isAdmin = true;
+	protected $formLanguages;
 
     public function __construct()
     {
-		$this->isAdmin = true;
+		parent::__construct();
         global $timer_start;
         $this->timer_start = $timer_start;
         $this->modelActions = array();
-        parent::__construct();
-
+        $this->formLanguages = Language::getLanguages(false);
         /*$default_theme_name = 'default';
 
         if (defined('_PS_BO_DEFAULT_THEME_') && _PS_BO_DEFAULT_THEME_
@@ -223,12 +224,12 @@ abstract class AdminController extends Controller
 		parent::setMedia();
 		$link = $this->context->getLink();
 		$librariesUri = $link->getAssetLibrariesURI();
-        $this->addjQueryPlugin(array('scrollTo', 'alerts', 'chosen', 'autosize', 'fancybox' ));
+        //$this->addjQueryPlugin(array('scrollTo', 'alerts', 'chosen', 'autosize', 'fancybox' ));
         $this->addjQueryPlugin('growl', null, false);
 		$this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
-		$this->addJS($librariesUri.'bootstrap/js/bootstrap.min.js', array('isLibrary' => true), false);
+		/*$this->addJS($librariesUri.'bootstrap/js/bootstrap.min.js', array('isLibrary' => true), false);
 		$this->addJS($librariesUri.'js/modernizr.min.js', array('isLibrary' => true), false);
-		$this->addJS($librariesUri.'js/moment-with-langs.min.js', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'js/moment-with-langs.min.js', array('isLibrary' => true), false);*/
 	}
 
     protected function display()

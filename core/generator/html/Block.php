@@ -14,8 +14,20 @@ class Block extends Element{
 		$this->setDecorated($decorated);
 	}
 	
+	public function hasChild($name) {
+		return isset($this->contents[$name]);
+	}
+	
 	public function addChild($child) {
-		$this->contents[] = $child;
+		if($child->hasName()){
+			$this->contents[$child->getName()] = $child;
+		}else{
+			$this->contents[] = $child;
+		}
+	}
+	
+	public function getChild($name) {
+		return $this->hasChild($name) ? $this->contents[$name] : null;
 	}
 	
 	public function generateContent() {
@@ -46,6 +58,10 @@ class Block extends Element{
 	public function setValue($value){
 		$this->value=$value;
 		$this->valueSetted =true;
+	}
+	
+	public function needValue() {
+		return true;
 	}
 	
 	public function isDecorated(){

@@ -3,9 +3,8 @@ namespace core\generator\html;
 class Link extends Command{
 	protected $templateFile = 'generator/link';
 	protected $href = false;
-	public function __construct($label, $href ='#', $icon = null) {
-		$this->setLabel($label);
-		$this->setIcon($icon);
+	public function __construct($label, $href ='#', $icon = null, $name = '') {
+		parent::__construct($label, $icon, $name);
 		$this->setHref($href);
 	}
 	
