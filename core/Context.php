@@ -125,4 +125,8 @@ class Context
     {
 		return $this->link;
     }
+	public function getController()
+    {
+		return $this->controller;
+    }
 }

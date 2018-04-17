@@ -1,5 +1,8 @@
 <?php
 namespace core\generator\html;
+use core\generator\html\table\Table;
+use core\generator\html\table\Column;
+use core\generator\html\table\Row;
 class HtmlGenerator{
 	protected $defaultSubmitText;
 	protected $defaultCancelText;
@@ -88,5 +91,10 @@ class HtmlGenerator{
 	
 	public function createCheckbox($name, $label = '', $checked = false){
 		return new Checkbox($name, $label, $checked);
+	}
+	
+	public function createTable($label = '', $icon = '', $decorated = true){
+		$icon = empty($icon) ? null : $this->createIcon($icon);
+		return new Table($decorated, $label, $icon);
 	}
 }

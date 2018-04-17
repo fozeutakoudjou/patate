@@ -27,6 +27,8 @@ abstract class AdminController extends Controller
 	protected $metaTitle = array();
 	protected $isAdmin = true;
 	protected $formLanguages;
+	
+	protected $toolbarTitle;
 
     public function __construct()
     {
@@ -120,7 +122,7 @@ abstract class AdminController extends Controller
             }
         }
 
-        if ($this->controllerClass != 'Login' && (!isset($this->user) || !$this->user->isLoggedBack())) {
+        /*if ($this->controllerClass != 'Login' && (!isset($this->user) || !$this->user->isLoggedBack())) {
             if (isset($this->user)) {
                 $this->user->logout();
             }
@@ -137,7 +139,7 @@ abstract class AdminController extends Controller
 				$redirectParams['email'] = $email;
 			}
             Tools::redirect($this->context->getLink()->getAdminLink('login', $redirectParams));
-        }
+        }*/
     }
 	
 	protected function getRightCode()
@@ -225,7 +227,7 @@ abstract class AdminController extends Controller
 		$link = $this->context->getLink();
 		$librariesUri = $link->getAssetLibrariesURI();
         //$this->addjQueryPlugin(array('scrollTo', 'alerts', 'chosen', 'autosize', 'fancybox' ));
-        $this->addjQueryPlugin('growl', null, false);
+       // $this->addjQueryPlugin('growl', null, false);
 		$this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
 		/*$this->addJS($librariesUri.'bootstrap/js/bootstrap.min.js', array('isLibrary' => true), false);
 		$this->addJS($librariesUri.'js/modernizr.min.js', array('isLibrary' => true), false);

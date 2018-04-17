@@ -1,8 +1,8 @@
 <?php
 namespace core\generator\html;
 class Block extends Element{
-	protected $contents;
-	protected $value;
+	protected $contents = array();
+	protected $value = array();
 	protected $decorated;
 	protected $footers = array();
 	protected $headers = array();

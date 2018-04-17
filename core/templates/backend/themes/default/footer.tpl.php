@@ -7,36 +7,50 @@
 			<span><?php echo date('Y');?> &copy;.&nbsp;<?php echo 'All right reserved'; ?></span>
 		</div>
 	</div>
-	<div class="page-footer-tools">
-		<span class="go-top">
-		<i class="fa fa-angle-up"></i>
-		</span>
+	<div class="scroll-to-top">
+		<i class="icon-arrow-up"></i>
 	</div>
 </div>
 <?php endif;?>
+</div>
 
 <?php if(isset($modals)):?>
 <div>
 	<?php echo $modals;?>
 </div>
+<div class="quick-nav-overlay"></div>
 <?php endif;?>
 <?php $tools->includeTpl('javascript', false, array('partKey'=>$notHeadKey, 'libraryKey'=>$libraryKey, 'notLibraryKey'=>$notLibraryKey, 'jsFiles'=>$jsFiles, 'jsContents'=>$jsContents, 'jsVariables'=>$jsVariables), false);?>
 
 <!--[if lt IE 9]>
 <script src="<?php echo $librariesDir;?>js/respond.min.js"></script>
 <script src="<?php echo $librariesDir;?>js/excanvas.min.js"></script> 
+<script src="<?php echo $librariesDir;?>js/ie8.fix.min.js"></script> 
 <![endif]-->
+<script src="<?php echo $librariesDir;?>bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/jquery.blockui.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>js/jquery.cokie.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>uniform/jquery.uniform.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
-	
-<script src="<?php echo $jsAdminThemeDir;?>metronic.js" type="text/javascript"></script>
-<script src="<?php echo $jsAdminThemeDir;?>layout.js" type="text/javascript"></script>
-<script src="<?php echo $jsAdminThemeDir;?>quick-sidebar.js" type="text/javascript"></script>
-<script src="<?php echo $jsAdminThemeDir;?>demo.js" type="text/javascript"></script>
+
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'app.min.js');?>" type="text/javascript"></script>
+
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'layout.min.js');?>" type="text/javascript"></script>
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'demo.min.js');?>" type="text/javascript"></script>
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-sidebar.min.js');?>" type="text/javascript"></script>
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-nav.min.js');?>" type="text/javascript"></script>
+
+<script>
+	$(document).ready(function()
+	{
+		$('#clickmewow').click(function()
+		{
+			$('#radio1003').attr('checked', 'checked');
+		});
+	});
+</script>
 
 <?php if(isset($additionalFooter)):?>
 	<?php echo $additionalFooter;?>

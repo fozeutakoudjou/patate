@@ -1,3 +1,4 @@
+<?php if(!$item->isFieldOnly()):?>
 <div class="form-group clearfix">
 	<?php if(!$item->isLabelDisabled()):?>
 		<?php if($item->hasLabelObject()):?>
@@ -9,6 +10,7 @@
 		<?php endif;?>
 	<?php endif;?>
 	<div class="col-lg-9">
+<?php endif;?>
 		<div class="clearfix">
 			<?php if($item->isTranslatable()):?>
 				<div class="col-lg-9 translatable-field">
@@ -37,5 +39,7 @@
 			<?php echo $item->getHelpText();?>
 		</div>
 		<?php endif;?>
+<?php if(!$item->isFieldOnly()):?>
 	</div>
 </div>
+<?php endif;?>

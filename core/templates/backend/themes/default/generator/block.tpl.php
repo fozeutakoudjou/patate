@@ -1,21 +1,25 @@
 <?php if($item->isDecorated()):?>
-	<div class="panel <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
+	<div class="portlet light bordered <?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?>" <?php echo $item->drawAttributes();?>
+		 style="<?php echo $item->drawVisible();?>">
 	<?php if($item->hasHeader()):?>
-		<div class="panel-heading">
+		<div class="portlet-title">
 			<?php if($item->hasIcon() || $item->hasLabel()):?>
-				<span>
+				<div class="caption">
 				<?php if($item->hasIcon()):?> <?php echo $item->getIcon()->generate();?> <?php endif;?>
 				<?php echo $item->getLabel();?>
-				</span>
+				</div>
 			<?php endif;?>
 			<?php $headers = $item->getHeaders();?>
-			<?php foreach($headers as $header):?>
-				<?php echo $header->generate();?>
-			<?php endforeach;?>
-			
+			<?php if(!empty($headers)):?>
+				<div class="actions">
+				<?php foreach($headers as $header):?>
+					<?php echo $header->generate();?>
+				<?php endforeach;?>
+				</div>
+			<?php endif;?>
 		</div>
 	<?php endif;?>
-		<div>
+		<div class="portlet-body">
 <?php else:?>
 	<div  class=" <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
 <?php endif;?>

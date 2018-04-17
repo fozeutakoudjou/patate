@@ -1,4 +1,5 @@
-<button type="<?php if($item->isSubmit()):?>submit<?php else:?>button<?php endif;?>" class="btn <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
+<button type="<?php if($item->isSubmit()):?>submit<?php else:?>button<?php endif;?>" class="btn <?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?>" 
+	<?php echo $item->drawAttributes();?> style="<?php echo $item->drawVisible();?>">
 	<?php if($item->hasCustomContent()):?>
 		<?php echo $item->getCustomContent();?>
 	<?php else:?>
