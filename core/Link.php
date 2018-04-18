@@ -40,7 +40,7 @@ class Link
 
     public function getAdminLink($controller, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
     {
-		return $this->getPageLink($controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, '', true);
+		return $this->getPageLink($controller, null, $request, $ssl, $requestUrlEncode, $relativeProtocol, '', true);
     }
 
     public function getPageLink($controller, $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false, $module = '', $isAdmin = false)

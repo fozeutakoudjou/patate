@@ -10,8 +10,6 @@ class Form extends Block{
 	protected $subLabel;
 	protected $enctype='multipart/form-data';
 	
-	protected $contentOnly = false;
-	
 	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $method = 'post') {
 		parent::__construct($decorated, $label, $icon);
 		$this->setFormAction($formAction);
@@ -71,13 +69,6 @@ class Form extends Block{
 	}
 	public function getCancel(){
 		return $this->cancel;
-	}
-	
-	public function isContentOnly(){
-		return $this->contentOnly;
-	}
-	public function setContentOnly($contentOnly){
-		$this->contentOnly=$contentOnly;
 	}
 	
 	public function getEnctype(){

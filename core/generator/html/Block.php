@@ -7,6 +7,7 @@ class Block extends Element{
 	protected $footers = array();
 	protected $headers = array();
 	protected $templateFile = 'generator/block';
+	protected $contentOnly = false;
 	
 	public function __construct($decorated = true, $label ='', $icon = null) {
 		$this->setLabel($label);
@@ -43,6 +44,12 @@ class Block extends Element{
 	public function generate() {
 		return parent::generate();
 	}
+	public function isContentOnly(){
+		return $this->contentOnly;
+	}
+	public function setContentOnly($contentOnly){
+		$this->contentOnly=$contentOnly;
+	}
 	public function getContents() {
 		return $this->contents;
 	}
@@ -54,7 +61,9 @@ class Block extends Element{
 			$this->addChild($content);
 		}
 	}
-	
+	public function getValue() {
+		return $this->value;
+	} 
 	public function setValue($value){
 		$this->value=$value;
 		$this->valueSetted =true;

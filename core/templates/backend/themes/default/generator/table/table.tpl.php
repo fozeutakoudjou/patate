@@ -12,11 +12,17 @@
 				<div class="caption">
 				<?php if($item->hasIcon()):?> <?php echo $item->getIcon()->generate();?> <?php endif;?>
 				<?php echo $item->getLabel();?>
+				<span class="badge"><?php echo $item->getTotalResult();?></span>
 				</div>
 			<?php endif;?>
-			<?php $headers = $item->getHeaders();?>
-			<?php if(!empty($headers)):?>
+			
+			<?php if($item->hasActionBlock()):?>
+				<?php $tableActions = $item->getTableActions();?>
+				<?php $headers = $item->getHeaders();?>
 				<div class="actions">
+				<?php foreach($tableActions as $tableAction):?>
+					<?php echo $tableAction->generate();?>
+				<?php endforeach;?>
 				<?php foreach($headers as $header):?>
 					<?php echo $header->generate();?>
 				<?php endforeach;?>
@@ -50,6 +56,11 @@
 						<?php endif;?>
 					</th>
 				<?php endforeach;?>
+				<?php if($item->needActionColumn()):?>
+					<th>
+						<?php echo $tools->l('Actions');?>
+					</th>
+				<?php endif;?>
 			</tr>
 			<?php if($item->hasSearchColumn()):?>
 				<tr role="row" class="filter">
@@ -64,63 +75,22 @@
 							<?php endif;?>
 						</td>
 					<?php endforeach;?>
+					<?php if($item->needActionColumn()):?>
+					<td>
+						<?php echo $item->getSearchButton()->generate();?>
+						<?php if($item->needSearchResetButton()):?>
+							<?php echo $item->getSearchResetButton()->generate();?>
+						<?php endif;?>
+					</td>
+				<?php endif;?>
 				</tr>
 			<?php endif;?>
-			<tr role="row" class="filter">
-				<td> </td>
-				<td>
-					<input type="text" class="form-control form-filter input-sm" name="order_id"> </td>
-				<td>
-					<div class="input-group date date-picker margin-bottom-5" data-date-format="dd/mm/yyyy">
-						<input type="text" class="form-control form-filter input-sm" readonly name="order_date_from" placeholder="From">
-						<span class="input-group-btn">
-							<button class="btn btn-sm default" type="button">
-								<i class="fa fa-calendar"></i>
-							</button>
-						</span>
-					</div>
-					<div class="input-group date date-picker" data-date-format="dd/mm/yyyy">
-						<input type="text" class="form-control form-filter input-sm" readonly name="order_date_to" placeholder="To">
-						<span class="input-group-btn">
-							<button class="btn btn-sm default" type="button">
-								<i class="fa fa-calendar"></i>
-							</button>
-						</span>
-					</div>
-				</td>
-				<td>
-					<input type="text" class="form-control form-filter input-sm" name="order_customer_name"> </td>
-				<td>
-					<input type="text" class="form-control form-filter input-sm" name="order_ship_to"> </td>
-				<td>
-					<div class="margin-bottom-5">
-						<input type="text" class="form-control form-filter input-sm" name="order_price_from" placeholder="From" /> </div>
-					<input type="text" class="form-control form-filter input-sm" name="order_price_to" placeholder="To" /> </td>
-				<td>
-					<div class="margin-bottom-5">
-						<input type="text" class="form-control form-filter input-sm margin-bottom-5 clearfix" name="order_quantity_from" placeholder="From" /> </div>
-					<input type="text" class="form-control form-filter input-sm" name="order_quantity_to" placeholder="To" /> </td>
-				<td>
-					<select name="order_status" class="form-control form-filter input-sm">
-						<option value="">Select...</option>
-						<option value="pending">Pending</option>
-						<option value="closed">Closed</option>
-						<option value="hold">On Hold</option>
-						<option value="fraud">Fraud</option>
-					</select>
-				</td>
-				<td>
-					<div class="margin-bottom-5">
-						<button class="btn btn-sm green btn-outline filter-submit margin-bottom">
-							<i class="fa fa-search"></i> Search</button>
-					</div>
-					<button class="btn btn-sm red btn-outline filter-cancel">
-						<i class="fa fa-times"></i> Reset</button>
-				</td>
-			</tr>
 		</thead>
 		<tbody>
-			
+			<?php $values = $item->getValue();?>
+			<?php foreach($values as $value):?>
+				<?php echo $item->createRow($value)->generate();?>
+			<?php endforeach;?>
 		</tbody>
 	</table>
 	<?php if($item->hasFooter()):?>

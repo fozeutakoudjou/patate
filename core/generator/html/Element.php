@@ -8,7 +8,7 @@ abstract class Element extends Content{
 	protected $icon;
 	protected $attributes=array();
 	protected $classes=array();
-	
+	protected $labelDisabled = false;
 	protected $wrapperClasses=array();
 	
 	public function addClass($class) {
@@ -103,5 +103,12 @@ abstract class Element extends Content{
 	
 	public function drawVisible() {
 		return $this->visible ? '' : 'display:none;';
+	}
+	
+	public function isLabelDisabled() {
+		return $this->labelDisabled;
+	} 
+	public function setLabelDisabled($labelDisabled){
+		$this->labelDisabled=$labelDisabled;
 	}
 }

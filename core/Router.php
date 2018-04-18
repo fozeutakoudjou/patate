@@ -41,12 +41,15 @@ class Router{
 	protected $adminDefaultRoutes = array(
 		'module_rule' => array(
             'controller' =>    null,
-            'rule' =>        'module/{module}{/:controller}{/:action}{/:id}',
+            'rule' =>        'module/{module}{/:controller}{/:action}{/:param1}{/:param2}{/:param3}{/:param4}',
             'keywords' => array(
                 'module' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'module'),
                 'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
                 'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action', 'optional' => true),
-                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id', 'optional' => true),
+                'param1' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param1', 'optional' => true),
+                'param2' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param2', 'optional' => true),
+                'param3' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param3', 'optional' => true),
+                'param4' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param4', 'optional' => true),
             ),
             'params' => array(
                 'is_module' => '1',
@@ -54,11 +57,14 @@ class Router{
         ),
 		'controller_rule' => array(
             'controller' =>    null,
-            'rule' =>        '{controller}{/:action}{/:id}',
+            'rule' =>        '{controller}{/:action}{/:param1}{/:param2}{/:param3}{/:param4}',
             'keywords' => array(
                 'controller' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'controller'),
                 'action' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'action', 'optional' => true),
-                'id' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'id', 'optional' => true),
+                'param1' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param1', 'optional' => true),
+                'param2' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param2', 'optional' => true),
+                'param3' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param3', 'optional' => true),
+                'param4' =>        array('regexp' => '[_a-zA-Z0-9_-]+', 'param' => 'param4', 'optional' => true),
             )
         )
 	);

@@ -7,14 +7,23 @@ use core\Tools;
 use core\Media;
 use core\StringTools;
 use core\FileTools;
+use core\models\Model;
 use core\models\Configuration;
 use core\models\Language;
+
+use core\generator\html\HtmlGenerator;
+use core\constant\generator\ColumnType;
+
 
 abstract class AdminController extends Controller
 {
 
     /** @var array */
     protected $modelActions;
+	
+    protected $modelClassName;
+	
+    protected $defaultModel;
 	
     protected $modelDefinition;
 
@@ -29,6 +38,12 @@ abstract class AdminController extends Controller
 	protected $formLanguages;
 	
 	protected $toolbarTitle;
+	
+	protected $table;
+	
+	protected $columnsToExclude = array('dateAdd', 'dateUpdate', 'deleted');
+	
+	protected $generator;
 
     public function __construct()
     {
@@ -37,6 +52,12 @@ abstract class AdminController extends Controller
         $this->timer_start = $timer_start;
         $this->modelActions = array();
         $this->formLanguages = Language::getLanguages(false);
+		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
+		$boolOptions = array(''=>'--', '1'=>$this->l('Yes'), '0'=>$this->l('No'));
+		$this->generator->setColumnOptions(ColumnType::BOOL, $boolOptions);
+		$this->generator->setColumnOptions(ColumnType::ACTIVE, $boolOptions);
+		$this->generator->setSearchButtonText($this->l('Search'));
+		$this->generator->setResetButtonText($this->l('Reset'));
         /*$default_theme_name = 'default';
 
         if (defined('_PS_BO_DEFAULT_THEME_') && _PS_BO_DEFAULT_THEME_
@@ -91,7 +112,69 @@ abstract class AdminController extends Controller
         $this->tpl_folder = Tools::toUnderscoreCase(substr($this->controller_name, 5)).'/';
 		$this->admin_webpath = str_ireplace(_PS_CORE_DIR_, '', _PS_ADMIN_DIR_);
         $this->admin_webpath = preg_replace('/^'.preg_quote(DIRECTORY_SEPARATOR, '/').'/', '', $this->admin_webpath);*/
+		$this->initModel();
     }
+	
+	protected function processList(){
+		$this->createTable();
+		$this->createColumns();
+		$this->createTableActions();
+		$data = $this->formatListData($this->getListData());
+		$this->table->setTotalResult($data['total']);
+		$this->table->setValue($data['list']);
+		$this->processResult['content'] = $this->table->generate();
+	}
+	
+	public function initModel()
+    {
+		$this->defaultModel = $this->getDAOInstance()->createModel();
+		$this->modelDefinition = $this->defaultModel->getDefinition();
+	}
+	
+	public function createTable()
+    {
+		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'), 'user', $this->defaultAction, $this->controllerClass, $this->moduleName);
+		$identifier = is_array($this->modelDefinition['primary']) ? implode('_', $this->modelDefinition['primary']) : $this->modelDefinition['primary'];
+		$this->table->setIdentifier($identifier);
+		$this->customizeTable();
+	}
+	
+	public function customizeTable() {}
+	
+	public function createTableActions() {
+		$addLink = $this->context->getLink()->getAdminLink(strtolower($this->controllerClass), array('action'=>'add'));
+		$this->generator->createTableAction($this->table, $this->l('Add'), $addLink, 'plus', $this->l('Add'), true, 'add');
+	}
+	
+	
+	public function createColumns()
+    {
+		$primaries = is_array($this->modelDefinition['primary'])?$this->modelDefinition['primary'] : array($this->modelDefinition['primary']);
+		foreach($primaries as $field){
+			if(!isset($this->modelDefinition['fields'][$field]) && !in_array($field, $this->columnsToExclude)){
+				$this->generator->createColumn($this->table, $this->l($field), $field, ColumnType::TEXT, true, true);
+			}
+		}
+		
+		foreach($this->modelDefinition['fields'] as $field => $fieldDefinition){
+			if(!in_array($field, $this->columnsToExclude)){
+				$this->generator->createColumn($this->table, $this->l($field), $field, self::getColumnType($fieldDefinition['type'], $field), true, true);
+			}
+		}
+		$this->customizeColumns();
+	}
+	
+	public function customizeColumns() {}
+	
+	public function getListData() {
+		$fields = array();
+		$data = $this->getDAOInstance()->getByFields($fields, true);
+		return $data;
+	}
+	
+	public function formatListData($data) {
+		return $data;
+	}
 	
 	public function init()
     {
@@ -280,5 +363,18 @@ abstract class AdminController extends Controller
     {
 		$module = $useModule ? $this->moduleName:'';
 		return FileTools::getTemplateDir($this->isAdmin, $module) . $name;
+	}
+	
+	protected static function getColumnType($modelType, $field)
+    {
+		$type = ColumnType::TEXT;
+		if($field=='active'){
+			$type = ColumnType::ACTIVE;
+		}elseif($modelType==Model::TYPE_BOOL){
+			$type = ColumnType::BOOL;
+		}elseif($modelType==Model::TYPE_DATE){
+			$type = ColumnType::DATE;
+		}
+		return $type;
 	}
 }

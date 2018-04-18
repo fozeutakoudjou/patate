@@ -3,6 +3,7 @@ namespace core\generator\html;
 use core\generator\html\table\Table;
 use core\generator\html\table\Column;
 use core\generator\html\table\Row;
+use core\constant\generator\ColumnType;
 class HtmlGenerator{
 	protected $defaultSubmitText;
 	protected $defaultCancelText;
@@ -10,6 +11,10 @@ class HtmlGenerator{
 	protected $defaultSubmitIcon='save';
 	protected $languages;
 	protected $activeLang;
+	protected $columnOptions = array();
+	
+	protected $searchButtonText;
+	protected $resetButtonText;
 	
 	public function __construct($defaultSubmitText = '', $defaultCancelText = '', $languages = array(), $activeLang = '') {
 		$this->setDefaultSubmitText($defaultSubmitText);
@@ -20,6 +25,15 @@ class HtmlGenerator{
 		Content::setActiveLang($this->activeLang);
 	}
 	
+	public function setSearchButtonText($searchButtonText){
+		$this->searchButtonText=$searchButtonText;
+	}
+	public function setResetButtonText($resetButtonText){
+		$this->resetButtonText=$resetButtonText;
+	}
+	public function setColumnOptions($type, $columnOptions){
+		$this->columnOptions[$type]=$columnOptions;
+	}
 	public function setDefaultSubmitText($defaultSubmitText){
 		$this->defaultSubmitText=$defaultSubmitText;
 	}
@@ -55,7 +69,7 @@ class HtmlGenerator{
 			$form->setSubmit($this->createButton($this->defaultSubmitText, true, $this->defaultSubmitIcon));
 		}
 		if($useCancel){
-			$form->setCancel($this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon));
+			$form->setCancel($this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon, '', true));
 		}
 		return $form;
 	}
@@ -76,9 +90,9 @@ class HtmlGenerator{
 		return new Button($label, $isSubmit, $icon, $name);
 	}
 	
-	public function createLink($label, $href = '#', $icon = '', $name = ''){
+	public function createLink($label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Link($label, $href, $icon, $name);
+		return new Link($label, $href, $icon, $title, $useOfButtonStyle, $name);
 	}
 	
 	public function createTextField($name, $label = ''){
@@ -93,8 +107,21 @@ class HtmlGenerator{
 		return new Checkbox($name, $label, $checked);
 	}
 	
-	public function createTable($label = '', $icon = '', $decorated = true){
+	public function createTable($label = '', $icon = '', $defaultAction = '', $controller = '', $module = '', $decorated = true){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Table($decorated, $label, $icon);
+		return new Table($decorated, $label, $icon, $defaultAction, $controller, $module, $this->searchButtonText, $this->resetButtonText);
+	}
+	
+	public function createColumn($table, $label, $name, $type, $sortable = true, $searchable = true, $options = array()){
+		if(empty($options) && isset($this->columnOptions[$type])){
+			$options = $this->columnOptions[$type];
+		}
+		return new Column($table, $label, $name, $type, $sortable, $searchable, $options);
+	}
+	
+	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = ''){
+		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name);
+		$table->addTableAction($link);
+		return $link;
 	}
 }

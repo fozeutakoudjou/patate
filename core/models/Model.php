@@ -325,4 +325,8 @@ class Model{
 	public function getAssociated($field){
 		return isset($this->associateds[$field]) ? $this->associateds[$field] : null;
 	}
+	
+	public function toArray(){
+		
+	}
 }

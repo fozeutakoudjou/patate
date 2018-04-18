@@ -8,7 +8,7 @@ class Field extends Element{
 	protected $helpText;
 	protected $errors;
 	protected $labelObject;
-	protected $labelDisabled = false;
+	
 	protected $translatable = false;
 	protected $fieldOnly = false;
 	
@@ -55,12 +55,7 @@ class Field extends Element{
 	public function setTranslatable($translatable){
 		$this->translatable=$translatable;
 	}
-	public function isLabelDisabled() {
-		return $this->labelDisabled;
-	} 
-	public function setLabelDisabled($labelDisabled){
-		$this->labelDisabled=$labelDisabled;
-	}
+	
 	public function isFieldOnly() {
 		return $this->fieldOnly;
 	} 
