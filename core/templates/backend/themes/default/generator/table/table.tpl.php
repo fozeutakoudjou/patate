@@ -1,8 +1,8 @@
-<?php $tools->addCSS($librariesDir.'datatables/datatables.min.css', array(), false);?>
-<?php $tools->addCSS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.css', array(), false);?>
+<?php /*$tools->addCSS($librariesDir.'datatables/datatables.min.css', array(), false);*/?>
+<?php /*$tools->addCSS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.css', array(), false);*/?>
 
-<?php $tools->addJS($librariesDir.'datatables/datatables.min.js', array(), false);?>
-<?php $tools->addJS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.js', array(), false);?>
+<?php /*$tools->addJS($librariesDir.'datatables/datatables.min.js', array(), false);*/?>
+<?php /*$tools->addJS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.js', array(), false);*/?>
 <?php if($item->isDecorated()):?>
 	<div class="portlet light bordered <?php echo $item->drawWrapperClasses();?>" 
 		style="<?php echo $item->drawVisible();?>">
@@ -35,7 +35,7 @@
 <?php else:?>
 	<div class="<?php echo $item->drawWrapperClasses();?>" style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
-<div class="table-container">
+<div class="table-container table-responsive">
 	<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
 		<thead>
 			<?php $columns = $item->getColumns();?>

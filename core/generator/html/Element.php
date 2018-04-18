@@ -10,6 +10,8 @@ abstract class Element extends Content{
 	protected $classes=array();
 	protected $labelDisabled = false;
 	protected $wrapperClasses=array();
+	protected $wrapperWidth;
+	protected $width;
 	
 	public function addClass($class) {
 		if (!in_array($class, $this->classes)) {

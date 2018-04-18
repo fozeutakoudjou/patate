@@ -44,6 +44,15 @@ abstract class AdminController extends Controller
 	protected $columnsToExclude = array('dateAdd', 'dateUpdate', 'deleted');
 	
 	protected $generator;
+	
+	protected $orderWay;
+	
+	protected $orderColumn;
+	
+	protected $itemsPerPage;
+	
+	protected $itemsPerPageOptions;
+	protected $currentPage;
 
     public function __construct()
     {
