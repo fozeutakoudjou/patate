@@ -6,10 +6,11 @@ abstract class Command extends Element{
 	protected $targetToShow;
 	protected $targetToHide;
 	
-	public function __construct($label, $icon = null, $name = '') {
+	public function __construct($label, $icon = null, $name = '', $action = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
 		$this->setName($name);
+		$this->setAction($action);
 	}
 	
 	public function getCustomContent() {

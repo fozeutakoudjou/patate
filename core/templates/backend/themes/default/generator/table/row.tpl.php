@@ -1,19 +1,17 @@
 <?php if(!$item->isContentOnly()):?>
-	<tr class="<?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?>" 
+	<tr class="<?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?> <?php echo $item->getWidth();?>" 
 		<?php echo $item->drawAttributes();?> style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
 <?php $table = $item->getTable();?>
 <?php $columns = $table->getColumns();?>
 <?php if($table->needRowSelector()):?>
-	<th>
+	<td>
 		<?php echo $table->createRowSelector(false)->generate();?>
-	</th>
+	</td>
 <?php endif;?>
 <?php foreach($columns as $column):?>
 	<?php $column->prepare();?>
-	<td>
-		<?php echo $column->getCellValue($item->getValue());?>
-	</td>
+	<?php echo $column->createCell($item->getValue())->generate();?>
 <?php endforeach;?>
 <?php if($table->needActionColumn()):?>
 	<td>

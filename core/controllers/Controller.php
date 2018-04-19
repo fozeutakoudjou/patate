@@ -63,7 +63,7 @@ abstract class Controller
 
     abstract protected function checkSecurityAccess();
 	
-    abstract protected function checkUserAccess();
+    abstract protected function checkUserAccess($action);
 	
     abstract protected function ProcessAction();
 	
@@ -141,7 +141,7 @@ abstract class Controller
                 $this->setMedia();
             }
 
-            if ($this->checkUserAccess()) {
+            if ($this->checkUserAccess($this->action)) {
                 $this->ProcessAction();
             } else {
                 $this->errors[] = Tools::displayError('Access denied.');

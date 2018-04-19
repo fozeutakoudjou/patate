@@ -4,11 +4,14 @@ namespace core\generator\html\Link;
 class RowAction extends Link{
 	protected $urlParams;
 	protected $table;
+	protected $default;
+	protected $formatter;
 	
-	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle false, $name = '', $urlParams = array(), $table = null) {
-		parent::__construct($label, $href, $icon, $title, $useOfButtonStyle, $name);
+	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle false, $name = '', $action = '', $urlParams = array(), $table = null, $default = false) {
+		parent::__construct($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$this->setUrlParams($urlParams);
 		$this->setTable($table);
+		$this->setTable($default);
 	}
 	
 	public function getUrlParams(){
@@ -25,20 +28,26 @@ class RowAction extends Link{
 		$this->table=$table;
 	}
 	
+	public function isDefault() {
+		return $this->default;
+	}
+	public function setDefault($default) {
+		$this->default=$default;
+	}
+	
 	public function createLink($values) {
-		$params = $this->urlParams;
-		if(isset($params['params']) && is_array(isset($params['params']))){
-			foreach($params['params'] as $key => $param){
-				$value = '';
-				if(isset($param['value'])){
-					$value = $param['value'];
-				}elseif(isset($param['field']) && isset($values[$param['field']])){
-					$value = $values[$param['field']];
-				}
-				$params[$key] = $value;
-			}
-			unset($params['params']);
+		
+	}
+	
+	public function generate(){
+		$link = new Link($this->label, $this->href, $this->icon, $this->title, $this->useOfButtonStyle, $this->name, $this->action);
+		$link->setClasses($this->classes);
+		$formatter = $this->column->getDataFormatter();
+		if($formatter!=null){
+			$data = $formatter->format($this);
+		}else{
+			$this->html = $this->value;
 		}
-		return $this->table->createLink($params);
+		return parent::generate();
 	}
 }

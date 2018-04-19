@@ -5,8 +5,8 @@ class Link extends Command{
 	protected $href;
 	protected $useOfButtonStyle = false;
 	protected $title;
-	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle = false, $name = '') {
-		parent::__construct($label, $icon, $name);
+	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle = false, $name = '', $action = '') {
+		parent::__construct($label, $icon, $name, $action);
 		$this->setHref($href);
 		$this->setUseOfButtonStyle($useOfButtonStyle);
 	}

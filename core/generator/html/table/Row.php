@@ -5,8 +5,6 @@ class Row extends Block{
 	protected $templateFile = 'generator/table/row';
 	protected $table;
 	
-	protected $emptyContent;
-	
 	public function __construct($table, $value) {
 		$this->setTable($table);
 		$this->setValue($value);

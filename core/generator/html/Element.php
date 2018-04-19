@@ -12,6 +12,7 @@ abstract class Element extends Content{
 	protected $wrapperClasses=array();
 	protected $wrapperWidth;
 	protected $width;
+	protected $value = array();
 	
 	public function addClass($class) {
 		if (!in_array($class, $this->classes)) {
@@ -47,9 +48,6 @@ abstract class Element extends Content{
 	
 	public function getId() {
 		return $this->id;
-	}
-	public function getName() {
-		return $this->name;
 	}
 	
 	public function getClasses() {
@@ -112,5 +110,25 @@ abstract class Element extends Content{
 	} 
 	public function setLabelDisabled($labelDisabled){
 		$this->labelDisabled=$labelDisabled;
+	}
+	public function getWidth(){
+		return $this->width;
+	}
+	public function setWidth($width){
+		$this->width=$width;
+	}
+	public function getWrapperWidth(){
+		return $this->wrapperWidth;
+	}
+	public function setWrapperWidth($wrapperWidth){
+		$this->wrapperWidth=$wrapperWidth;
+	}
+	
+	public function getValue() {
+		return $this->value;
+	} 
+	public function setValue($value){
+		$this->value=$value;
+		$this->valueSetted =true;
 	}
 }

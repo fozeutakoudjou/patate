@@ -7,24 +7,32 @@ use core\generator\html\InputText;
 use core\generator\html\Select;
 use core\constant\dao\OrderWay;
 use core\constant\generator\ColumnType;
+use core\constant\generator\SearchType;
 class Column extends Element{
+	protected $cellTemplateFile = 'generator/table/cell';
 	protected $searchable;
 	protected $sortable;
 	protected $searchFields = array();
-	protected $type;
+	protected $dataType;
+	protected $searchType;
 	protected $sortLinks = array();
-	protected $options = array();
+	protected $searchOptions = array();
+	protected $dataOptions = array();
 	protected $table;
+	
+	protected $dataFormatter;
 	
 	protected $prepared = false;
 	
-	public function __construct($table, $label, $name, $type, $sortable = true, $searchable = true, $options = array()) {
+	public function __construct($table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array()) {
 		$this->setLabel($label);
 		$this->setName($name);
-		$this->setType($type);
+		$this->setDataType($dataType);
+		$this->setSearchType($searchType);
+		$this->setDataOptions($dataOptions);
+		$this->setSearchOptions($searchOptions);
 		$this->setSortable($sortable);
 		$this->setSearchable($searchable);
-		$this->setOptions($options);
 		$this->setTable($table);
 		$table->addColumn($this);
 	}
@@ -32,20 +40,18 @@ class Column extends Element{
 	public function prepare(){
 		if(!$this->prepared){
 			if($this->sortable){
-				$params = array('action'=>$this->table->getDefaultAction(), 'param1'=>'order', 'param2'=>$this->getName(), 'param3'=>OrderWay::ASC);
-				$this->sortLinks['asc'] = new Link('ASC', $this->table->createLink($params));
+				$this->sortLinks['asc'] = new Link('ASC', $this->createSortUrl(OrderWay::ASC));
 				$this->sortLinks['asc']->setIcon(new Icon('caret-up'));
 				$this->sortLinks['asc']->setLabelDisabled(true);
-				$params['param3'] = OrderWay::DESC;
-				$this->sortLinks['desc'] = new Link('DESC', $this->table->createLink($params));
+				$this->sortLinks['desc'] = new Link('DESC', $this->createSortUrl(OrderWay::DESC));
 				$this->sortLinks['desc']->setIcon(new Icon('caret-down'));
 				$this->sortLinks['desc']->setLabelDisabled(true);
 			}
 			if($this->searchable && !$this->hasCustomSearchField()){
 				$this->searchFields = array();
-				if(($this->type == ColumnType::ACTIVE) || ($this->type == ColumnType::CHOOSE) || ($this->type == ColumnType::BOOL)){
-					$this->searchFields[] = new Select($this->name, '', $this->options);
-				}elseif($this->type == ColumnType::DATE){
+				if(($this->searchType == SearchType::SELECT)){
+					$this->searchFields[] = new Select($this->name, '', $this->searchOptions);
+				}elseif($this->searchType == SearchType::DATE){
 					
 				}else{
 					$this->searchFields[] = new InputText($this->name, '', 'text');
@@ -58,23 +64,39 @@ class Column extends Element{
 		}
 	}
 	
+	public function createSortUrl($way){
+		return $this->table->getUrlCreator()->createSortUrl(array('column'=>$this->getName(), 'way'=>$way));
+	}
+	
 	public function getTable() {
 		return $this->table;
 	}
 	public function setTable($table) {
 		$this->table=$table;
 	}
-	public function getOptions() {
-		return $this->options;
+	public function getDataOptions() {
+		return $this->dataOptions;
 	}
-	public function setOptions($options) {
-		$this->options=$options;
+	public function setDataOptions($dataOptions) {
+		$this->dataOptions=$dataOptions;
 	}
-	public function getType() {
-		return $this->type;
+	public function getSearchOptions() {
+		return $this->searchOptions;
 	}
-	public function setType($type) {
-		$this->type=$type;
+	public function setSearchOptions($searchOptions) {
+		$this->searchOptions=$searchOptions;
+	}
+	public function getDataType() {
+		return $this->dataType;
+	}
+	public function setDataType($dataType) {
+		$this->dataType=$dataType;
+	}
+	public function getSearchType() {
+		return $this->searchType;
+	}
+	public function setSearchType($searchType) {
+		$this->searchType=$searchType;
 	}
 	public function isSortable() {
 		return $this->sortable;
@@ -110,5 +132,18 @@ class Column extends Element{
 			$value = $data[$this->name];
 		} 
 		return $value;
+	}
+	
+	public function createCell($data) {
+		$cell = new Cell($this->getCellValue($data), $this);
+		$cell->setTemplateFile($this->cellTemplateFile, false);
+		return $cell;
+	}
+	
+	public function getDataFormatter() {
+		return $this->dataFormatter;
+	}
+	public function setDataFormatter($dataFormatter) {
+		$this->dataFormatter=$dataFormatter;
 	}
 }

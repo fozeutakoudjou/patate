@@ -61,13 +61,6 @@ class Block extends Element{
 			$this->addChild($content);
 		}
 	}
-	public function getValue() {
-		return $this->value;
-	} 
-	public function setValue($value){
-		$this->value=$value;
-		$this->valueSetted =true;
-	}
 	
 	public function needValue() {
 		return true;

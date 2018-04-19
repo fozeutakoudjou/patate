@@ -4,6 +4,7 @@ use core\generator\html\table\Table;
 use core\generator\html\table\Column;
 use core\generator\html\table\Row;
 use core\constant\generator\ColumnType;
+use core\constant\generator\SearchType;
 class HtmlGenerator{
 	protected $defaultSubmitText;
 	protected $defaultCancelText;
@@ -11,7 +12,7 @@ class HtmlGenerator{
 	protected $defaultSubmitIcon='save';
 	protected $languages;
 	protected $activeLang;
-	protected $columnOptions = array();
+	protected $searchOptions = array();
 	
 	protected $searchButtonText;
 	protected $resetButtonText;
@@ -24,15 +25,17 @@ class HtmlGenerator{
 		Content::setLanguages($this->languages);
 		Content::setActiveLang($this->activeLang);
 	}
-	
+	public function setAccessChecker($accessChecker){
+		Content::setAccessChecker($accessChecker);
+	}
 	public function setSearchButtonText($searchButtonText){
 		$this->searchButtonText=$searchButtonText;
 	}
 	public function setResetButtonText($resetButtonText){
 		$this->resetButtonText=$resetButtonText;
 	}
-	public function setColumnOptions($type, $columnOptions){
-		$this->columnOptions[$type]=$columnOptions;
+	public function setSearchOptions($type, $searchOptions){
+		$this->searchOptions[$type]=$searchOptions;
 	}
 	public function setDefaultSubmitText($defaultSubmitText){
 		$this->defaultSubmitText=$defaultSubmitText;
@@ -85,14 +88,14 @@ class HtmlGenerator{
 		return new Content($content);
 	}
 	
-	public function createButton($label, $isSubmit = false, $icon = '', $name = ''){
+	public function createButton($label, $isSubmit = false, $icon = '', $name = '', $action = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Button($label, $isSubmit, $icon, $name);
+		return new Button($label, $isSubmit, $icon, $name, $action);
 	}
 	
-	public function createLink($label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = ''){
+	public function createLink($label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Link($label, $href, $icon, $title, $useOfButtonStyle, $name);
+		return new Link($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 	}
 	
 	public function createTextField($name, $label = ''){
@@ -112,15 +115,15 @@ class HtmlGenerator{
 		return new Table($decorated, $label, $icon, $defaultAction, $controller, $module, $this->searchButtonText, $this->resetButtonText);
 	}
 	
-	public function createColumn($table, $label, $name, $type, $sortable = true, $searchable = true, $options = array()){
-		if(empty($options) && isset($this->columnOptions[$type])){
-			$options = $this->columnOptions[$type];
+	public function createColumn($table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array()){
+		if(empty($searchOptions) && isset($this->searchOptions[$searchType])){
+			$searchOptions = $this->searchOptions[$searchType];
 		}
-		return new Column($table, $label, $name, $type, $sortable, $searchable, $options);
+		return new Column($table, $label, $name, $dataType, $searchType, $sortable, $searchable, $searchOptions, $dataOptions);
 	}
 	
-	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = ''){
-		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name);
+	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
+		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$table->addTableAction($link);
 		return $link;
 	}

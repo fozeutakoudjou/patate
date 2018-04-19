@@ -13,9 +13,11 @@ use core\models\Language;
 
 use core\generator\html\HtmlGenerator;
 use core\constant\generator\ColumnType;
+use core\constant\generator\SearchType;
+use core\generator\html\interfaces\AccesChecker;
+use core\generator\html\interfaces\UrlCreator;
 
-
-abstract class AdminController extends Controller
+abstract class AdminController extends Controller implements AccesChecker, UrlCreator
 {
 
     /** @var array */
@@ -63,10 +65,10 @@ abstract class AdminController extends Controller
         $this->formLanguages = Language::getLanguages(false);
 		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
 		$boolOptions = array(''=>'--', '1'=>$this->l('Yes'), '0'=>$this->l('No'));
-		$this->generator->setColumnOptions(ColumnType::BOOL, $boolOptions);
-		$this->generator->setColumnOptions(ColumnType::ACTIVE, $boolOptions);
+		$this->generator->setSearchOptions(SearchType::SELECT, $boolOptions);
 		$this->generator->setSearchButtonText($this->l('Search'));
 		$this->generator->setResetButtonText($this->l('Reset'));
+		$this->generator->setAccessChecker($this);
         /*$default_theme_name = 'default';
 
         if (defined('_PS_BO_DEFAULT_THEME_') && _PS_BO_DEFAULT_THEME_
@@ -124,6 +126,35 @@ abstract class AdminController extends Controller
 		$this->initModel();
     }
 	
+	public function createUrl($params){
+		
+	}
+	
+	public function createSortUrl($params){
+		
+	}
+	
+	public function createPaginationUrl($params){
+		
+	}
+	
+	public function createActionUrl($params){
+		$params = $this->urlParams;
+		if(isset($params['params']) && is_array(isset($params['params']))){
+			foreach($params['params'] as $key => $param){
+				$value = '';
+				if(isset($param['value'])){
+					$value = $param['value'];
+				}elseif(isset($param['field']) && isset($values[$param['field']])){
+					$value = $values[$param['field']];
+				}
+				$params[$key] = $value;
+			}
+			unset($params['params']);
+		}
+		return $this->table->createLink($params);
+	}
+	
 	protected function processList(){
 		$this->createTable();
 		$this->createColumns();
@@ -145,6 +176,7 @@ abstract class AdminController extends Controller
 		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'), 'user', $this->defaultAction, $this->controllerClass, $this->moduleName);
 		$identifier = is_array($this->modelDefinition['primary']) ? implode('_', $this->modelDefinition['primary']) : $this->modelDefinition['primary'];
 		$this->table->setIdentifier($identifier);
+		$this->table->setUrlCreator($this);
 		$this->customizeTable();
 	}
 	
@@ -161,13 +193,13 @@ abstract class AdminController extends Controller
 		$primaries = is_array($this->modelDefinition['primary'])?$this->modelDefinition['primary'] : array($this->modelDefinition['primary']);
 		foreach($primaries as $field){
 			if(!isset($this->modelDefinition['fields'][$field]) && !in_array($field, $this->columnsToExclude)){
-				$this->generator->createColumn($this->table, $this->l($field), $field, ColumnType::TEXT, true, true);
+				$this->generator->createColumn($this->table, $this->l($field), $field, ColumnType::TEXT, SearchType::TEXT, true, true);
 			}
 		}
 		
 		foreach($this->modelDefinition['fields'] as $field => $fieldDefinition){
 			if(!in_array($field, $this->columnsToExclude)){
-				$this->generator->createColumn($this->table, $this->l($field), $field, self::getColumnType($fieldDefinition['type'], $field), true, true);
+				$this->generator->createColumn($this->table, $this->l($field), $field, self::getColumnType($fieldDefinition['type'], $field), self::getSearchType($fieldDefinition['type'], $field), true, true);
 			}
 		}
 		$this->customizeColumns();
@@ -234,9 +266,9 @@ abstract class AdminController extends Controller
         }*/
     }
 	
-	protected function getRightCode()
+	protected function getRightCode($action)
     {
-		$rightCode = $this->action;
+		$rightCode = $action;
 		if(in_array($this->action, $this->modelActions)){
 			$rightCode .= $this->modelClassName;
 		}
@@ -258,9 +290,9 @@ abstract class AdminController extends Controller
 			$this->ajaxProcess();
 		}
     }
-	protected function checkUserAccess()
+	public function checkUserAccess($action)
     {
-        $rightCode = $this->getRightCode();
+        $rightCode = $this->getRightCode($action);
 		$rightDao = $this->getDAOInstance('Right', false);
 		$rights = $rightDao->getByField('code', $rightCode, true);
 		if(!empty($rights)){
@@ -383,6 +415,17 @@ abstract class AdminController extends Controller
 			$type = ColumnType::BOOL;
 		}elseif($modelType==Model::TYPE_DATE){
 			$type = ColumnType::DATE;
+		}
+		return $type;
+	}
+	
+	protected static function getSearchType($modelType, $field)
+    {
+		$type = SearchType::TEXT;
+		if($modelType==Model::TYPE_BOOL){
+			$type = SearchType::SELECT;
+		}elseif($modelType==Model::TYPE_DATE){
+			$type = SearchType::DATE;
 		}
 		return $type;
 	}

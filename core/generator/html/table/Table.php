@@ -38,7 +38,14 @@ class Table extends Block{
 	
 	protected $controller;
 	
+	protected $urlCreator;
+	
 	protected $value = array();
+	
+	protected $rowFormatter;
+	
+	protected $defaultRowAction;
+	protected $othersRowActions;
 	
 	public function __construct($decorated = true, $label ='', $icon = null, $defaultAction = '', $controller = '', $module = '', $searchText = '', $resetText = '') {
 		$this->setLabel($label);
@@ -70,12 +77,8 @@ class Table extends Block{
 		return (!empty($this->tableActions) || !empty($this->headers));
 	}
 	
-	public function createLink($params) {
-		$link = Context::getInstance()->getLink();
-		$controller = isset($params['controller']) ? $params['controller'] : $this->controller;
-		$module = isset($params['module']) ? $params['module'] : $this->module;
-		$isAdmin = isset($params['isAdmin']) ? $params['isAdmin'] : true;
-		return $link->getPageLink(strtolower($controller), null, $params, null, false, false, $module, $isAdmin);
+	public function createUrl($params) {
+		return $this->urlCreator->createUrl($params);
 	}
 	
 	public function needSearchResetButton() {
@@ -235,6 +238,13 @@ class Table extends Block{
 	public function setIdentifier($identifier) {
 		$this->identifier=$identifier;
 	}
+	public function setUrlCreator($urlCreator) {
+		$this->urlCreator=$urlCreator;
+	}
+	
+	public function getUrlCreator() {
+		return $this->urlCreator;
+	}
 	
 	
 	public function getColumns() {
@@ -251,5 +261,43 @@ class Table extends Block{
 	
 	public function needActionColumn() {
 		return (!empty($this->rowActions) || $this->hasSearchColumn());
+	}
+	
+	public function getRowFormatter() {
+		return $this->rowFormatter;
+	}
+	public function setRowFormatter($rowFormatter) {
+		$this->rowFormatter=$rowFormatter;
+	}
+	public function separeRowActions() {
+		if($this->defaultRowAction==null){
+			$first = true;
+			$firstKey = '';
+			foreach($this->rowActions as $key => $action){
+				if($action->isDefault()){
+					$this->defaultRowAction = $action;
+				}else{
+					$this->othersRowActions[$key] = $action;
+				}
+				if($first){
+					$first = false;
+					$firstKey = $key;
+				}
+			}
+			if(($this->defaultRowAction==null) && isset($this->othersRowActions[$firstKey])){
+				$this->defaultRowAction = $this->othersRowActions[$firstKey];
+				unset($this->othersRowActions[$firstKey]);
+			}
+			$this->othersRowActions = ($this->othersRowActions==null) ? array() : $this->othersRowActions;
+		}
+	}
+	public function getDefaultRowAction() {
+		$this->separeRowActions();
+		return $this->defaultRowAction;
+	}
+	
+	public function getOthersRowActions() {
+		$this->separeRowActions();
+		return $this->othersRowActions;
 	}
 }

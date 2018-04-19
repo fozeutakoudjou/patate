@@ -8,6 +8,7 @@ class Field extends Element{
 	protected $helpText;
 	protected $errors;
 	protected $labelObject;
+	protected $labelWidth;
 	
 	protected $translatable = false;
 	protected $fieldOnly = false;
@@ -23,6 +24,13 @@ class Field extends Element{
 	public function setValue($value){
 		$this->value=$value;
 		$this->valueSetted =true;
+	}
+	
+	public function getLabelWidth() {
+		return $this->labelWidth;
+	} 
+	public function setLabelWidth($labelWidth){
+		$this->labelWidth=$labelWidth;
 	}
 	
 	public function needValue() {
