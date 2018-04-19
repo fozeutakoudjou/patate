@@ -7,6 +7,7 @@ class Content{
 	protected $name;
 	protected $templateFile;
 	protected $action;
+	protected $contentForced = false;
 	
 	protected static $languages = array();
 	
@@ -30,7 +31,7 @@ class Content{
 		$content = '';
 		if(empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action)){
 			$content = $this->html;
-			if(!empty($this->templateFile)){
+			if(!$this->contentForced && !empty($this->templateFile)){
 				$context = Context::getInstance();
 				$template = $context->getTemplate();
 				$file = $this->absoluteTemplate ? $this->templateFile : FileTools::getTemplateDir(true) . $this->templateFile;
@@ -68,6 +69,11 @@ class Content{
 	
 	public function getAction() {
 		return $this->action;
+	}
+	
+	public function forceContent($html) {
+		$this->setHtml($html);
+		$this->contentForced = true;
 	}
 	
 	public function setAction($action){

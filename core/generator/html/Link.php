@@ -3,12 +3,12 @@ namespace core\generator\html;
 class Link extends Command{
 	protected $templateFile = 'generator/link';
 	protected $href;
-	protected $useOfButtonStyle = false;
+	protected $buttonStyleUsed = false;
 	protected $title;
-	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle = false, $name = '', $action = '') {
+	public function __construct($label, $href ='#', $icon = null, $title = '', $buttonStyleUsed = false, $name = '', $action = '') {
 		parent::__construct($label, $icon, $name, $action);
 		$this->setHref($href);
-		$this->setUseOfButtonStyle($useOfButtonStyle);
+		$this->setButtonStyleUsed($buttonStyleUsed);
 	}
 	
 	public function getHref(){
@@ -25,10 +25,10 @@ class Link extends Command{
 		$this->title=$title;
 	}
 	
-	public function isUseOfButtonStyle(){
-		return $this->useOfButtonStyle;
+	public function isButtonStyleUsed(){
+		return $this->buttonStyleUsed;
 	}
-	public function setUseOfButtonStyle($useOfButtonStyle){
-		$this->useOfButtonStyle=$useOfButtonStyle;
+	public function setButtonStyleUsed($buttonStyleUsed){
+		$this->buttonStyleUsed=$buttonStyleUsed;
 	}
 }

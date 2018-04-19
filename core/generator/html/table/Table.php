@@ -34,10 +34,6 @@ class Table extends Block{
 	
 	protected $rowSelectorCache;
 	
-	protected $module;
-	
-	protected $controller;
-	
 	protected $urlCreator;
 	
 	protected $value = array();
@@ -47,20 +43,12 @@ class Table extends Block{
 	protected $defaultRowAction;
 	protected $othersRowActions;
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $defaultAction = '', $controller = '', $module = '', $searchText = '', $resetText = '') {
+	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
 		$this->setDecorated($decorated);
-		$this->setDefaultAction($defaultAction);
-		$this->setController($controller);
-		$this->setModule($module);
 		$this->searchButton = new Button($searchText, true, new Icon('search'), 'searchButton');
 		$this->searchResetButton = new Button($resetText, true, new Icon('times'), 'searchResetButton');
-	}
-	
-	public function generate(){
-		
-		return parent::generate();
 	}
 	
 	public function createRow($value){
@@ -115,27 +103,6 @@ class Table extends Block{
 	
 	public function addColumn($column) {
 		$this->columns[$column->getName()] = $column;
-	}
-	
-	public function getModule() {
-		return $this->module;
-	}
-	public function setModule($module) {
-		$this->module=$module;
-	}
-	
-	public function getController() {
-		return $this->controller;
-	}
-	public function setController($controller) {
-		$this->controller=$controller;
-	}
-	
-	public function getDefaultAction() {
-		return $this->defaultAction;
-	}
-	public function setDefaultAction($defaultAction) {
-		$this->defaultAction=$defaultAction;
 	}
 	
 	public function isAjaxActive() {
@@ -274,7 +241,7 @@ class Table extends Block{
 			$first = true;
 			$firstKey = '';
 			foreach($this->rowActions as $key => $action){
-				if($action->isDefault()){
+				if($action->isDefault() && ($this->defaultRowAction==null)){
 					$this->defaultRowAction = $action;
 				}else{
 					$this->othersRowActions[$key] = $action;
@@ -299,5 +266,14 @@ class Table extends Block{
 	public function getOthersRowActions() {
 		$this->separeRowActions();
 		return $this->othersRowActions;
+	}
+	
+	public function hasOthersRowActions() {
+		$this->othersRowActions = $this->getOthersRowActions();
+		return !empty($this->othersRowActions);
+	}
+	
+	public function hasRowActions() {
+		return !empty($this->rowActions);
 	}
 }

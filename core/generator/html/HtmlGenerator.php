@@ -2,6 +2,7 @@
 namespace core\generator\html;
 use core\generator\html\table\Table;
 use core\generator\html\table\Column;
+use core\generator\html\table\RowAction;
 use core\generator\html\table\Row;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
@@ -110,9 +111,9 @@ class HtmlGenerator{
 		return new Checkbox($name, $label, $checked);
 	}
 	
-	public function createTable($label = '', $icon = '', $defaultAction = '', $controller = '', $module = '', $decorated = true){
+	public function createTable($label = '', $icon = '', $decorated = true){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Table($decorated, $label, $icon, $defaultAction, $controller, $module, $this->searchButtonText, $this->resetButtonText);
+		return new Table($decorated, $label, $icon, $this->searchButtonText, $this->resetButtonText);
 	}
 	
 	public function createColumn($table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array()){
@@ -125,6 +126,13 @@ class HtmlGenerator{
 	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
 		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$table->addTableAction($link);
+		return $link;
+	}
+	
+	public function createRowAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $urlParams = array(), $default = false){
+		$icon = empty($icon) ? null : $this->createIcon($icon);
+		$link = new RowAction($table, $label, $href, $icon, $title, $useOfButtonStyle, $name, $action, $urlParams, $default);
+		$table->addRowAction($link);
 		return $link;
 	}
 }

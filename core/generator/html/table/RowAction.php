@@ -1,17 +1,18 @@
 <?php
 namespace core\generator\html\table;
-namespace core\generator\html\Link;
+namespace core\generator\html\table;
+use core\generator\html\Link;
 class RowAction extends Link{
 	protected $urlParams;
 	protected $table;
 	protected $default;
 	protected $formatter;
 	
-	public function __construct($label, $href ='#', $icon = null, $title = '', $useOfButtonStyle false, $name = '', $action = '', $urlParams = array(), $table = null, $default = false) {
-		parent::__construct($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
+	public function __construct($table, $label, $href ='#', $icon = null, $title = '', $buttonStyleUsed = false, $name = '', $action = '', $urlParams = array(), $default = false) {
+		parent::__construct($label, $href, $icon, $title, $buttonStyleUsed, $name, $action);
 		$this->setUrlParams($urlParams);
 		$this->setTable($table);
-		$this->setTable($default);
+		$this->setDefault($default);
 	}
 	
 	public function getUrlParams(){
@@ -35,19 +36,20 @@ class RowAction extends Link{
 		$this->default=$default;
 	}
 	
-	public function createLink($values) {
-		
-	}
-	
-	public function generate(){
-		$link = new Link($this->label, $this->href, $this->icon, $this->title, $this->useOfButtonStyle, $this->name, $this->action);
+	public function createNewLink($values) {
+		$link = new Link($this->label, $this->href, $this->icon, $this->title, $this->buttonStyleUsed, $this->name, $this->action);
 		$link->setClasses($this->classes);
-		$formatter = $this->column->getDataFormatter();
-		if($formatter!=null){
-			$data = $formatter->format($this);
-		}else{
-			$this->html = $this->value;
+		$link->setAttributes($this->attributes);
+		if($this->formatter!=null){
+			$data = $this->formatter->format($this);
 		}
-		return parent::generate();
+		if(empty($link->href)){
+			$params = $this->urlParams;
+			if(!isset($params['action'])){
+				$params['action'] = $this->action;
+			}
+			$link->href = $this->table->getUrlCreator()->createActionUrl($params, $values);
+		}
+		return $link;
 	}
 }

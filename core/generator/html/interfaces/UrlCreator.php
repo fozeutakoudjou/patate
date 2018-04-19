@@ -7,5 +7,5 @@ interface UrlCreator{
 	
 	public function createPaginationUrl($params);
 	
-	public function createActionUrl($params);
+	public function createActionUrl($params, $values);
 }
