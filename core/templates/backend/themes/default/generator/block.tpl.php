@@ -1,6 +1,6 @@
 <?php if($item->isDecorated()):?>
-	<div class="portlet light bordered <?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?>" <?php echo $item->drawAttributes();?>
-		 style="<?php echo $item->drawVisible();?>">
+	<div class="portlet light bordered <?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?> <?php echo $item->getWidth();?>" 
+		<?php echo $item->drawAttributes();?> style="<?php echo $item->drawVisible();?>">
 	<?php if($item->hasHeader()):?>
 		<div class="portlet-title">
 			<?php if($item->hasIcon() || $item->hasLabel()):?>
@@ -21,7 +21,8 @@
 	<?php endif;?>
 		<div class="portlet-body">
 <?php else:?>
-	<div  class=" <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
+	<div  class=" <?php echo $item->drawClasses();?> <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?> <?php echo $item->getWidth();?>" 
+		<?php echo $item->drawAttributes();?>  style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
 
 <?php echo $item->generateContent();?>

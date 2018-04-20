@@ -8,8 +8,6 @@ use core\constant\dao\OrderWay;
 use core\constant\dao\OrderBy;
 
 class DAO{
-    
-	const FOREIGN_SEPARATOR = '___';
 	
     /** @var Factory factory */
     protected $factory;
@@ -415,23 +413,5 @@ class DAO{
 		$this->setUseOfLang(true);
 		$this->setUseOfAllLang(false);
 		$this->setSaveOfLangField(true);
-    }
-	
-	public function formatForeignField($field, $externalField)
-    {
-        return $field . self::FOREIGN_SEPARATOR . $externalField;
-    }
-	
-	public function extractForeignField($string)
-    {
-		$result = array('field'=>$string);
-		if(strpos($string, self::FOREIGN_SEPARATOR)){
-			$tab = explode(self::FOREIGN_SEPARATOR, $string);
-			$result['field'] = $tab[0];
-			if(isset($tab[1]) && !empty($tab[1])){
-				$result['externalField'] = $tab[1];
-			}
-		}
-        return $result;
     }
 }

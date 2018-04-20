@@ -1,5 +1,5 @@
 <?php if(!$item->isFieldOnly()):?>
-<div class="form-group clearfix <?php echo $item->drawWrappperClasses();?> <?php echo $item->getWrappperWidth();?>" style="<?php echo $item->drawVisible();?>">
+<div class="form-group clearfix <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?>" style="<?php echo $item->drawVisible();?>">
 	<?php if(!$item->isLabelDisabled()):?>
 		<?php if($item->hasLabelObject()):?>
 			<?php echo $item->getLabelObject()->generate();?>
@@ -9,9 +9,9 @@
 			</label>
 		<?php endif;?>
 	<?php endif;?>
-	<div class="col-lg-9">
+	<div class=" <?php echo $item->getWidth();?>">
 <?php endif;?>
-		<div class="clearfix <?php echo $item->getWidth();?>">
+		<div class="clearfix">
 			<?php if($item->isTranslatable()):?>
 				<div class="col-lg-9 translatable-field">
 			<?php else:?>

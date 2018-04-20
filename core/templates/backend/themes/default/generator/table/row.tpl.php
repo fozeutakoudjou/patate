@@ -15,7 +15,25 @@
 <?php endforeach;?>
 <?php if($table->needActionColumn()):?>
 	<td>
-		<?php echo $tools->l('Actions');?>
+		<?php if($table->hasRowActions()):?>
+			<div class="btn-group">
+				<?php $defaultAction = $table->getDefaultRowAction()->createNewLink($item->getValue()); $defaultAction->addClass('btn-default');?>
+				<?php echo $defaultAction->generate();?>
+				<?php if($table->hasOthersRowActions()):?>
+					<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+						<i class="fa fa-angle-down"></i>&nbsp;
+					<?php $othersActions = $table->getOthersRowActions();?>
+					</button>
+					<ul class="dropdown-menu" role="menu">
+						<?php foreach($othersActions as $othersAction):?>
+							<li>
+								<?php echo $othersAction->createNewLink($item->getValue())->generate();?>
+							</li>
+						<?php endforeach;?>
+					</ul>
+				<?php endif;?>
+			</div>
+		<?php endif;?>
 	</td>
 <?php endif;?>
 <?php if(!$item->isContentOnly()):?>

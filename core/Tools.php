@@ -1,6 +1,7 @@
 <?php
 namespace core;
 
+use core\constant\Separator;
 use core\models\Configuration;
 class Tools
 {
@@ -378,5 +379,23 @@ class Tools
 	public static function getRouteId($page, $module = '')
     {
         return (empty($module)?'':'module-'.$module.'-').$page;
+    }
+	
+	public static function formatForeignField($field, $externalField)
+    {
+        return $field . Separator::FOREIGN_FIELD . $externalField;
+    }
+	
+	public static function extractForeignField($string)
+    {
+		$result = array('field'=>$string);
+		if(strpos($string, Separator::FOREIGN_FIELD)){
+			$tab = explode(Separator::FOREIGN_FIELD, $string);
+			$result['field'] = $tab[0];
+			if(isset($tab[1]) && !empty($tab[1])){
+				$result['externalField'] = $tab[1];
+			}
+		}
+        return $result;
     }
 }

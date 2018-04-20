@@ -1,6 +1,7 @@
 <?php
 namespace core\dao\pdo;
 
+use core\Tools;
 use core\constant\dao\Operator;
 use core\constant\dao\LogicalOperator;
 use core\constant\dao\JoinType;
@@ -135,7 +136,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 			$newFields = array();
 			foreach ($fields as $field => $value) {
 				$values = is_array($value) ? $value : array('value'=>$value);
-				$tab = $this->extractForeignField($field);
+				$tab = Tools::extractForeignField($field);
 				if(isset($tab['externalField'])){
 					$values['preffix'] = $tab['field'];
 					$values['modelField'] = $tab['externalField'];

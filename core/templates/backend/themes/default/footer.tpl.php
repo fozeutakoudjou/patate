@@ -38,7 +38,6 @@
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'app.min.js');?>" type="text/javascript"></script>
 
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'layout.min.js');?>" type="text/javascript"></script>
-<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'demo.min.js');?>" type="text/javascript"></script>
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-sidebar.min.js');?>" type="text/javascript"></script>
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-nav.min.js');?>" type="text/javascript"></script>
 

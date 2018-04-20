@@ -9,7 +9,7 @@ use core\constant\generator\SearchType;
 class HtmlGenerator{
 	protected $defaultSubmitText;
 	protected $defaultCancelText;
-	protected $defaultCancelIcon = 'cancel';
+	protected $defaultCancelIcon = 'close';
 	protected $defaultSubmitIcon='save';
 	protected $languages;
 	protected $activeLang;
@@ -73,7 +73,7 @@ class HtmlGenerator{
 			$form->setSubmit($this->createButton($this->defaultSubmitText, true, $this->defaultSubmitIcon));
 		}
 		if($useCancel){
-			$form->setCancel($this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon, '', true));
+			$form->setCancel($this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon, $this->defaultCancelText, true, '', ''));
 		}
 		return $form;
 	}

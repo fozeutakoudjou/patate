@@ -33,14 +33,14 @@ class Link
         return $this->getPageLink($controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, $module, $isAdmin);
     }
 	
-	public function getAdminModuleLink($module, $controller = 'default', $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
+	/*public function getAdminModuleLink($module, $controller = 'default', $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
     {
-        return $this->getModuleLink($module, $controller, $lang, $request, $ssl, $requestUrlEncode, $relativeProtocol, true);
-    }
+        return $this->getModuleLink($module, $controller, null, $request, $ssl, $requestUrlEncode, $relativeProtocol, true);
+    }*/
 
-    public function getAdminLink($controller, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
+    public function getAdminLink($module, $controller, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false)
     {
-		return $this->getPageLink($controller, null, $request, $ssl, $requestUrlEncode, $relativeProtocol, '', true);
+		return $this->getPageLink($controller, null, $request, $ssl, $requestUrlEncode, $relativeProtocol, $module, true);
     }
 
     public function getPageLink($controller, $lang = null, $request = null, $ssl = null, $requestUrlEncode = false, $relativeProtocol = false, $module = '', $isAdmin = false)
@@ -332,6 +332,11 @@ class Link
     {
 		$base = $this->getBaseLink($ssl, $relativeProtocol).(empty($module)?_CORE_PATH_:_MODULES_PATH_.'/'.$module).'/';
         return $base.FileTools::getPath($path, $isAdmin, $module, $useOfTheme);
+    }
+	
+	public function getJSURI($isAdmin = null, $module = '', $useOfTheme = true, $ssl = null, $relativeProtocol = false)
+    {
+       return $this->getURI(_JS_PATH_, $isAdmin, $module, $useOfTheme, $ssl, $relativeProtocol);
     }
 	
 	public function getURIFormDir($dir)

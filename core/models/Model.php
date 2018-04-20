@@ -326,7 +326,66 @@ class Model{
 		return isset($this->associateds[$field]) ? $this->associateds[$field] : null;
 	}
 	
-	public function toArray(){
+	public function toArray($preffix = '', $getAssociated = false, $createSinglePrimary = false){
+		$data = array();
+		$primaries = $this->getPrimaries();
+		foreach($primaries as $field){
+			if(!isset($this->definition['fields'][$field])){
+				$data[$preffix.$field] = $this->getPropertyValue($field);
+			}
+		}
+		foreach($this->definition['fields'] as $field => $fieldDefinition){
+			$data[$preffix.$field] = $this->getPropertyValue($field);
+		}
+		if($getAssociated){
+			foreach($this->associateds as $field => $associated){
+				$associatedData = $associated->toArray(Tools::formatForeignField($preffix.$field, ''), false);
+				$data = array_merge($data, $associatedData);
+			}
+		}
+		if($createSinglePrimary && is_array($this->definition['primary'])){
+			$data[$preffix.$this->createSinglePrimary()] = $this->getSinglePrimaryValue();
+		}
+	}
+	public function getPrimaries(){
+		return is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
+	}
+	public function createSinglePrimary(){
+		return is_array($this->definition['primary']) ? implode(Separator::PRIMARIES_FIELD, $this->definition['primary']) : $this->definition['primary'];
+	}
+	
+	public function getSinglePrimaryValue(){
 		
+		if(is_array($this->definition['primary'])){
+			$first = true;
+			$value = '';
+			foreach($this->definition['primary'] as $field){
+				if(!$first){
+					$value.=Separator::PRIMARIES_DATA;
+				}
+				$value.= $this->getPropertyValue($field);
+				$first = false;
+			}
+		}else{
+			$value = $this->getPropertyValue($this->definition['primary']);
+		}
+		return $value;
+	}
+	
+	public function getPrimaryValue($data){
+		$value = array();
+		if(is_array($this->definition['primary'])){
+			$values = explode(Separator::PRIMARIES_DATA, $data);
+			foreach($this->definition['primary'] as $key => $field){
+				if(isset($values[$key])){
+					$value[$field] = $values[$key];
+				}else{
+					throw new \Exception('data does not match primaries');
+				}
+			}
+		}else{
+			$value[$this->definition['primary']] = $data;
+		}
+		return $value;
 	}
 }
