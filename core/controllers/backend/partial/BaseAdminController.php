@@ -18,6 +18,7 @@ use core\generator\html\interfaces\UrlCreator;
 
 abstract class BaseAdminController extends Controller
 {
+	const ID_PARAM_URL = 'param1';
 	protected $availableActions = array();
 	
     protected $modelClassName;
@@ -75,8 +76,8 @@ abstract class BaseAdminController extends Controller
 			}
 			unset($params['params']);
 		}
-		if(!isset($params['param1'])){
-			$params['param1'] = $this->getFieldValue($values, $this->modelIdentifier);
+		if(!isset($params[self::ID_PARAM_URL])){
+			$params[self::ID_PARAM_URL] = $this->getFieldValue($values, $this->modelIdentifier);
 		}
 		return $this->createUrl($params);
 	}

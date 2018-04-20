@@ -388,4 +388,17 @@ class Model{
 		}
 		return $value;
 	}
+	
+	public function isLoaded(){
+		$primaries = $this->getPrimaries();
+		$result = true;
+		foreach($primaries as $primary){
+			$value = $this->getPropertyValue($primary);
+			if(empty($value)){
+				$result = false;
+				break;
+			}
+		}
+		return $result;
+	}
 }

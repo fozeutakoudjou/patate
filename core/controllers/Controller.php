@@ -147,7 +147,7 @@ abstract class Controller
                 $this->errors[] = Tools::displayError('Access denied.');
             }
             if(!$this->onlyProcess){
-				if (!empty($this->redirectAfter)) {
+				if ($this->redirectAfter) {
 					$this->redirect();
 				}
 

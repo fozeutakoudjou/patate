@@ -601,19 +601,8 @@ class Validate
      */
     public static function isLoadedObject($object)
     {
-		$result =is_object($object) && ($object != null);
-		if($result){
-			$definition = $object->getDefinition();
-			$primaries = is_array($definition['primary']) ? $definition['primary'] : array($definition['primary']);
-			foreach($primaries as $primary){
-				$value = $object->getPropertyValue($primary);
-				if(empty($value)){
-					$result = false;
-					break;
-				}
-			}
-		}
-        return  $result;
+		$result =is_object($object) && ($object != null) && $object->isLoaded();
+		return  $result;
     }
 
     /**
