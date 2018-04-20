@@ -48,11 +48,6 @@ abstract class BaseAdminController extends Controller
 		parent::__construct();
         global $timer_start;
         $this->timer_start = $timer_start;
-        $this->formLanguages = Language::getLanguages(false);
-		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
-		$this->generator->setAccessChecker($this);
-		$this->initModel();
-		$this->initActions();
     }
 	
 	public function createUrl($params){
@@ -188,6 +183,13 @@ abstract class BaseAdminController extends Controller
 			}
             Tools::redirect($this->context->getLink()->getAdminLink('login', $redirectParams));
         }*/
+		$this->formLanguages = Language::getLanguages(false);
+		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
+		$this->generator->setAccessChecker($this);
+		if(!empty($this->modelClassName)){
+			$this->initModel();
+			$this->initActions();
+		}
     }
 	
 	protected function getRightCode($action)

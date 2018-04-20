@@ -25,9 +25,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected $itemsPerPageOptions;
 	protected $currentPage;
 	
-	 public function __construct()
+	public function init()
     {
-		parent::__construct();
+		parent::init();
 		$boolOptions = array(''=>'--', '1'=>$this->l('Yes'), '0'=>$this->l('No'));
 		$this->generator->setSearchOptions(SearchType::SELECT, $boolOptions);
 		$this->generator->setSearchButtonText($this->l('Search'));

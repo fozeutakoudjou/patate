@@ -26,14 +26,9 @@
 	
 	<link href="<?php echo $tools->getMedia($cssAdminThemeDir.'components.min.css');?>" rel="stylesheet" type="text/css"/>
     <link href="<?php echo $tools->getMedia($cssAdminThemeDir.'plugins.min.css');?>" rel="stylesheet" type="text/css"/>
-	
-	 <link href="../assets/layouts/layout/css/layout.min.css" rel="stylesheet" type="text/css" />
-        <link href="../assets/layouts/layout/css/themes/darkblue.min.css" rel="stylesheet" type="text/css" id="style_color" />
-        <link href="../assets/layouts/layout/css/custom.min.css" rel="stylesheet" type="text/css" />
-	
 	<link href="<?php echo $tools->getMedia($cssAdminThemeDir.'layout.min.css');?>" rel="stylesheet" type="text/css"/>
     <link id="style_color" href="<?php echo $tools->getMedia($cssAdminThemeDir.'themes/darkblue.min.css');?>" rel="stylesheet" type="text/css" />
-    <link href="<?php echo $tools->getMedia($cssAdminThemeDir.'custom.min.css');?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo $tools->getMedia($cssAdminThemeDir.'custom.css');?>" rel="stylesheet" type="text/css"/>
 	
 	<?php $tools->includeTpl('javascript', false, array('partKey'=>$headKey, 'libraryKey'=>$libraryKey, 'notLibraryKey'=>$notLibraryKey, 'jsFiles'=>$jsFiles, 'jsContents'=>$jsContents, 'jsVariables'=>$jsVariables), false);?>
 <?php if(isset($additionalHeader)):?>
