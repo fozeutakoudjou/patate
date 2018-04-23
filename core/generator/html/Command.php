@@ -5,6 +5,8 @@ abstract class Command extends Element{
 	protected $showHide;
 	protected $targetToShow;
 	protected $targetToHide;
+	protected $confirmText;
+	protected $confirm;
 	
 	public function __construct($label, $icon = null, $name = '', $action = '') {
 		$this->setLabel($label);

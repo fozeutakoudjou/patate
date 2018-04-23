@@ -1,9 +1,14 @@
 <?php
 namespace core\controllers\backend\partial;
+use core\Tools;
+use core\StringTools;
 use core\models\Model;
+use core\constant\dao\OrderWay;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\ActionCode;
+use core\constant\UrlParamType;
+use core\constant\Separator;
 use core\generator\html\interfaces\AccesChecker;
 use core\generator\html\interfaces\UrlCreator;
 
@@ -11,19 +16,22 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 {
 	protected $table;
 	
-	protected $columnsToExclude = array('dateAdd', 'dateUpdate', 'deleted');
+	protected $columnsToExclude = array('dateAdd', 'dateUpdate', 'deleted', 'idProposer', 'additionalInfos', 'email', 'avatar', 'firstName', 'preferredLang', 'gender', 'type', 'balance');
 	
-	protected $defaultOrderWay;
+	protected $defaultOrderWay = OrderWay::DESC;
 	protected $orderWay;
 	
 	protected $defaultOrderColumn;
 	protected $orderColumn;
 	
-	protected $defaultItemsPerPage =20;
+	protected $defaultItemsPerPage =2;
 	protected $itemsPerPage;
 	
 	protected $itemsPerPageOptions;
-	protected $currentPage;
+	protected $currentPage = 1;
+	
+	protected $orderWayParams = array(OrderWay::ASC=>'asc', OrderWay::DESC=>'desc');
+	protected $limitParams = array(0=>'all');
 	
 	public function init()
     {
@@ -32,6 +40,14 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->generator->setSearchOptions(SearchType::SELECT, $boolOptions);
 		$this->generator->setSearchButtonText($this->l('Search'));
 		$this->generator->setResetButtonText($this->l('Reset'));
+		$this->generator->setSelectAllText($this->l('Select all'));
+		$this->generator->setUnselectAllText($this->l('Unselect all'));
+		$this->generator->setEmptyRowText($this->l('No records found'));
+		$this->generator->setBulkActionText($this->l('Bulk actions'));
+		$this->itemsPerPageOptions = array('20'=>20, '2'=>2, '50'=>50, '100'=>100, '300'=>300, '1000'=>1000, '0'=>$this->l('All'));
+		if($this->defaultModel!=null){
+			$this->defaultOrderColumn =$this->defaultModel->getPrimaries()[0];
+		}
     }
 	
 	protected function createTable()
@@ -39,6 +55,11 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'));
 		$this->table->setIdentifier($this->modelIdentifier);
 		$this->table->setUrlCreator($this);
+		$this->table->setItemsPerPageOptions($this->itemsPerPageOptions);
+		$this->table->setCurrentPage($this->currentPage);
+		$this->table->setItemsPerPage(($this->itemsPerPage === null)?$this->defaultItemsPerPage : $this->itemsPerPage);
+		$this->table->setOrderColumn(empty($this->orderColumn) ? $this->defaultOrderColumn : $this->orderColumn);
+		$this->table->setOrderWay(($this->orderWay === null)? $this->defaultOrderWay : $this->orderWay);
 		$this->customizeTable();
 	}
 	
@@ -46,7 +67,12 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected function createTableActions() {
 		$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
-		$this->generator->createTableAction($this->table, $this->l('Add'), $addLink, 'plus', $this->l('Add'), true, ActionCode::ADD, ActionCode::ADD);
+		$this->generator->createTableAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD);
+	}
+	
+	protected function createBulkActions() {
+		$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
+		$this->generator->createBulkAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD);
 	}
 	
 	protected function createRowsActions() {
@@ -117,5 +143,68 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			$type = SearchType::DATE;
 		}
 		return $type;
+	}
+	
+	public function createSortUrl($column, $way){
+		return $this->createListUrl(array(UrlParamType::ORDER=>$column, 'way'=>$way));
+	}
+	public function createLimitUrl($limit){
+		return $this->createListUrl(array(UrlParamType::LIMIT=>$limit));
+	}
+	
+	public function createPaginationUrl($page){
+		return $this->createListUrl(array(UrlParamType::PAGE=>$page));
+	}
+	
+	public function createListUrl($data){
+		$params = array('action'=>ActionCode::LISTING);
+		if(isset($data[UrlParamType::ORDER])){
+			$params = $this->addOrderParam($params, $data[UrlParamType::ORDER], $data['way']);
+		}elseif(isset($data[UrlParamType::LIMIT])){
+			$params = $this->addLimitParam($params, $data[UrlParamType::LIMIT]);
+		}elseif(isset($data[UrlParamType::PAGE])){
+			$params = $this->addPageParam($params, $data[UrlParamType::PAGE]);
+		}
+		return $this->createUrl($params);
+	}
+	
+	public function addOrderParam($params, $column, $way){
+		$way = isset($this->orderWayParams[$way])?$this->orderWayParams[$way] : $way;
+		$params['param1'] = UrlParamType::ORDER.Separator::URL_VALUE.$way.Separator::URL_VALUE.
+			StringTools::toUnderscoreCase(Separator::URL_VALUE.$column,Separator::COLUMN_CAMEL_CASE);
+		return $params;
+	}
+	
+	public function addLimitParam($params, $limit){
+		$str = UrlParamType::LIMIT.Separator::URL_VALUE.(isset($this->limitParams[$limit])?$this->limitParams[$limit] : $limit);
+		if(!empty($this->orderColumn)){
+			$params = $this->addOrderParam($params, $this->orderColumn, $this->orderWay);
+			$params['param2'] = $str;
+		}else{
+			$params['param1'] = $str;
+		}
+		return $params;
+	}
+	
+	public function addPageParam($params, $page){
+		$str = UrlParamType::PAGE.Separator::URL_VALUE.$page;
+		if($this->itemsPerPage!==null){
+			$params = $this->addLimitParam($params, $this->itemsPerPage);
+			$params['param3'] = $str;
+		}elseif(!empty($this->orderColumn)){
+			$params = $this->addOrderParam($params, $this->orderColumn, $this->orderWay);
+			$params['param2'] = $str;
+		}else{
+			$params['param1'] = $str;
+		}
+		return $params;
+	}
+	
+	public function retrieveListUrlParam(){
+		$param1 = Tools::getValue('param1');
+		if($param1){
+			//$data
+		}
+		
 	}
 }

@@ -49,7 +49,7 @@ class DAO{
     }
     
     protected function validation($model){
-        if ($this->requireValidation && !empty($model->isFieldsValidated())) {
+        if ($this->requireValidation && !$model->isFieldsValidated()) {
             throw new \Exception('Some fields are invalid.');
         }
         $this->requireValidation = true;

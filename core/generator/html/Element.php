@@ -12,19 +12,39 @@ abstract class Element extends Content{
 	protected $wrapperClasses=array();
 	protected $wrapperWidth;
 	protected $width;
-	protected $value = array();
+	protected $value;
+	protected $additionalData = array();
+	protected $valueSetted = false;
+	protected $errorSetted = false;
+	protected $errors = array();
+	
+	public function hasErrors(){
+		return !empty($this->errors);
+	}
+	public function getErrors(){
+		return $this->errors;
+	}
+	public function setErrors($errors){
+		$this->errors=$errors;
+		$this->errorSetted =true;
+	}
 	
 	public function addClass($class) {
-		if (!in_array($class, $this->classes)) {
+		if (!$this->hasClass($class)) {
 			$this->classes[] =$class;
 		}
+	}
+	public function hasClass($class) {
+		return in_array($class, $this->classes);
 	}
 	public function addWrapperClasses($class) {
 		if (!in_array($class, $this->wrapperClasses)) {
 			$this->wrapperClasses[] =$wrapperClasses;
 		}
 	}
-	
+	public function setAdditionalData($additionalData) {
+		$this->additionalData =$additionalData;
+	}
 	public function setClasses($classes) {
 		$this->classes =$classes;
 	}
@@ -44,6 +64,14 @@ abstract class Element extends Content{
 	}
 	public function setAttribute($name, $value = null) {
 		$this->attributes[$name] =$value;
+	}
+	
+	public function addAdditionalData($name, $value = null) {
+		$this->additionalData[$name] =$value;
+	}
+	
+	public function getAdditional($name) {
+		return isset($this->additionalData[$name]) ? $this->additionalData[$name] : '';
 	}
 	
 	public function getId() {
@@ -124,6 +152,12 @@ abstract class Element extends Content{
 		$this->wrapperWidth=$wrapperWidth;
 	}
 	
+	public function isValueSetted() {
+		return $this->valueSetted;
+	}
+	public function isErrorSetted() {
+		return $this->errorSetted;
+	}
 	public function getValue() {
 		return $this->value;
 	} 

@@ -96,7 +96,7 @@ class DAOPDO extends DAO implements DAOImplementation{
         }
         $identifiers = $this->formatIdentifiers($model, $identifiers);
         $condition = $this->getRestrictionFromArray($identifiers);
-        $sql = 'UPDATE '._DB_PREFIX_.$this->definition['table'].' SET '.$fieldsString .' WHERE '.$condition;
+        $sql = 'UPDATE '._DB_PREFIX_.$this->definition['table']. ' '.self::DEFAULT_PREFFIX .' SET '.$fieldsString .' WHERE '.$condition;
         $query =$this->db->prepare($sql);
         foreach ($fieldsToUpdate as $field) {
             if ($this->canFieldBeSet($model, $field)) {

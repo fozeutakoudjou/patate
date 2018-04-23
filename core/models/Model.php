@@ -31,38 +31,42 @@ class Model{
 		}
     }
     
-    public function hydrate(array $data, $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = '')
+    public function hydrate(array $data, $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = '', $fieldsToExclude = array())
     {
 		foreach ($data as $field => $value) {
-            $this->setFieldValue($field, $value, $lang, $useOfAllLang, $preffix);
+			if(!in_array($field, $fieldsToExclude)){
+				$this->setFieldValue($field, $value, $lang, $useOfAllLang, $preffix);
+			}
         }
 		if(!$fromDB && $this->isMultilang()){
 			$langFields = $this->getLangFields();
 			foreach ($languages as $tmpLang => $langObject) {
 				foreach ($langFields as $field) {
-					$fieldKey = $preffix . Tools::getLangFieldKey($field, $tmpLang);
-					if (!isset($data[$fieldKey])) {
-						$this->setFieldValue($field, $data[$fieldKey], $tmpLang, true, '');
+					if(!in_array($field, $fieldsToExclude)){
+						$fieldKey = $preffix . Tools::getLangFieldKey($field, $tmpLang);
+						if (!isset($data[$fieldKey])) {
+							$this->setFieldValue($field, $data[$fieldKey], $tmpLang, true, '');
+						}
 					}
 				}
 			}
 		}
     }
-	public function copyFromPost($languages = array(), $preffix = '')
+	public function copyFromPost($languages = array(), $preffix = '', $fieldsToExclude = array())
     {
-		$data = Tools::getAllValues();
-		$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
+		$data = Tools::getAllValues(true);
+		/*$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		foreach($primaries as $primary){
 			$postedPrimary = $preffix . $primary . '_' . $this->definition['table'];
 			if(!isset($data[$preffix . $primary]) && isset($data[$postedPrimary])){
 				$data[$preffix . $primary] = $data[$postedPrimary];
 			}
-		}
-		$this->hydrate($data, false, '', true, $languages, $preffix);
+		}*/
+		$this->hydrate($data, false, '', true, $languages, $preffix, $fieldsToExclude);
     }
     public function setFieldValue($field, $value, $lang = '', $useOfAllLang = false, $preffix = ''){
 		if(empty($preffix) || (strpos($field, $preffix) === 0)){
-			$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
+			$primaries = $this->getPrimaries();
 			$field = str_replace($preffix, '', $field);
 			if (isset($this->definition['fields'][$field]) || in_array($field, $primaries)){
 				if($this->isLangField($field) && $useOfAllLang && !empty($lang)){
@@ -346,6 +350,7 @@ class Model{
 		if($createSinglePrimary && is_array($this->definition['primary'])){
 			$data[$preffix.$this->createSinglePrimary()] = $this->getSinglePrimaryValue();
 		}
+		return $data;
 	}
 	public function getPrimaries(){
 		return is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
@@ -372,7 +377,7 @@ class Model{
 		return $value;
 	}
 	
-	public function getPrimaryValue($data){
+	public function getPrimaryValuesFromString($data){
 		$value = array();
 		if(is_array($this->definition['primary'])){
 			$values = explode(Separator::PRIMARIES_DATA, $data);
@@ -385,6 +390,15 @@ class Model{
 			}
 		}else{
 			$value[$this->definition['primary']] = $data;
+		}
+		return $value;
+	}
+	
+	public function getPrimaryValues(){
+		$value = array();
+		$primaries = $this->getPrimaries();
+		foreach($primaries as $primary){
+			$value[$primary] = $this->getPropertyValue($primary);
 		}
 		return $value;
 	}

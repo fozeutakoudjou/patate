@@ -161,9 +161,15 @@ class Tools
      * Get all values from $_POST/$_GET
      * @return mixed
      */
-    public static function getAllValues()
+    public static function getAllValues($clean = false)
     {
-        return $_POST + $_GET;
+		$data = $_POST + $_GET;
+		if($clean){
+			foreach($data as $key => $value){
+				$data[$key] = Tools::getValue($key, $value);
+			}
+		}
+        return $data;
     }
 
     public static function getIsset($key)

@@ -13,8 +13,6 @@ use core\models\Language;
 
 use core\generator\html\HtmlGenerator;
 use core\constant\ActionCode;
-use core\generator\html\interfaces\AccesChecker;
-use core\generator\html\interfaces\UrlCreator;
 
 abstract class BaseAdminController extends Controller
 {
@@ -26,6 +24,7 @@ abstract class BaseAdminController extends Controller
     protected $defaultModel;
 	
     protected $modelDefinition;
+    protected $formErrors = array();
 
     /** @var string */
     protected $layout = 'layout';
@@ -51,16 +50,8 @@ abstract class BaseAdminController extends Controller
         $this->timer_start = $timer_start;
     }
 	
-	public function createUrl($params){
+	public function createUrl($params = array()){
 		return $this->context->getLink()->getAdminLink($this->moduleName, strtolower($this->controllerClass), $params);
-	}
-	
-	public function createSortUrl($params){
-		
-	}
-	
-	public function createPaginationUrl($params){
-		
 	}
 	
 	public function createActionUrl($params, $values){
@@ -82,7 +73,7 @@ abstract class BaseAdminController extends Controller
 		return $this->createUrl($params);
 	}
 	
-	public function getFieldValue($values, $field){
+	protected function getFieldValue($values, $field){
 		$value = '';
 		if(is_array($values) && isset($values[$field])){
 			$value = $values[$field];
@@ -92,14 +83,14 @@ abstract class BaseAdminController extends Controller
 		return $value;
 	}
 	
-	public function initModel()
+	protected function initModel()
     {
 		$this->defaultModel = $this->getDAOInstance()->createModel();
 		$this->modelDefinition = $this->defaultModel->getDefinition();
 		$this->modelIdentifier = $this->defaultModel->createSinglePrimary();
 	}
 	
-	public function initActions()
+	protected function initActions()
     {
 		$this->availableActions = array(
 			ActionCode::ADD => array(
@@ -134,6 +125,14 @@ abstract class BaseAdminController extends Controller
 		if(isset($this->modelDefinition['fields']['active'])){
 			$this->availableActions[ActionCode::ACTIVATE] = array('model' =>true);
 			$this->availableActions[ActionCode::DESACTIVATE] = array('model' =>true);
+		}
+	}
+	protected function restrictAction()
+    {
+		foreach($this->availableActions as $key => $value){
+			if(!$this->checkUserAccess($key)){
+				unset($this->availableActions[$key]);
+			}
 		}
 	}
 	
@@ -186,10 +185,14 @@ abstract class BaseAdminController extends Controller
         }*/
 		$this->formLanguages = Language::getLanguages(false);
 		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
+		$radioOptions = array('1'=>$this->l('Yes'), '0'=>$this->l('No'));
 		$this->generator->setAccessChecker($this);
+		$this->generator->setDefaultFormErrorText($this->l('You have some form errors. Please check below.'));
+		$this->generator->setRadioOptions($radioOptions);
 		if(!empty($this->modelClassName)){
 			$this->initModel();
 			$this->initActions();
+			$this->restrictAction();
 		}
     }
 	
@@ -266,7 +269,7 @@ abstract class BaseAdminController extends Controller
     }
 	
 	protected function redirect(){
-		
+		Tools::redirect($this->redirectLink);
 	}
 	
 	protected function checkSecurityAccess(){
@@ -328,5 +331,10 @@ abstract class BaseAdminController extends Controller
     {
 		$module = $useModule ? $this->moduleName:'';
 		return FileTools::getTemplateDir($this->isAdmin, $module) . $name;
+	}
+	
+	protected function hasErrors()
+    {
+		return (!empty($this->errors) || !empty($this->formErrors));
 	}
 }

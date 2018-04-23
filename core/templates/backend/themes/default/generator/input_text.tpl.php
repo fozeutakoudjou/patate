@@ -1,5 +1,6 @@
 <?php if(!$item->isFieldOnly()):?>
-<div class="form-group clearfix <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?>" style="<?php echo $item->drawVisible();?>">
+<div class="form-group clearfix <?php echo $item->drawWrapperClasses();?> <?php echo $item->getWrapperWidth();?> <?php echo $item->drawWrapperErrorClass();?>" 
+	style="<?php echo $item->drawVisible();?>">
 	<?php if(!$item->isLabelDisabled()):?>
 		<?php if($item->hasLabelObject()):?>
 			<?php echo $item->getLabelObject()->generate();?>
@@ -22,9 +23,9 @@
 			
 			<?php foreach($languages as $key => $lang):?>
 				<?php $name = $tools->getFieldName($item->getName(), $key);?>
-				<input type="<?php echo $item->getType();?>" name="<?php $name;?>" id="<?php echo $name;?>" value="<?php echo $item->getValue();?>"
-				class="form-control <?php echo $item->drawClasses();?>"  <?php echo $item->drawAttributes();?>
-				<?php if(!$item->hasPlaceholder()):?> placeholder="<?php echo $item->getPlaceholder();?>" <?php endif;?>/>
+				<input type="<?php echo $item->getType();?>" name="<?php echo $name;?>" id="<?php echo $name;?>" value="<?php echo $item->getFieldValue($key);?>"
+				class="form-control <?php echo $item->drawClasses();?> <?php echo $item->getLangClass($key);?>"  <?php echo $item->drawAttributes();?>
+				<?php if($item->hasPlaceholder()):?> placeholder="<?php echo $item->getPlaceholder();?>" <?php endif;?>  style="<?php echo $item->getLangVisible($key);?>"/>
 			<?php endforeach;?>
 			<?php if($item->hasRightIcon()):?><?php echo $item->getRightIcon()->generate();?><?php endif;?>
 			<?php if($item->isTranslatable()):?>
@@ -34,8 +35,13 @@
 				</div>
 			<?php endif;?>
 		</div>
+		<?php foreach($languages as $key => $lang):?>
+		<div class="help-block help-block-error" style="<?php echo $item->drawErrorTextVisible($key);?>">
+			<?php echo $item->getErrorText($key);?>
+		</div>
+		<?php endforeach;?>
 		<?php if($item->hasHelpText()):?>
-		<div class="clearfix">
+		<div class="help-block">
 			<?php echo $item->getHelpText();?>
 		</div>
 		<?php endif;?>

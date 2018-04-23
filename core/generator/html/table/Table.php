@@ -4,6 +4,7 @@ use core\generator\html\Block;
 use core\generator\html\Checkbox;
 use core\generator\html\Icon;
 use core\generator\html\Button;
+use core\generator\html\Link;
 use core\Context;
 class Table extends Block{
 	protected $templateFile = 'generator/table/table';
@@ -39,16 +40,26 @@ class Table extends Block{
 	protected $value = array();
 	
 	protected $rowFormatter;
+	protected $bulkActionContent;
 	
 	protected $defaultRowAction;
 	protected $othersRowActions;
+	protected $bulkActionText;
+	protected $emptyRowText;
+	protected $selectAll;
+	protected $unselectAll;
+	protected $maxPageDisplayed = 5;
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '') {
+	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '', $emptyRowText = '', $selectAllText = '', $unselectAllText = '', $bulkActionText = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
 		$this->setDecorated($decorated);
 		$this->searchButton = new Button($searchText, true, new Icon('search'), 'searchButton');
 		$this->searchResetButton = new Button($resetText, true, new Icon('times'), 'searchResetButton');
+		$this->selectAll = new Link($selectAllText, '#', new Icon('check-square'), $selectAllText);
+		$this->unselectAll = new Link($unselectAllText, '#', new Icon('square-o'), $unselectAllText);
+		$this->emptyRowText = $emptyRowText;
+		$this->bulkActionText = $bulkActionText;
 	}
 	
 	public function createRow($value){
@@ -56,7 +67,43 @@ class Table extends Block{
 		$row->setTemplateFile($this->rowTemplateFile, false);
 		return $row;
 	}
+	public function createItemPerPageLink($itemsPerPage, $label) {
+		$link = new Link($label, $this->urlCreator->createLimitUrl($itemsPerPage));
+		return $link;
+	}
+	public function isActiveItemPerPage($value){
+		return $this->itemsPerPage == $value;
+	}
 	
+	public function canDisplayItemsPerPageOptions(){
+		$result = !$this->isEmpty();
+		if($result && !empty($this->itemsPerPageOptions)){
+			$optionCount = 0;
+			$upperOptionCount = 0;
+			foreach($this->itemsPerPageOptions as $value => $option){
+				if($value > 0){
+					$optionCount++;
+					if($value >= $this->totalResult){
+						$upperOptionCount++;
+					}
+				}
+			}
+			$result = ($upperOptionCount < $optionCount);
+		}
+		return $result;
+	}
+	public function drawPagination($templateFile = '', $absolutePath = true){
+		$content = '';
+		if(!$this->isEmpty()){
+			$pagination = new Pagination($this);
+			if(!empty($templateFile)){
+				$pagination->setTemplateFile($this->rowTemplateFile, $absolutePath);
+			}
+			$content = $pagination->generate();
+		}
+		
+		return $content;
+	}
 	public function hasHeader(){
 		return (parent::hasHeader() || !empty($this->tableActions));
 	}
@@ -74,18 +121,61 @@ class Table extends Block{
 	}
 	
 	public function needRowSelector(){
+		return $this->hasBulkActions();
+	}
+	
+	public function hasBulkActions(){
 		return !empty($this->bulkActions);
 	}
 	
-	public function createRowSelector($isHeader = false, $templateFile = ''){
+	public function isEmpty(){
+		return empty($this->value);
+	}
+	
+	public function drawBulkActions($templateFile = ''){
+		$key = $templateFile;
+		if(!isset($this->bulkActionContent[$key])){
+			if($this->isEmpty()){
+				$this->bulkActionContent[$key] = '';
+			}else{
+				$templateFile = empty($templateFile) ? 'generator/bulk_action' : $templateFile;
+				$block = new Block(true, $this->bulkActionText);
+				$block->setTemplateFile($templateFile, false);
+				if($this->selectAll!=null){
+					$block->addChild($this->selectAll);
+				}
+				if($this->unselectAll!=null){
+					$this->unselectAll->addAdditionalData('separator', '1');
+					$block->addChild($this->unselectAll);
+				}
+				foreach($this->bulkActions as $action){
+					$block->addChild($action);
+				}
+				$this->bulkActionContent[$key] = $block->generate();
+			}
+			
+		}
+		return $this->bulkActionContent[$key];
+	}
+	
+	public function createRowSelector($isHeader = false, $value = null, $templateFile = ''){
 		$key = (int)$isHeader.$templateFile;
 		if(!isset($this->rowSelectorCache[$key])){
-			$this->rowSelectorCache[$key] = $checkbox;
-			$name = $isHeader?'':$this->identifier;
+			$name = $isHeader?'':$this->identifier.'[]';
 			$checkbox = new Checkbox($name);
 			if(!empty($templateFile)){
 				$checkbox->setTemplateFile($templateFile);
 			}
+			$this->rowSelectorCache[$key] = $checkbox;
+		}
+		if(!$isHeader){
+			$id = '';
+			if(is_array($value) && isset($value[$this->identifier])){
+				
+			}elseif(is_object($value)){
+				$id = $value->getSinglePrimaryValue();
+			}
+			$this->rowSelectorCache[$key]->setValue($id);
 		}
 		return $this->rowSelectorCache[$key];
 	}
@@ -112,13 +202,21 @@ class Table extends Block{
 		$this->ajaxActive=$ajaxActive;
 	}
 	
+	public function getEmptyRowText() {
+		return $this->emptyRowText;
+	}
 	public function getFormPosition() {
 		return $this->formPosition;
 	}
 	public function setFormPosition($formPosition) {
 		$this->formPosition=$formPosition;
 	}
-	
+	public function getMaxPageDisplayed() {
+		return $this->maxPageDisplayed;
+	}
+	public function setMaxPageDisplayed($maxPageDisplayed) {
+		$this->maxPageDisplayed=$maxPageDisplayed;
+	}
 	public function getTotalResult() {
 		return $this->totalResult;
 	}

@@ -6,7 +6,7 @@
 <?php $columns = $table->getColumns();?>
 <?php if($table->needRowSelector()):?>
 	<td>
-		<?php echo $table->createRowSelector(false)->generate();?>
+		<?php echo $table->createRowSelector(false, $item->getValue())->generate();?>
 	</td>
 <?php endif;?>
 <?php foreach($columns as $column):?>

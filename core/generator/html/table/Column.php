@@ -65,7 +65,7 @@ class Column extends Element{
 	}
 	
 	public function createSortUrl($way){
-		return $this->table->getUrlCreator()->createSortUrl(array('column'=>$this->getName(), 'way'=>$way));
+		return $this->table->getUrlCreator()->createSortUrl($this->getName(), $way);
 	}
 	
 	public function getTable() {

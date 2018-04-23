@@ -82,6 +82,9 @@ abstract class Controller
     protected $user;
 	
     protected $lang;
+    protected $confirmations;
+    protected $warnings;
+    protected $informations;
 	
     /**
      * Initialize the page
@@ -367,6 +370,10 @@ abstract class Controller
 
         $html = '';
 		$content = is_array($content) ? $content : array($content);
+		$this->template->assign('errors', $this->errors);
+		$this->template->assign('confirmations', $this->confirmations);
+		$this->template->assign('informations', $this->informations);
+		$this->template->assign('warnings', $this->warnings);
         foreach ($content as $tpl) {
 			$html .= $this->template->render($tpl);
 		}

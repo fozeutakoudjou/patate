@@ -8,15 +8,19 @@ class Form extends Block{
 	protected $submitAction;
 	protected $cancel;
 	protected $subLabel;
+	protected $errorText;
+	
 	protected $enctype='multipart/form-data';
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $method = 'post') {
+	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $errorText = '', $method = 'post') {
 		parent::__construct($decorated, $label, $icon);
 		$this->setFormAction($formAction);
 		$this->setMethod($method);
 		$this->setSubmitAction($submitAction);
+		$this->setErrorText($errorText);
 		
 	}
+	
 	public function hasCancel(){
 		return ($this->cancel!=null);
 	}
@@ -37,6 +41,13 @@ class Form extends Block{
 	}
 	public function setSubmitAction($submitAction){
 		$this->submitAction=$submitAction;
+	}
+	
+	public function getErrorText(){
+		return $this->errorText;
+	}
+	public function setErrorText($errorText){
+		$this->errorText=$errorText;
 	}
 	public function getFormAction(){
 		return $this->formAction;
@@ -76,5 +87,8 @@ class Form extends Block{
 	}
 	public function setEnctype($enctype){
 		$this->enctype=$enctype;
+	}
+	public function drawErrorVisible(){
+		return $this->hasErrors() ? '' : 'display:none;';
 	}
 }

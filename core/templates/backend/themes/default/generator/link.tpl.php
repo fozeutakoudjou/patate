@@ -1,4 +1,5 @@
-<a href="<?php echo $item->getHref();?>" class="<?php if($item->isButtonStyleUsed()):?>btn <?php endif;?> <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
+<a href="<?php echo $item->getHref();?>" class="<?php if($item->isButtonStyleUsed()):?>btn <?php endif;?> <?php echo $item->drawClasses();?>" 
+	<?php echo $item->drawAttributes();?> title="<?php echo $item->getTitle();?>">
 	<?php if($item->hasCustomContent()):?>
 		<?php echo $item->getCustomContent();?>
 	<?php else:?>

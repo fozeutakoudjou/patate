@@ -40,11 +40,12 @@
 		<thead>
 			<?php $columns = $item->getColumns();?>
 			<tr role="row" class="heading">
-				<?php if($item->needRowSelector()):?>
+				<?php if($item->needRowSelector() && !$item->isEmpty()):?>
 					<th>
 						<?php echo $item->createRowSelector(true)->generate();?>
 					</th>
 				<?php endif;?>
+				<?php $columnCount = 0;?>
 				<?php foreach($columns as $column):?>
 					<?php $column->prepare();?>
 					<th>
@@ -55,14 +56,16 @@
 							<?php echo $sortLinks['desc']->generate();?>
 						<?php endif;?>
 					</th>
+					<?php $columnCount += 1;?>
 				<?php endforeach;?>
 				<?php if($item->needActionColumn()):?>
 					<th>
 						<?php echo $tools->l('Actions');?>
 					</th>
+					<?php $columnCount += 1;?>
 				<?php endif;?>
 			</tr>
-			<?php if($item->hasSearchColumn()):?>
+			<?php if($item->hasSearchColumn() && !$item->isEmpty()):?>
 				<tr role="row" class="filter">
 					<?php if($item->needRowSelector()):?><td> </td><?php endif;?>
 					<?php foreach($columns as $column):?>
@@ -87,20 +90,54 @@
 			<?php endif;?>
 		</thead>
 		<tbody>
-			<?php $values = $item->getValue();?>
-			<?php foreach($values as $value):?>
-				<?php echo $item->createRow($value)->generate();?>
-			<?php endforeach;?>
+			<?php if($item->isEmpty()):?>
+				<tr>
+					<td class="list-empty" colspan="<?php echo $columnCount;?>">
+						<div class="list-empty-msg">
+							<i class="fa fa-warning list-empty-icon"></i><?php echo $item->getEmptyRowText();?>
+						</div>
+					</td>
+				</tr>
+			<?php else:?>
+				<?php $values = $item->getValue();?>
+				<?php foreach($values as $value):?>
+					<?php echo $item->createRow($value)->generate();?>
+				<?php endforeach;?>
+			<?php endif;?>
 		</tbody>
 	</table>
-	<?php if($item->hasFooter()):?>
-		<div class="row">
+	<div class="row">
+		<div class="col-lg-4"><?php echo $item->drawBulkActions();?></div>
+		<div class="col-lg-8">
+			<?php if($item->canDisplayItemsPerPageOptions()):?>
+				<div class="pagination">
+					<?php echo $tools->l('Display');?>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+						<?php echo $item->getItemsPerPage();?>
+						<i class="fa fa-caret-down"></i>
+					</button>
+					<ul class="dropdown-menu">
+						<?php $options = $item->getItemsPerPageOptions();?>
+						<?php foreach($options as $value => $label):?>
+							<li class="<?php if($item->isActiveItemPerPage($value)):?>active<?php endif;?>">
+								<?php echo $item->createItemPerPageLink($value, $label)->generate();?>
+							</li>
+						<?php endforeach;?>
+					</ul>
+					<?php echo sprintf($tools->l('/ %s result(s)'), $item->getTotalResult());?>
+				</div>
+			<?php endif;?>
+			<?php echo $item->drawPagination();?>
+		</div>
+		<?php if($item->hasFooter()):?>
 			<?php $footers = $item->getFooters();?>
 			<?php foreach($footers as $footer):?>
 				<?php echo $footer->generate();?>
 			<?php endforeach;?>
-		</div>
-	<?php endif;?>
+		<?php endif;?>
+		
+	</div>
+	
 </div>
 
 <?php if($item->isDecorated()):?>

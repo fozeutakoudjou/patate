@@ -315,13 +315,13 @@ class StringTools
     * Translates a string with underscores into camel case (e.g. first_name -> firstName)
     * @prototype string public static function toCamelCase(string $str[, bool $capitalise_first_char = false])
     */
-    public static function toCamelCase($str, $catapitalise_first_char = false)
+    public static function toCamelCase($str, $catapitalise_first_char = false, $separator = '_')
     {
         $str = self::strtolower($str);
         if ($catapitalise_first_char) {
             $str = self::ucfirst($str);
         }
-        return preg_replace_callback('/_+([a-z])/', create_function('$c', 'return strtoupper($c[1]);'), $str);
+        return preg_replace_callback('/'.$separator.'+([a-z])/', create_function('$c', 'return strtoupper($c[1]);'), $str);
     }
 
     /**
@@ -330,11 +330,11 @@ class StringTools
      * @param string $string
      * @return string
      */
-    public static function toUnderscoreCase($string)
+    public static function toUnderscoreCase($string, $separator = '_')
     {
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
-        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', '_$1', $string), '_'));
+        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $separator.'$1', $string), $separator));
     }
 
 	public static function strtolower($str)
@@ -449,4 +449,15 @@ class StringTools
     {
         return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
     }
+	
+	/*public static function separate($str, $separator, $count = 2)
+    {
+		explode()
+		$result = array();
+		for($i = 0, $i<$count; $i++){
+			
+		}
+		
+        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
+    }*/
 }
