@@ -56,9 +56,6 @@ abstract class Factory {
 		}else{
 			$class = $implementation;
 		}
-		if($class!=null){
-			$class->reset();
-		}
 		return $class;
     }
     private static function getCacheKey($className, $module){

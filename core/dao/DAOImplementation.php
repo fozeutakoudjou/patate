@@ -4,11 +4,10 @@ namespace core\dao;
 use core\constant\dao\Operator;
 use core\constant\dao\LogicalOperator;
 use core\constant\dao\OrderWay;
-use core\constant\dao\OrderBy;
 
 interface DAOImplementation{
     
-	function saveMultilangFields($model, $update = false, $fieldsToUpdate = array());
+	function saveMultilangFields($model, $saveOfLangField, $languages, $update = false, $fieldsToUpdate = array());
     
     
     /**
@@ -47,8 +46,8 @@ interface DAOImplementation{
      * @param array $fields
      * @return array
      */
-    function _getByFields($fields, $returnTotal = false, $association = array(), $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_);
+    function _getByFields($fields, $returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $association = array(), $start = 0, $limit = 0,
+            $orderBy = '', $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_);
     
     
     function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_);

@@ -32,8 +32,7 @@ class Configuration extends Model{
 	public static function get($name, $useOfAllLang = false, $lang = ''){
 		if(!isset(self::$values[$name])){
 			$dao = self::getDAO();
-			$dao->setUseOfAllLang(true);
-            $config = $dao->getByField('name',$name);
+			$config = $dao->getByField('name',$name, false, false, null, true, true);
 			if(empty($config)){
 				$value = false;
 			}else{
@@ -59,13 +58,14 @@ class Configuration extends Model{
 		}else{
 			$config = $config[0];
 		}
+		$saveLangField = true;
 		if($isLangValue){
 			$config->setValueLang($value);
 		}else{
-			$dao->setSaveOfLangField(false);
+			$saveLangField = false;
 			$config->setValue($value);
 		}
-		$result = $dao->save($config);
+		$result = $dao->save($config, $saveLangField);
 		if($result && isset(self::$values[$name])){
 			unset(self::$values[$name]);
 		}

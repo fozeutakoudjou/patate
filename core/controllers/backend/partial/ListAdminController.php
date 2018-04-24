@@ -4,6 +4,7 @@ use core\Tools;
 use core\StringTools;
 use core\models\Model;
 use core\constant\dao\OrderWay;
+use core\constant\dao\LogicalOperator;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\ActionCode;
@@ -29,6 +30,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected $itemsPerPageOptions;
 	protected $currentPage = 1;
+	protected $maxPageDisplayed = 5;
 	
 	protected $orderWayParams = array(OrderWay::ASC=>'asc', OrderWay::DESC=>'desc');
 	protected $limitParams = array(0=>'all');
@@ -44,7 +46,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->generator->setUnselectAllText($this->l('Unselect all'));
 		$this->generator->setEmptyRowText($this->l('No records found'));
 		$this->generator->setBulkActionText($this->l('Bulk actions'));
-		$this->itemsPerPageOptions = array('20'=>20, '2'=>2, '50'=>50, '100'=>100, '300'=>300, '1000'=>1000, '0'=>$this->l('All'));
+		$this->itemsPerPageOptions = array('20'=>20, '1'=>1, '2'=>2, '50'=>50, '100'=>100, '300'=>300, '1000'=>1000, '0'=>$this->l('All'));
 		if($this->defaultModel!=null){
 			$this->defaultOrderColumn =$this->defaultModel->getPrimaries()[0];
 		}
@@ -57,6 +59,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table->setUrlCreator($this);
 		$this->table->setItemsPerPageOptions($this->itemsPerPageOptions);
 		$this->table->setCurrentPage($this->currentPage);
+		$this->table->setMaxPageDisplayed($this->maxPageDisplayed);
 		$this->table->setItemsPerPage(($this->itemsPerPage === null)?$this->defaultItemsPerPage : $this->itemsPerPage);
 		$this->table->setOrderColumn(empty($this->orderColumn) ? $this->defaultOrderColumn : $this->orderColumn);
 		$this->table->setOrderWay(($this->orderWay === null)? $this->defaultOrderWay : $this->orderWay);
@@ -113,7 +116,12 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	}
 	protected function getListData() {
 		$fields = $this->getBaseRestrictionFields();
-		$data = $this->getDAOInstance()->getByFields($fields, true);
+		$limit = (int)(($this->itemsPerPage===null) ? $this->defaultItemsPerPage : $this->itemsPerPage);
+		$start = ($this->currentPage-1)*$limit;
+		$orderWay = (int)(($this->orderWay===null) ? $this->defaultOrderWay : $this->orderWay);
+		$orderBy = empty($this->orderColumn===null) ? $this->defaultOrderColumn : $this->orderColumn;
+		$data = $this->getDAOInstance()->getByFields($fields, true, $this->lang, true, false, array(),
+			$start, $limit, $orderBy, $orderWay, LogicalOperator::AND_);
 		return $data;
 	}
 	
@@ -156,7 +164,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		return $this->createListUrl(array(UrlParamType::PAGE=>$page));
 	}
 	
-	public function createListUrl($data){
+	protected function createListUrl($data){
 		$params = array('action'=>ActionCode::LISTING);
 		if(isset($data[UrlParamType::ORDER])){
 			$params = $this->addOrderParam($params, $data[UrlParamType::ORDER], $data['way']);
@@ -168,14 +176,14 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		return $this->createUrl($params);
 	}
 	
-	public function addOrderParam($params, $column, $way){
+	protected function addOrderParam($params, $column, $way){
 		$way = isset($this->orderWayParams[$way])?$this->orderWayParams[$way] : $way;
 		$params['param1'] = UrlParamType::ORDER.Separator::URL_VALUE.$way.Separator::URL_VALUE.
 			StringTools::toUnderscoreCase(Separator::URL_VALUE.$column,Separator::COLUMN_CAMEL_CASE);
 		return $params;
 	}
 	
-	public function addLimitParam($params, $limit){
+	protected function addLimitParam($params, $limit){
 		$str = UrlParamType::LIMIT.Separator::URL_VALUE.(isset($this->limitParams[$limit])?$this->limitParams[$limit] : $limit);
 		if(!empty($this->orderColumn)){
 			$params = $this->addOrderParam($params, $this->orderColumn, $this->orderWay);
@@ -186,7 +194,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		return $params;
 	}
 	
-	public function addPageParam($params, $page){
+	protected function addPageParam($params, $page){
 		$str = UrlParamType::PAGE.Separator::URL_VALUE.$page;
 		if($this->itemsPerPage!==null){
 			$params = $this->addLimitParam($params, $this->itemsPerPage);
@@ -201,10 +209,40 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	}
 	
 	public function retrieveListUrlParam(){
-		$param1 = Tools::getValue('param1');
-		if($param1){
-			//$data
+		$paramDef = array(
+			'param1'=>array(UrlParamType::ORDER, UrlParamType::LIMIT, UrlParamType::PAGE),
+			'param2'=>array(UrlParamType::LIMIT, UrlParamType::PAGE),
+			'param3'=>array(UrlParamType::PAGE),
+		);
+		foreach($paramDef as $name => $paramTypes){
+			$value = Tools::getValue($name);
+			if(!empty($value)){
+				$data = explode(Separator::URL_VALUE, $value, 2);
+				if(in_array(UrlParamType::ORDER, $paramTypes) && ($data[0]==UrlParamType::ORDER)){
+					$this->setOrderProperties($data[1]);
+				}elseif(in_array(UrlParamType::LIMIT, $paramTypes) && ($data[0]==UrlParamType::LIMIT)){
+					$this->setLimitProperties($data[1]);
+				}elseif(in_array(UrlParamType::PAGE, $paramTypes) && ($data[0]==UrlParamType::PAGE)){
+					$this->setPageProperties($data[1]);
+				}
+			}
 		}
-		
+	}
+	
+	protected function setOrderProperties($params){
+		$data = explode(Separator::URL_VALUE, $params, 2);
+		$ways = array_flip($this->orderWayParams);
+		$this->orderWay = isset($ways[$data[0]])?$ways[$data[0]] : $data[0];
+		$this->orderColumn = StringTools::toCamelCase($data[1],false, Separator::COLUMN_CAMEL_CASE);
+	}
+	
+	protected function setLimitProperties($params){
+		$data = (int)$params;
+		$limits = array_flip($this->limitParams);
+		$this->itemsPerPage = isset($limits[$data])?$limits[$data] : $data;
+	}
+	
+	protected function setPageProperties($params){
+		$this->currentPage = (int)$params;
 	}
 }

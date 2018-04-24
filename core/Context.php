@@ -94,7 +94,7 @@ class Context
     {
 		$factory = Factory::getInstance();
 		$factory->setLang($this->lang);
-		Factory::getDAOInstance('Configuration')->setLang($this->lang);
+		Factory::getDAOInstance('Configuration')->setDefaultLang($this->lang);
     }
 	
 	public function getLang()

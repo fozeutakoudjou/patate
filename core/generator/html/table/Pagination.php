@@ -69,7 +69,7 @@ class Pagination extends Block{
 	}
 	public function getEndPage() {
 		$start = $this->getStartPage();
-		$end = $start + $this->maxPageDisplayed;
+		$end = $start -1 + $this->maxPageDisplayed;
 		return (($this->totalPage - $end)<0) ? $this->totalPage : $end;
 	}
 	public function prepare() {

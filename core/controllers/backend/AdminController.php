@@ -33,8 +33,8 @@ abstract class AdminController extends FormAdminController
 				if($this->defaultModel->isFieldsValidated() && !$this->hasErrors()){
 					$continue = $this->beforeEdit($update);
 					if($continue && !$this->hasErrors()){
-						$result = $update ? $this->getDAOInstance()->update($this->defaultModel, $this->formFieldsToExclude, array(), $identifiers) :
-							$this->getDAOInstance()->add($this->defaultModel);
+						$result = $update ? $this->getDAOInstance()->update($this->defaultModel, $this->formFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :
+							$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
 						$this->afterEdit($result, $update);
 						if($result){
 							$this->redirectLink = $this->createUrl();

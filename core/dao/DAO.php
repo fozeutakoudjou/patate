@@ -5,7 +5,6 @@ use core\FileTools;
 use core\constant\dao\Operator;
 use core\constant\dao\LogicalOperator;
 use core\constant\dao\OrderWay;
-use core\constant\dao\OrderBy;
 
 class DAO{
 	
@@ -20,11 +19,6 @@ class DAO{
     protected $defaultModel;
     
     protected $requireValidation = true;
-	protected $lang;
-    protected $languages;
-    protected $useOfLang = true;
-    protected $useOfAllLang = false;
-    protected $saveOfLangField = true;
 	
 	protected $isImplementation;
 	
@@ -39,10 +33,8 @@ class DAO{
         $this->factory= $param['factory'];
         $this->module= $param['module'];
         $this->className= $param['className'];
-        $this->lang= $param['lang'];
-        $this->languages= $param['languages'];
-        $this->defaultLang = $this->lang;
-        $this->defaultLanguages = $this->languages;
+        $this->defaultLang= $param['lang'];
+        $this->defaultLanguages= $param['languages'];
 		if(isset($param['implementation'])){
 			$this->implementation = $param['implementation'];
 		}
@@ -69,12 +61,8 @@ class DAO{
         }
     }
 	
-	public function save($model) {
-		$this->setDefinition($model);
-		$result = null;
-		if(!is_array($this->definition['primary'])){
-			$result = empty($model->getPropertyValue($this->definition['primary'])) ? $this->add($model) : $this->update($model);
-		}
+	public function save($model, $saveOfLangField = true, $languages = null) {
+		$result = $model->isLoaded() ? $this->update($model, array(), array(), array(), $saveOfLangField, $languages) : $this->add($model, $saveOfLangField, $languages);
 		return $result;
 	}
     /**
@@ -83,7 +71,8 @@ class DAO{
      * @param \models\Model $model
      * @return bool
      */
-    public function add($model) {
+    public function add($model, $saveOfLangField = true, $languages = null) {
+		$languages = ($languages==null)?$this->defaultLanguages : $languages;
 		$this->setDefinition($model);
 		if (isset($this->definition['fields']['dateAdd'])) {
             $model->setDateAdd(date('Y-m-d H:i:s'));
@@ -92,15 +81,14 @@ class DAO{
             $model->setDateUpdate(date('Y-m-d H:i:s'));
         }
         $this->validation($model);
-        $model->formatFields($this->languages, $this->lang);
+        $model->formatFields($languages, $this->defaultLang);
         $result = $this->getImplementation()->_add($model);
         if($result && !is_array($this->definition['primary']) && $model->isAutoIncrement()){
             $model->setPropertyValue($this->definition['primary'], $this->getLastId());
         }
 		if($result){
-			$result = $this->getImplementation()->saveMultilangFields($model, false);
+			$result = $this->getImplementation()->saveMultilangFields($model, $saveOfLangField, $languages, false);
 		}
-		$this->setSaveOfLangField(true);
         return $result;
     }
 	
@@ -113,13 +101,14 @@ class DAO{
      * @param array $fieldsToUpdate
      * @return bool
      */
-    public function update($model, $fieldsToExclude = array(), $fieldsToUpdate = array(), $identifiers = array()) {
+    public function update($model, $fieldsToExclude = array(), $fieldsToUpdate = array(), $identifiers = array(), $saveOfLangField = true, $languages = null) {
+		$languages = ($languages==null)?$this->defaultLanguages : $languages;
 		$this->setDefinition($model);
 		if (isset($this->definition['fields']['dateUpdate'])) {
             $model->setDateUpdate(date('Y-m-d H:i:s'));
         }
         $this->validation($model);
-        $model->formatFields($this->languages, $this->lang);
+		$model->formatFields($languages, $this->defaultLang);
 		$newFieldsToUpdate = array();
 		$newLangFields = array();
 		foreach ($this->definition['fields'] as $field => $value) {
@@ -133,9 +122,8 @@ class DAO{
         }
         $result = $this->getImplementation()->_update($model, $newFieldsToUpdate, $identifiers);
 		if($result){
-			$result = $this->getImplementation()->saveMultilangFields($model, true, $newLangFields);
+			$result = $this->getImplementation()->saveMultilangFields($model, $saveOfLangField, $languages, true, $newLangFields);
 		}
-		$this->setSaveOfLangField(true);
         return $result;
     }
     
@@ -165,7 +153,7 @@ class DAO{
      * @param int|array $id
      * @return Model
      */
-    public function getById($id, $onlyActive = false, $associations = array()) {
+    public function getById($id, $onlyActive = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $associations = array()) {
         $this->setDefinition();
         if(is_array($this->definition['primary'])){
             $fields = $id;
@@ -183,14 +171,14 @@ class DAO{
      * @param array $fields
      * @return array
      */
-    public function getAll($returnTotal = false, $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $onlyActive = false, $associations = array()) {
+    public function getAll($returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $start = 0, $limit = 0,
+            $orderBy = '', $orderWay = OrderWay::DESC, $onlyActive = false, $associations = array()) {
         $this->setDefinition();
         $fields = array();
         if($onlyActive && isset($this->definition['fields']['active'])){
             $fields['active'] = true;
         }
-        return $this->getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay);
+        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay);
     }
     
     /**
@@ -199,13 +187,11 @@ class DAO{
      * @param array $fields
      * @return array
      */
-    public function getByFields($fields, $returnTotal = false, $associations = array(), $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
+    public function getByFields($fields, $returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $associations = array(), 
+		$start = 0, $limit = 0, $orderBy ='', $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
         $this->setDefinition();
 		$fields = $this->addDelectedParam($fields);
-        $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay, $logicalOperator);
-		$this->setUseOfLang(true);
-		$this->setUseOfAllLang(false);
+        $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay, $logicalOperator);
 		return $result;
     }
     
@@ -229,11 +215,11 @@ class DAO{
      * @param type $value
      * @return array
      */
-    public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $associations = array(), $start = 0, $limit = 0,
-            $orderBy = OrderBy::PRIMARY, $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
+    public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, 
+			$associations = array(), $start = 0, $limit = 0, $orderBy = '', $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
 		$fields = $this->createFieldArray($field, $value, $operator);
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFields($fields, $returnTotal, $associations, $start, $limit, $orderBy, $orderWay);
+        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay);
     }
     
     public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS) {
@@ -247,7 +233,7 @@ class DAO{
     }
 	
 	protected function addDelectedParam($params){
-		if(isset($this->definition['fields']['deleted'])){
+		if(isset($this->definition['fields']['deleted']) && !isset($params['deleted'])){
 			$params['deleted'] = 0;
 		}
 		return $params;
@@ -352,43 +338,19 @@ class DAO{
         return $canBeSet;
     }
 	
-	public function setUseOfAllLang($useOfAllLang)
+	public function setDefaultLang($lang)
     {
-		$this->useOfAllLang = $useOfAllLang;
+		$this->defaultLang = $lang;
 		if(!$this->isImplementation){
-			$this->implementation->setUseOfAllLang($useOfAllLang);
+			$this->implementation->setDefaultLang($lang);
 		}
     }
 	
-	public function setLang($lang)
+	public function setDefaultLanguages($languages)
     {
-		$this->lang = $lang;
+		$this->defaultLanguages = $languages;
 		if(!$this->isImplementation){
-			$this->implementation->setLang($lang);
-		}
-    }
-	
-	public function setUseOfLang($useOfLang)
-    {
-		$this->useOfLang = $useOfLang;
-		if(!$this->isImplementation){
-			$this->implementation->setUseOfLang($useOfLang);
-		}
-    }
-	
-	public function setLanguages($languages)
-    {
-		$this->languages = $languages;
-		if(!$this->isImplementation){
-			$this->implementation->setLanguages($languages);
-		}
-    }
-	
-	public function setSaveOfLangField($saveOfLangField)
-    {
-		$this->saveOfLangField = $saveOfLangField;
-		if(!$this->isImplementation){
-			$this->implementation->setSaveOfLangField($saveOfLangField);
+			$this->implementation->setDefaultLanguages($languages);
 		}
     }
 	
@@ -404,14 +366,5 @@ class DAO{
 	protected function getImplementation()
     {
 		return $this->isImplementation ? $this : $this->implementation;
-    }
-	
-	public function reset()
-    {
-        $this->setLang($this->defaultLang);
-        $this->setLanguages($this->defaultLanguages);
-		$this->setUseOfLang(true);
-		$this->setUseOfAllLang(false);
-		$this->setSaveOfLangField(true);
     }
 }

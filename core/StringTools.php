@@ -449,15 +449,4 @@ class StringTools
     {
         return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
     }
-	
-	/*public static function separate($str, $separator, $count = 2)
-    {
-		explode()
-		$result = array();
-		for($i = 0, $i<$count; $i++){
-			
-		}
-		
-        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
-    }*/
 }
