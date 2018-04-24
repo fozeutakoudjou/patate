@@ -5,6 +5,7 @@ use core\Tools;
 use core\constant\dao\Operator;
 use core\constant\dao\LogicalOperator;
 use core\constant\dao\JoinType;
+use core\constant\dao\OrderWay;
 use core\dao\DAO;
 use core\dao\Factory;
 use core\dao\DAOImplementation;
@@ -23,6 +24,10 @@ class DAOPDO extends DAO implements DAOImplementation{
 	protected static $logicalOperatorList = array(
 		LogicalOperator::AND_ => 'AND',
 		LogicalOperator::OR_ => 'OR'
+	);
+	protected static $orderWayList = array(
+		OrderWay::ASC => 'ASC',
+		OrderWay::DESC => 'DESC'
 	);
 	protected static $joinTypeList = array(
 		JoinType::INNER => 'INNER JOIN',
@@ -327,7 +332,16 @@ class DAOPDO extends DAO implements DAOImplementation{
     }
     
     protected function getOrderString($orderBy, $orderWay, $formatted= array()){
-        return '';
+		$sql = '';
+		if(!empty($orderBy)){
+			if(!isset(self::$orderWayList[$orderWay])){
+				throw new \Exception('Invalid order way');
+			}else{
+				$preffix = self::DEFAULT_PREFFIX;
+				$sql = ' ORDER BY `'.bqSQL($preffix).'`.`'.bqSQL($orderBy).'` '.self::$orderWayList[$orderWay].' ';
+			}
+		}
+        return $sql;
     }
     
     protected function getLimitString($start, $limit){

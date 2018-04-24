@@ -41,11 +41,18 @@ class Column extends Element{
 		if(!$this->prepared){
 			if($this->sortable){
 				$this->sortLinks['asc'] = new Link('ASC', $this->createSortUrl(OrderWay::ASC));
+				$this->sortLinks['asc']->addAdditionalData('way', OrderWay::ASC);
 				$this->sortLinks['asc']->setIcon(new Icon('caret-up'));
-				$this->sortLinks['asc']->setLabelDisabled(true);
 				$this->sortLinks['desc'] = new Link('DESC', $this->createSortUrl(OrderWay::DESC));
 				$this->sortLinks['desc']->setIcon(new Icon('caret-down'));
-				$this->sortLinks['desc']->setLabelDisabled(true);
+				$this->sortLinks['desc']->addAdditionalData('way', OrderWay::DESC);
+				foreach($this->sortLinks as $link){
+					$link->setLabelDisabled(true);
+					$link->addClass('sort_link');
+					if($this->isActiveSortWay($link->getAdditional('way'))){
+						$link->addClass('active');
+					}
+				}
 			}
 			if($this->searchable && !$this->hasCustomSearchField()){
 				$this->searchFields = array();
@@ -62,6 +69,14 @@ class Column extends Element{
 			}
 			$this->prepared = true;
 		}
+	}
+	
+	public function isActiveSortColumn(){
+		return ($this->name == $this->table->getOrderColumn());
+	}
+	
+	public function isActiveSortWay($way){
+		return ($this->isActiveSortColumn() && $way == $this->table->getOrderWay());
 	}
 	
 	public function createSortUrl($way){

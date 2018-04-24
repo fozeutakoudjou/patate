@@ -1,3 +1,11 @@
 .alert .close{
 	text-indent: 0px;
 }
+
+.sortable_column .sort_link{
+	color: #000;
+}
+
+.sortable_column.active_sort .sort_link.active{
+	color: #00aff0
+}

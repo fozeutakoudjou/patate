@@ -48,7 +48,7 @@
 				<?php $columnCount = 0;?>
 				<?php foreach($columns as $column):?>
 					<?php $column->prepare();?>
-					<th>
+					<th class="<?php if($column->isSortable()):?>sortable_column <?php if($column->isActiveSortColumn()):?>active_sort<?php endif;?><?php endif;?>">
 						<?php echo $column->getLabel();?>
 						<?php if($column->isSortable()):?>
 							<?php $sortLinks = $column->getSortLinks();?>

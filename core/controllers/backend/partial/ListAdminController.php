@@ -119,7 +119,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$limit = (int)(($this->itemsPerPage===null) ? $this->defaultItemsPerPage : $this->itemsPerPage);
 		$start = ($this->currentPage-1)*$limit;
 		$orderWay = (int)(($this->orderWay===null) ? $this->defaultOrderWay : $this->orderWay);
-		$orderBy = empty($this->orderColumn===null) ? $this->defaultOrderColumn : $this->orderColumn;
+		$orderBy = ($this->orderColumn===null) ? $this->defaultOrderColumn : $this->orderColumn;
 		$data = $this->getDAOInstance()->getByFields($fields, true, $this->lang, true, false, array(),
 			$start, $limit, $orderBy, $orderWay, LogicalOperator::AND_);
 		return $data;
