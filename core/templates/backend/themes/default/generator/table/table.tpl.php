@@ -52,8 +52,8 @@
 						<?php echo $column->getLabel();?>
 						<?php if($column->isSortable()):?>
 							<?php $sortLinks = $column->getSortLinks();?>
-							<?php echo $sortLinks['asc']->generate();?>
-							<?php echo $sortLinks['desc']->generate();?>
+							<?php $sortLinks['asc']->setTitle($tools->l('Sort ascending')); echo $sortLinks['asc']->generate();?>
+							<?php $sortLinks['desc']->setTitle($tools->l('Sort descending')); echo $sortLinks['desc']->generate();?>
 						<?php endif;?>
 					</th>
 					<?php $columnCount += 1;?>

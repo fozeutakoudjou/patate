@@ -55,7 +55,6 @@ class Model{
 	public function copyFromPost($languages = array(), $preffix = '', $fieldsToExclude = array())
     {
 		$data = Tools::getAllValues(true);
-		var_dump($data);
 		/*$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		foreach($primaries as $primary){
 			$postedPrimary = $preffix . $primary . '_' . $this->definition['table'];

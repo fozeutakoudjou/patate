@@ -337,7 +337,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 			if(!isset(self::$orderWayList[$orderWay])){
 				throw new \Exception('Invalid order way');
 			}else{
-				$preffix = self::DEFAULT_PREFFIX;
+				$preffix = self::DEFAULT_PREFFIX .($this->defaultModel->isLangField($orderBy) ? '_l' :'');
 				$sql = ' ORDER BY `'.bqSQL($preffix).'`.`'.bqSQL($orderBy).'` '.self::$orderWayList[$orderWay].' ';
 			}
 		}
