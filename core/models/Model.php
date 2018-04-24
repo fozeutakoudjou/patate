@@ -44,7 +44,7 @@ class Model{
 				foreach ($langFields as $field) {
 					if(!in_array($field, $fieldsToExclude)){
 						$fieldKey = $preffix . Tools::getLangFieldKey($field, $tmpLang);
-						if (!isset($data[$fieldKey])) {
+						if (isset($data[$fieldKey])) {
 							$this->setFieldValue($field, $data[$fieldKey], $tmpLang, true, '');
 						}
 					}
@@ -55,6 +55,7 @@ class Model{
 	public function copyFromPost($languages = array(), $preffix = '', $fieldsToExclude = array())
     {
 		$data = Tools::getAllValues(true);
+		var_dump($data);
 		/*$primaries = is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 		foreach($primaries as $primary){
 			$postedPrimary = $preffix . $primary . '_' . $this->definition['table'];

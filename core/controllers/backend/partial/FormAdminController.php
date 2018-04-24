@@ -69,7 +69,7 @@ abstract class FormAdminController extends ListAdminController
 	
 	protected function loadFormObject() {
 		$fields = $this->getFormFieldsRestriction();
-		$data = $this->getDAOInstance()->getByFields($fields, false);
+		$data = $this->getDAOInstance()->getByFields($fields, false, $this->lang, true, true);
 		if(empty($data)){
 			$this->errors[] = $this->l('Data not found');
 			$return = false;

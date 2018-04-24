@@ -104,6 +104,9 @@ class Table extends Block{
 		
 		return $content;
 	}
+	public function getItemsPerPageLabel(){
+		return isset($this->itemsPerPageOptions[$this->itemsPerPage]) ? $this->itemsPerPageOptions[$this->itemsPerPage] : $this->itemsPerPage;
+	}
 	public function hasHeader(){
 		return (parent::hasHeader() || !empty($this->tableActions));
 	}

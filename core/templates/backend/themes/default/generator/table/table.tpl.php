@@ -113,7 +113,7 @@
 				<div class="pagination">
 					<?php echo $tools->l('Display');?>
 					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-						<?php echo $item->getItemsPerPage();?>
+						<?php echo $item->getItemsPerPageLabel();?>
 						<i class="fa fa-caret-down"></i>
 					</button>
 					<ul class="dropdown-menu">
