@@ -50,5 +50,5 @@ interface DAOImplementation{
             $orderBy = '', $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_);
     
     
-    function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_);
+    function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_, $lang = null, $useOfLang = true, $useOfAllLang = false);
 }

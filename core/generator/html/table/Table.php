@@ -1,12 +1,13 @@
 <?php
 namespace core\generator\html\table;
 use core\generator\html\Block;
+use core\generator\html\Form;
 use core\generator\html\Checkbox;
 use core\generator\html\Icon;
 use core\generator\html\Button;
 use core\generator\html\Link;
 use core\Context;
-class Table extends Block{
+class Table extends Form{
 	protected $templateFile = 'generator/table/table';
 	protected $rowTemplateFile = 'generator/table/row';
 	
@@ -145,13 +146,19 @@ class Table extends Block{
 				$block = new Block(true, $this->bulkActionText);
 				$block->setTemplateFile($templateFile, false);
 				if($this->selectAll!=null){
+					$this->selectAll->addClass('all_checker');
+					$this->selectAll->addAttribute('target_item', '.check_all_item');
 					$block->addChild($this->selectAll);
 				}
 				if($this->unselectAll!=null){
+					$this->unselectAll->addClass('all_unchecker');
+					$this->unselectAll->addAttribute('target_item', '.check_all_item');
 					$this->unselectAll->addAdditionalData('separator', '1');
 					$block->addChild($this->unselectAll);
 				}
 				foreach($this->bulkActions as $action){
+					$action->addClass("bulk_action");
+					$action->addAttribute('data-action', $action->getAction());
 					$block->addChild($action);
 				}
 				$this->bulkActionContent[$key] = $block->generate();
@@ -166,6 +173,12 @@ class Table extends Block{
 		if(!isset($this->rowSelectorCache[$key])){
 			$name = $isHeader?'':$this->identifier.'[]';
 			$checkbox = new Checkbox($name);
+			$checkbox->addClass('check_all_item');
+			if($isHeader){
+				$checkbox->addClass('check_all_switcher');
+				$checkbox->addClass('check_all_switcher');
+				$checkbox->addAttribute('target_item', '.check_all_item');
+			}
 			if(!empty($templateFile)){
 				$checkbox->setTemplateFile($templateFile);
 			}

@@ -35,111 +35,117 @@
 <?php else:?>
 	<div class="<?php echo $item->drawWrapperClasses();?>" style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
-<div class="table-container table-responsive">
-	<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
-		<thead>
-			<?php $columns = $item->getColumns();?>
-			<tr role="row" class="heading">
-				<?php if($item->needRowSelector() && !$item->isEmpty()):?>
-					<th>
-						<?php echo $item->createRowSelector(true)->generate();?>
-					</th>
-				<?php endif;?>
-				<?php $columnCount = 0;?>
-				<?php foreach($columns as $column):?>
-					<?php $column->prepare();?>
-					<th class="<?php if($column->isSortable()):?>sortable_column <?php if($column->isActiveSortColumn()):?>active_sort<?php endif;?><?php endif;?>">
-						<?php echo $column->getLabel();?>
-						<?php if($column->isSortable()):?>
-							<?php $sortLinks = $column->getSortLinks();?>
-							<?php $sortLinks['asc']->setTitle($tools->l('Sort ascending')); echo $sortLinks['asc']->generate();?>
-							<?php $sortLinks['desc']->setTitle($tools->l('Sort descending')); echo $sortLinks['desc']->generate();?>
-						<?php endif;?>
-					</th>
-					<?php $columnCount += 1;?>
-				<?php endforeach;?>
-				<?php if($item->needActionColumn()):?>
-					<th>
-						<?php echo $tools->l('Actions');?>
-					</th>
-					<?php $columnCount += 1;?>
-				<?php endif;?>
-			</tr>
-			<?php if($item->hasSearchColumn() && !$item->isEmpty()):?>
-				<tr role="row" class="filter">
-					<?php if($item->needRowSelector()):?><td> </td><?php endif;?>
+<?php if(!$item->isContentOnly()):?>
+	<form action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
+<?php endif;?>
+	<input type="hidden" class="" name="<?php echo $item->getSubmitAction();?>" value=""/>
+	<div class="table-container table-responsive">
+		<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
+			<thead>
+				<?php $columns = $item->getColumns();?>
+				<tr role="row" class="heading">
+					<?php if($item->needRowSelector() && !$item->isEmpty()):?>
+						<th>
+							<?php echo $item->createRowSelector(true)->generate();?>
+						</th>
+					<?php endif;?>
+					<?php $columnCount = 0;?>
 					<?php foreach($columns as $column):?>
-						<td>
-							<?php if($column->isSearchable()):?>
-								<?php $searchFields = $column->getSearchFields();?>
-								<?php foreach($searchFields as $field):?>
-									<?php echo $field->generate();?>
-								<?php endforeach;?>
+						<?php $column->prepare();?>
+						<th class="<?php if($column->isSortable()):?>sortable_column <?php if($column->isActiveSortColumn()):?>active_sort<?php endif;?><?php endif;?>">
+							<?php echo $column->getLabel();?>
+							<?php if($column->isSortable()):?>
+								<?php $sortLinks = $column->getSortLinks();?>
+								<?php $sortLinks['asc']->setTitle($tools->l('Sort ascending')); echo $sortLinks['asc']->generate();?>
+								<?php $sortLinks['desc']->setTitle($tools->l('Sort descending')); echo $sortLinks['desc']->generate();?>
 							<?php endif;?>
-						</td>
+						</th>
+						<?php $columnCount += 1;?>
 					<?php endforeach;?>
 					<?php if($item->needActionColumn()):?>
-					<td>
-						<?php echo $item->getSearchButton()->generate();?>
-						<?php if($item->needSearchResetButton()):?>
-							<?php echo $item->getSearchResetButton()->generate();?>
-						<?php endif;?>
-					</td>
+						<th>
+							<?php echo $tools->l('Actions');?>
+						</th>
+						<?php $columnCount += 1;?>
+					<?php endif;?>
+				</tr>
+				<?php if($item->hasSearchColumn() && !$item->isEmpty()):?>
+					<tr role="row" class="filter">
+						<?php if($item->needRowSelector()):?><td> </td><?php endif;?>
+						<?php foreach($columns as $column):?>
+							<td>
+								<?php if($column->isSearchable()):?>
+									<?php $searchFields = $column->getSearchFields();?>
+									<?php foreach($searchFields as $field):?>
+										<?php echo $field->generate();?>
+									<?php endforeach;?>
+								<?php endif;?>
+							</td>
+						<?php endforeach;?>
+						<?php if($item->needActionColumn()):?>
+						<td>
+							<?php echo $item->getSearchButton()->generate();?>
+							<?php if($item->needSearchResetButton()):?>
+								<?php echo $item->getSearchResetButton()->generate();?>
+							<?php endif;?>
+						</td>
+					<?php endif;?>
+					</tr>
 				<?php endif;?>
-				</tr>
-			<?php endif;?>
-		</thead>
-		<tbody>
-			<?php if($item->isEmpty()):?>
-				<tr>
-					<td class="list-empty" colspan="<?php echo $columnCount;?>">
-						<div class="list-empty-msg">
-							<i class="fa fa-warning list-empty-icon"></i><?php echo $item->getEmptyRowText();?>
-						</div>
-					</td>
-				</tr>
-			<?php else:?>
-				<?php $values = $item->getValue();?>
-				<?php foreach($values as $value):?>
-					<?php echo $item->createRow($value)->generate();?>
+			</thead>
+			<tbody>
+				<?php if($item->isEmpty()):?>
+					<tr>
+						<td class="list-empty" colspan="<?php echo $columnCount;?>">
+							<div class="list-empty-msg">
+								<i class="fa fa-warning list-empty-icon"></i><?php echo $item->getEmptyRowText();?>
+							</div>
+						</td>
+					</tr>
+				<?php else:?>
+					<?php $values = $item->getValue();?>
+					<?php foreach($values as $value):?>
+						<?php echo $item->createRow($value)->generate();?>
+					<?php endforeach;?>
+				<?php endif;?>
+			</tbody>
+		</table>
+		<div class="row">
+			<div class="col-lg-4"><?php echo $item->drawBulkActions();?></div>
+			<div class="col-lg-8">
+				<?php if($item->canDisplayItemsPerPageOptions()):?>
+					<div class="pagination">
+						<?php echo $tools->l('Display');?>
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+							<?php echo $item->getItemsPerPageLabel();?>
+							<i class="fa fa-caret-down"></i>
+						</button>
+						<ul class="dropdown-menu">
+							<?php $options = $item->getItemsPerPageOptions();?>
+							<?php foreach($options as $value => $label):?>
+								<li class="<?php if($item->isActiveItemPerPage($value)):?>active<?php endif;?>">
+									<?php echo $item->createItemPerPageLink($value, $label)->generate();?>
+								</li>
+							<?php endforeach;?>
+						</ul>
+						<?php echo sprintf($tools->l('/ %s result(s)'), $item->getTotalResult());?>
+					</div>
+				<?php endif;?>
+				<?php echo $item->drawPagination();?>
+			</div>
+			<?php if($item->hasFooter()):?>
+				<?php $footers = $item->getFooters();?>
+				<?php foreach($footers as $footer):?>
+					<?php echo $footer->generate();?>
 				<?php endforeach;?>
 			<?php endif;?>
-		</tbody>
-	</table>
-	<div class="row">
-		<div class="col-lg-4"><?php echo $item->drawBulkActions();?></div>
-		<div class="col-lg-8">
-			<?php if($item->canDisplayItemsPerPageOptions()):?>
-				<div class="pagination">
-					<?php echo $tools->l('Display');?>
-					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-						<?php echo $item->getItemsPerPageLabel();?>
-						<i class="fa fa-caret-down"></i>
-					</button>
-					<ul class="dropdown-menu">
-						<?php $options = $item->getItemsPerPageOptions();?>
-						<?php foreach($options as $value => $label):?>
-							<li class="<?php if($item->isActiveItemPerPage($value)):?>active<?php endif;?>">
-								<?php echo $item->createItemPerPageLink($value, $label)->generate();?>
-							</li>
-						<?php endforeach;?>
-					</ul>
-					<?php echo sprintf($tools->l('/ %s result(s)'), $item->getTotalResult());?>
-				</div>
-			<?php endif;?>
-			<?php echo $item->drawPagination();?>
+			
 		</div>
-		<?php if($item->hasFooter()):?>
-			<?php $footers = $item->getFooters();?>
-			<?php foreach($footers as $footer):?>
-				<?php echo $footer->generate();?>
-			<?php endforeach;?>
-		<?php endif;?>
 		
 	</div>
-	
-</div>
-
+<?php if(!$item->isContentOnly()):?>
+	</form>
+<?php endif;?>
 <?php if($item->isDecorated()):?>
 		</div>
 	</div>

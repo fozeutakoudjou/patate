@@ -57,6 +57,8 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'));
 		$this->table->setIdentifier($this->modelIdentifier);
 		$this->table->setUrlCreator($this);
+		$this->table->setSubmitAction('action');
+		$this->table->setFormAction($this->createUrl());
 		$this->table->setItemsPerPageOptions($this->itemsPerPageOptions);
 		$this->table->setCurrentPage($this->currentPage);
 		$this->table->setMaxPageDisplayed($this->maxPageDisplayed);

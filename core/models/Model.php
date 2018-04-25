@@ -3,6 +3,7 @@ namespace core\models;
 
 use core\Validate;
 use core\Tools;
+use core\constant\Separator;
 
 class Model{
     
@@ -24,6 +25,8 @@ class Model{
     protected $simpleFields = null;
 	
     protected $associateds = array();
+	
+    protected $singlePrimaryField;
     
     public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
 		if(!empty($data)){
@@ -313,8 +316,15 @@ class Model{
 	}
 	
 	public function getPropertyValue($field){
-		$getter = $this->getGetterName($field);
-		return $this->$getter();
+		if(isset($this->definition['fields'][$field]) || in_array($field, $this->getPrimaries())){
+			$getter = $this->getGetterName($field);
+			$value = $this->$getter();
+		}elseif($this->createSinglePrimary()==$field){
+			$value = $this->getSinglePrimaryValue();
+		}else{
+			
+		}
+		return $value;
 	}
 	
 	public function setPropertyValue($field, $value){
@@ -356,7 +366,10 @@ class Model{
 		return is_array($this->definition['primary']) ? $this->definition['primary'] : array($this->definition['primary']);
 	}
 	public function createSinglePrimary(){
-		return is_array($this->definition['primary']) ? implode(Separator::PRIMARIES_FIELD, $this->definition['primary']) : $this->definition['primary'];
+		if($this->singlePrimaryField==null){
+			$this->singlePrimaryField=is_array($this->definition['primary']) ? implode(Separator::PRIMARIES_FIELD, $this->definition['primary']) : $this->definition['primary'];
+		}
+		return $this->singlePrimaryField;
 	}
 	
 	public function getSinglePrimaryValue(){

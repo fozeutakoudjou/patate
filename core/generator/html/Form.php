@@ -3,7 +3,7 @@ namespace core\generator\html;
 class Form extends Block{
 	protected $templateFile = 'generator/form';
 	protected $formAction;
-	protected $method;
+	protected $method = 'post';
 	protected $submit;
 	protected $submitAction;
 	protected $cancel;

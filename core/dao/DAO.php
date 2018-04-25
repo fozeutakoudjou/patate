@@ -202,10 +202,10 @@ class DAO{
      * @param array $fields
      * @return int
      */
-    public function getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_) {
+    public function getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_, $lang = null, $useOfLang = true, $useOfAllLang = false) {
         $this->setDefinition();
 		$fields = $this->addDelectedParam($fields);
-        return $this->getImplementation()->_getByFieldsCount($fields, $logicalOperator);
+        return $this->getImplementation()->_getByFieldsCount($fields, $logicalOperator, $lang = null, $useOfLang = true, $useOfAllLang = false);
     }
 	
 	 /**
@@ -222,10 +222,10 @@ class DAO{
         return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay);
     }
     
-    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS) {
+    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS, $lang = null, $useOfLang = true, $useOfAllLang = false) {
 		$fields = $this->createFieldArray($field, $value, $operator);
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFieldsCount($fields, $operator);
+        return $this->getByFieldsCount($fields, $operator, $lang = null, $useOfLang = true, $useOfAllLang = false);
     }
 	
 	public function createFieldArray($field, $value, $operator) {
