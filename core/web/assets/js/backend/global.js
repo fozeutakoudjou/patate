@@ -33,4 +33,9 @@ function handleGlobalEvent(){
 		form.find("input[name='action']:first").val($(this).attr("data-action"));
 		form.submit();
 	});
+	
+	$(document).on("click", ".table_search_btn", function(e){
+		var form = $(this).closest("form");
+		form.find("input[name='action']:first").val("");
+	});
 }

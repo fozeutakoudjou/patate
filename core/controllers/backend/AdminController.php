@@ -70,15 +70,29 @@ abstract class AdminController extends FormAdminController
 	}
 	
 	protected function processList(){
-		$this->retrieveListUrlParam();
-		$this->createTable();
-		$this->createColumns();
-		$this->createTableActions();
-		$this->createBulkActions();
-		$this->createRowsActions();
-		$data = $this->formatListData($this->getListData());
-		$this->table->setTotalResult($data['total']);
-		$this->table->setValue($data['list']);
-		$this->processResult['content'] = $this->table->generate();
+		if(Tools::isSubmit('submitFilterData')){
+			$this->updateListSearchData();
+			$this->redirectLink = $this->createUrl();
+			$this->redirectAfter = true;
+		}elseif(Tools::getValue('resetAllFilters')){
+			$this->resetAllFilters();
+			$this->redirectLink = $this->createUrl();
+			$this->redirectAfter = true;
+		}else{
+			$this->retrieveListSearchData();
+			$this->formatListSearchData();
+			$this->retrieveListUrlParam();
+			$this->createTable();
+			$this->createColumns();
+			$this->createTableActions();
+			$this->createBulkActions();
+			$this->createRowsActions();
+			$data = $this->formatListData($this->getListData());
+			$this->table->setTotalResult($data['total']);
+			$this->table->setValue($data['list']);
+			$this->processResult['content'] = $this->table->generate();
+		}
+		
 	}
+	
 }

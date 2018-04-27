@@ -67,6 +67,12 @@ class Column extends Element{
 					$field->setFieldOnly(true);
 				}
 			}
+			$value = $this->table->getColumnSearchValue($this);
+			$value = is_array($value)?$value:array($value);
+			foreach($this->searchFields as $key => $field){
+				$field->setName($this->table->getFilterPrefix().$field->getName());
+				$field->setValue(isset($value[$key])?$value[$key]:'');
+			}
 			$this->prepared = true;
 		}
 	}

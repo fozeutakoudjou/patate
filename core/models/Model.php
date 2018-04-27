@@ -428,4 +428,21 @@ class Model{
 		}
 		return $result;
 	}
+	
+	public function __toString()
+    {
+		if(isset($this->definition['fields']['label'])){
+			$value = $this->getPropertyValue('label');
+		}elseif(isset($this->definition['fields']['name'])){
+			$value = $this->getPropertyValue('name');
+		}else{
+			$primaries = $this->getPrimaries();
+			$value = array();
+			foreach($primaries as $primary){
+				$value[] = $this->getPropertyValue($primary);
+			}
+			$value = implode(', ', $value);
+		}
+        return $value;
+    }
 }

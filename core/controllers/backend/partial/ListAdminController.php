@@ -16,7 +16,9 @@ use core\generator\html\interfaces\UrlCreator;
 abstract class ListAdminController extends BaseAdminController implements AccesChecker, UrlCreator
 {
 	protected $table;
+	protected $filterPrefix = 'filterField_';
 	
+	protected $associationList = array();
 	protected $columnsToExclude = array('dateAdd', 'dateUpdate', 'deleted', 'idProposer', 'additionalInfos', 'email', 'avatar', 'firstName', 'preferredLang', 'gender', 'type', 'balance');
 	
 	protected $defaultOrderWay = OrderWay::DESC;
@@ -34,6 +36,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected $orderWayParams = array(OrderWay::ASC=>'asc', OrderWay::DESC=>'desc');
 	protected $limitParams = array(0=>'all');
+	protected $searchData;
 	
 	public function init()
     {
@@ -54,7 +57,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected function createTable()
     {
-		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'));
+		$this->table = $this->generator->createTable($this->l($this->modelClassName.'s'), '', $this->createUrl(array('action'=>ActionCode::LISTING, 'resetAllFilters'=>1)));
 		$this->table->setIdentifier($this->modelIdentifier);
 		$this->table->setUrlCreator($this);
 		$this->table->setSubmitAction('action');
@@ -65,6 +68,8 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table->setItemsPerPage(($this->itemsPerPage === null)?$this->defaultItemsPerPage : $this->itemsPerPage);
 		$this->table->setOrderColumn(empty($this->orderColumn) ? $this->defaultOrderColumn : $this->orderColumn);
 		$this->table->setOrderWay(($this->orderWay === null)? $this->defaultOrderWay : $this->orderWay);
+		$this->table->setFilterPrefix($this->filterPrefix);
+		$this->table->setSearchData($this->searchData);
 		$this->customizeTable();
 	}
 	
@@ -116,13 +121,19 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$fields = array();
 		return $fields;
 	}
+	protected function getListSearchData() {
+		$fields = array();
+		return $fields;
+	}
 	protected function getListData() {
-		$fields = $this->getBaseRestrictionFields();
+		$restrictions = is_array($this->searchData) ? $this->searchData : array();
+		$baseRestrictions = $this->getBaseRestrictionFields();
+		$restrictions = is_array($baseRestrictions) ? array_merge($restrictions, $baseRestrictions) : $restrictions;
 		$limit = (int)(($this->itemsPerPage===null) ? $this->defaultItemsPerPage : $this->itemsPerPage);
 		$start = ($this->currentPage-1)*$limit;
 		$orderWay = (int)(($this->orderWay===null) ? $this->defaultOrderWay : $this->orderWay);
 		$orderBy = ($this->orderColumn===null) ? $this->defaultOrderColumn : $this->orderColumn;
-		$data = $this->getDAOInstance()->getByFields($fields, true, $this->lang, true, false, array(),
+		$data = $this->getDAOInstance()->getByFields($restrictions, true, $this->lang, true, false, $this->associationList,
 			$start, $limit, $orderBy, $orderWay, LogicalOperator::AND_);
 		return $data;
 	}
@@ -246,5 +257,53 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected function setPageProperties($params){
 		$this->currentPage = (int)$params;
+	}
+	protected function getCookieFilterPrefix()
+    {
+        return strtolower($this->controllerClass).$this->filterPrefix;
+    }
+	protected function updateListSearchData(){
+		$cookiePrefix = $this->getCookieFilterPrefix();
+		$cookie = $this->context->getCookie();
+		foreach($_POST as $key => $value){
+			if(strpos($key, $this->filterPrefix)===0){
+				$cookieField = $cookiePrefix.StringTools::strReplaceOnce($this->filterPrefix, '', $key);
+				if(is_array($value)){
+					$emptyValue = true;
+					foreach($value as $val){
+						$emptyValue = ($emptyValue && ($val===''));
+					}
+				}else{
+					$emptyValue = ($value==='');
+				}
+				if($emptyValue){
+					unset($cookie->$cookieField);
+				}else{
+					$cookie->$cookieField = is_array($value) ? serialize($value) : $value;
+				}
+			}
+		}
+		$cookie->write();
+	}
+	protected function resetAllFilters(){
+		$cookie = $this->context->getCookie();
+		$cookie->unsetFamily($this->getCookieFilterPrefix());
+	}
+	protected function retrieveListSearchData(){
+		$cookiePrefix = $this->getCookieFilterPrefix();
+		$cookie = $this->context->getCookie();
+		$this->searchData = $cookie->getFamily($cookiePrefix);
+	}
+	
+	protected function formatListSearchData(){
+		if(!empty($this->searchData)){
+			$list = $this->searchData;
+			$this->searchData = array();
+			$cookiePrefix = $this->getCookieFilterPrefix();
+			foreach($list as $key => $value){
+				$field = StringTools::strReplaceOnce($cookiePrefix, '', $key);
+				$this->searchData[$field] =  $value;
+			}
+		}
 	}
 }

@@ -140,9 +140,9 @@ class HtmlGenerator{
 		return new Checkbox($name, $label, $checked);
 	}
 	
-	public function createTable($label = '', $icon = '', $decorated = true){
+	public function createTable($label = '', $icon = '', $resetHref = '#', $decorated = true){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Table($decorated, $label, $icon, $this->searchButtonText, $this->resetButtonText, $this->emptyRowText, $this->selectAllText, $this->unselectAllText, $this->bulkActionText);
+		return new Table($decorated, $label, $icon, $this->searchButtonText, $this->resetButtonText, $this->emptyRowText, $this->selectAllText, $this->unselectAllText, $this->bulkActionText, $resetHref);
 	}
 	
 	public function createColumn($table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array()){

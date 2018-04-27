@@ -39,6 +39,7 @@
 	<form action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
 <?php endif;?>
 	<input type="hidden" class="" name="<?php echo $item->getSubmitAction();?>" value=""/>
+	<input type="hidden" class="" name="<?php echo $item->getSearchSubmitAction();?>" value="1"/>
 	<div class="table-container table-responsive">
 		<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
 			<thead>
@@ -69,9 +70,9 @@
 						<?php $columnCount += 1;?>
 					<?php endif;?>
 				</tr>
-				<?php if($item->hasSearchColumn() && !$item->isEmpty()):?>
+				<?php if($item->hasSearchColumn()):?>
 					<tr role="row" class="filter">
-						<?php if($item->needRowSelector()):?><td> </td><?php endif;?>
+						<?php if($item->needRowSelector() && !$item->isEmpty()):?><td> </td><?php endif;?>
 						<?php foreach($columns as $column):?>
 							<td>
 								<?php if($column->isSearchable()):?>

@@ -51,16 +51,19 @@ class Table extends Form{
 	protected $unselectAll;
 	protected $maxPageDisplayed = 5;
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '', $emptyRowText = '', $selectAllText = '', $unselectAllText = '', $bulkActionText = '') {
+	protected $filterPrefix;
+	
+	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '', $emptyRowText = '', $selectAllText = '', $unselectAllText = '', $bulkActionText = '', $resetHref = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
 		$this->setDecorated($decorated);
 		$this->searchButton = new Button($searchText, true, new Icon('search'), 'searchButton');
-		$this->searchResetButton = new Button($resetText, true, new Icon('times'), 'searchResetButton');
+		$this->searchResetButton = new Link($resetText, $resetHref, new Icon('times'), $resetText, true, 'searchResetButton');
 		$this->selectAll = new Link($selectAllText, '#', new Icon('check-square'), $selectAllText);
 		$this->unselectAll = new Link($unselectAllText, '#', new Icon('square-o'), $unselectAllText);
 		$this->emptyRowText = $emptyRowText;
 		$this->bulkActionText = $bulkActionText;
+		$this->searchButton->addClass('table_search_btn');
 	}
 	
 	public function createRow($value){
@@ -110,6 +113,10 @@ class Table extends Form{
 	}
 	public function hasHeader(){
 		return (parent::hasHeader() || !empty($this->tableActions));
+	}
+	
+	public function getSearchSubmitAction(){
+		return 'submitFilterData';
 	}
 	
 	public function hasActionBlock(){
@@ -166,6 +173,11 @@ class Table extends Form{
 			
 		}
 		return $this->bulkActionContent[$key];
+	}
+	
+	public function getColumnSearchValue($column) {
+		$key = $column->getName();
+		return isset($this->searchData[$key])?$this->searchData[$key] : '';
 	}
 	
 	public function createRowSelector($isHeader = false, $value = null, $templateFile = ''){
@@ -226,6 +238,12 @@ class Table extends Form{
 	}
 	public function setFormPosition($formPosition) {
 		$this->formPosition=$formPosition;
+	}
+	public function getFilterPrefix() {
+		return $this->filterPrefix;
+	}
+	public function setFilterPrefix($filterPrefix) {
+		$this->filterPrefix=$filterPrefix;
 	}
 	public function getMaxPageDisplayed() {
 		return $this->maxPageDisplayed;
@@ -294,7 +312,7 @@ class Table extends Form{
 		return $this->searchData;
 	}
 	public function setSearchData($searchData) {
-		$this->itemsPerPage=$searchData;
+		$this->searchData=$searchData;
 	}
 	
 	
