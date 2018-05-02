@@ -119,6 +119,10 @@ class Table extends Form{
 		return 'submitFilterData';
 	}
 	
+	public function getBulkSubmitAction(){
+		return 'submitBulkAction';
+	}
+	
 	public function hasActionBlock(){
 		return (!empty($this->tableActions) || !empty($this->headers));
 	}

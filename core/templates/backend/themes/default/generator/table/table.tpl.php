@@ -40,6 +40,7 @@
 <?php endif;?>
 	<input type="hidden" class="" name="<?php echo $item->getSubmitAction();?>" value=""/>
 	<input type="hidden" class="" name="<?php echo $item->getSearchSubmitAction();?>" value="1"/>
+	<input type="hidden" class="" name="<?php echo $item->getBulkSubmitAction();?>" value="1"/>
 	<div class="table-container table-responsive">
 		<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
 			<thead>

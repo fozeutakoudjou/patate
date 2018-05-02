@@ -214,7 +214,7 @@ abstract class BaseAdminController extends Controller
 		}elseif(method_exists($this, 'process'.$action)){
 			$this->{'process'.$action}();
 		}else{
-			$this->errors[] = 'The action you specified has does not exist';
+			$this->errors[] = $this->l('The action you specified does not exist');
 		}
 		if($this->ajax && !$ajaxProcessUsed){
 			$this->ajaxProcess();
@@ -281,8 +281,10 @@ abstract class BaseAdminController extends Controller
 		$link = $this->context->getLink();
 		$librariesUri = $link->getAssetLibrariesURI();
 		$jsUri = $link->getJSURI(true, '', false);
+		$cssUri = $link->getCSSURI(true, '', false);
         $this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
 		$this->addJS($jsUri.'global.js');
+		$this->addCSS($cssUri.'global.css');
 	}
 
     protected function display()

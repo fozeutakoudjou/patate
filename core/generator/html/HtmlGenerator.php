@@ -158,9 +158,11 @@ class HtmlGenerator{
 		return $link;
 	}
 	
-	public function createBulkAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
+	public function createBulkAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $confirm = false, $confirmText = ''){
 		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$table->addBulkAction($link);
+		$link->setConfirm($confirm);
+		$link->setConfirmText($confirmText);
 		return $link;
 	}
 	
@@ -180,5 +182,11 @@ class HtmlGenerator{
 			$options = $this->radioOptions;
 		}
 		return new Radio($name, $label, $options);
+	}
+	
+	public function createSwitch($name, $label = '', $options = array()){
+		$input = $this->createRadio($name, $label, $options);
+		$input->setTemplateFile('generator\switch', false);
+		return $input;
 	}
 }

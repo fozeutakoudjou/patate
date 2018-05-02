@@ -339,6 +339,11 @@ class Link
        return $this->getURI(_JS_PATH_, $isAdmin, $module, $useOfTheme, $ssl, $relativeProtocol);
     }
 	
+	public function getCSSURI($isAdmin = null, $module = '', $useOfTheme = true, $ssl = null, $relativeProtocol = false)
+    {
+       return $this->getURI(_CSS_PATH_, $isAdmin, $module, $useOfTheme, $ssl, $relativeProtocol);
+    }
+	
 	public function getURIFormDir($dir)
     {
 		$fileUri = FileTools::standardizeFile($dir);

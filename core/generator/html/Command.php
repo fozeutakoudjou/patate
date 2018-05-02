@@ -33,11 +33,23 @@ abstract class Command extends Element{
 	public function setTargetToHide($targetToHide) {
 		$this->targetToHide=$targetToHide;
 	}
+	public function getConfirmText() {
+		return $this->confirmText;
+	}
+	public function setConfirmText($confirmText) {
+		$this->confirmText=$confirmText;
+	}
 	public function isShowHide() {
 		return $this->showHide;
 	}
 	public function setShowHide($showHide) {
 		$this->showHide=$showHide;
+	}
+	public function isConfirm() {
+		return $this->confirm;
+	}
+	public function setConfirm($confirm) {
+		$this->confirm=$confirm;
 	}
 	
 	public function hasCustomContent(){
@@ -49,6 +61,10 @@ abstract class Command extends Element{
 			$this->addAttribute('target_to_hide', $this->targetToHide);
 			$this->addAttribute('target_to_show', $this->targetToShow);
 			$this->addClass('show_hide');
+		}
+		if($this->confirm){
+			$this->addAttribute('confirm_text', $this->confirmText);
+			$this->addClass('confirm_command');
 		}
 		return parent::generate();
 	}

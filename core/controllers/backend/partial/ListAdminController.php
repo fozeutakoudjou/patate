@@ -81,8 +81,15 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	}
 	
 	protected function createBulkActions() {
-		$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
-		$this->generator->createBulkAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD);
+		$addLink = $this->createUrl(array('action'=>ActionCode::DELETE));
+		if(isset($this->modelDefinition['fields']['active'])){
+			$activateLink = $this->generator->createBulkAction($this->table, $this->l('Activate selection'), '#', 'power-off', $this->l('Activate selection'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE);
+			$desactivateLink = $this->generator->createBulkAction($this->table, $this->l('Desactivate selection'), '#', 'power-off', $this->l('Desactivate selection'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE);
+			$activateLink->getIcon()->addClass('text-success');
+			$desactivateLink->getIcon()->addClass('text-danger');
+			$desactivateLink->addAdditionalData('separator', '1');
+		}
+		$this->generator->createBulkAction($this->table, $this->l('Delete selection'), '#', 'trash', $this->l('Delete selection'), false, ActionCode::DELETE, ActionCode::DELETE, true, $this->l('Are you sure you want to delete these items?'));
 	}
 	
 	protected function createRowsActions() {
@@ -116,7 +123,11 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->customizeColumns();
 	}
 	
-	protected function customizeColumns() {}
+	protected function customizeColumns() {
+		$field = Tools::formatForeignField('idContainer', 'name');
+		$this->generator->createColumn($this->table, $field, $field, ColumnType::TEXT, SearchType::TEXT, true, true);
+		$this->associationList['idContainer'] = array();
+	}
 	protected function getBaseRestrictionFields() {
 		$fields = array();
 		return $fields;
@@ -305,5 +316,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 				$this->searchData[$field] =  $value;
 			}
 		}
+	}
+	
+	protected function getOperator($field){
+		
 	}
 }

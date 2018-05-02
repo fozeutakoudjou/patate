@@ -42,8 +42,6 @@ abstract class AdminController extends FormAdminController
 						}
 					}
 				}
-				/*$this->errors = ($this->errors==null)? array() : $this->errors;
-				$this->errors = array_merge($this->errors, $validateErrors);*/
 			}
 			
 		}
@@ -92,7 +90,48 @@ abstract class AdminController extends FormAdminController
 			$this->table->setValue($data['list']);
 			$this->processResult['content'] = $this->table->generate();
 		}
+	}
+	
+	protected function processActivate(){
 		
 	}
 	
+	protected function beforeDirectAction($action, $model){
+		return true;
+	}
+	protected function afterDirectAction($result, $model){
+		
+	}
+	
+	protected function onDirectAction(){
+		$models = $this->prepareDirectActionData(false);
+		if(!$this->hasErrors()){
+			foreach($models as $model){
+				$continue = $this->beforeDirectAction($update, $model);
+				if($continue && !$this->hasErrors()){
+					$result = $update ? $this->getDAOInstance()->changeActive($this->defaultModel, $this->formFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :
+						$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
+					$this->afterDirectAction($update, $model);
+					if($result){
+						$this->redirectLink = $this->createUrl();
+						$this->redirectAfter = true;
+					}
+				}
+			}
+		}
+	}
+	
+	protected function prepareDirectActionData($useLang = false){
+		$models = array();
+		$ids = Tools::isSubmit('submitBulkAction') ? Tools::getValue($this->modelIdentifier) : array('');
+		if(is_array($ids)){
+			foreach($ids as $id){
+				if($this->loadFormObject($id, $useLang, false)){
+					$models[] = $this->defaultModel;
+				}else{
+					break;
+				}
+			}
+		}
+	}
 }

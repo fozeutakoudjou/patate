@@ -28,14 +28,34 @@ function handleGlobalEvent(){
 		$($(this).attr("target_item")).prop("checked", $(this).is(":checked"));
 	});
 	$(document).on("click", ".bulk_action", function(e){
-		e.preventDefault();
+		checkConfirm(e, function(target){
+			var form = target.closest("form");
+			form.find("input[name='action']:first").val(target.attr("data-action"));
+			form.submit();
+		});
+		/*e.preventDefault();
 		var form = $(this).closest("form");
 		form.find("input[name='action']:first").val($(this).attr("data-action"));
-		form.submit();
+		form.submit();*/
 	});
 	
 	$(document).on("click", ".table_search_btn", function(e){
 		var form = $(this).closest("form");
 		form.find("input[name='action']:first").val("");
 	});
+}
+
+function showConfirmDialog(target, callback){
+	if(confirm(target.attr("confirm_text"))){
+		callback(target);
+	}
+}
+
+function checkConfirm(event, callback){
+	event.preventDefault();
+	var target = $(event.target);
+	if(target.hasClass("confirm_command")){
+		showConfirmDialog(target, callback);
+	}
+	callback(target);
 }

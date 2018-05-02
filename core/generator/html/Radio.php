@@ -6,4 +6,8 @@ class Radio extends Option{
 	public function getOptionId($value) {
 		return $this->name.'_'.$value;
 	}
+	
+	public function isOptionSelected($value) {
+		return parent::isOptionSelected($value) || (empty($this->value) && empty($value));
+	}
 }

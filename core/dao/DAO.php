@@ -295,7 +295,7 @@ class DAO{
      */
     protected function changeActive($model, $active) {
         $this->requireValidation = false;
-        $result = $this->changeValue($model, 'active', $active);
+        $result = $this->changeValue($model, 'active', (int)$active);
 		$this->requireValidation = true;
 		return $result;
     }

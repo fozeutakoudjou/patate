@@ -12,9 +12,9 @@
 	<div class="col-lg-9">
 <?php endif;?>
 		<?php $options = $item->getOptions();?>
-		<select class="form-control <?php echo $item->drawClasses();?>"  <?php echo $item->drawAttributes();?>>
+		<select class="form-control <?php echo $item->drawClasses();?>"  <?php echo $item->drawAttributes();?> name="<?php echo $item->getName();?>">
 			<?php foreach($options as $value => $label):?>
-				<option value="<?php echo $value;?>" <?php if(!$item->isOptionSelected($value)):?>selected<?php endif;?>><?php echo $label;?></option>
+				<option value="<?php echo $value;?>" <?php if($item->isOptionSelected($value)):?>selected<?php endif;?>><?php echo $label;?></option>
 			<?php endforeach;?>
 		</select>
 		<?php if($item->hasHelpText()):?>

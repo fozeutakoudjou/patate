@@ -17,6 +17,6 @@ abstract class Option extends Field{
 	}
 	
 	public function isOptionSelected($value) {
-		return ($this->value==$value);
+		return ((string)$this->value===(string)$value);
 	}
 }

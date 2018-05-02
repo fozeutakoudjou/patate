@@ -316,13 +316,17 @@ class Model{
 	}
 	
 	public function getPropertyValue($field){
+		$value = '';
 		if(isset($this->definition['fields'][$field]) || in_array($field, $this->getPrimaries())){
 			$getter = $this->getGetterName($field);
 			$value = $this->$getter();
 		}elseif($this->createSinglePrimary()==$field){
 			$value = $this->getSinglePrimaryValue();
 		}else{
-			
+			$extract = Tools::extractForeignField($field);
+			if(isset($extract['externalField']) && isset($this->associateds[$extract['field']]) && ($this->associateds[$extract['field']] != null)){
+				$value = $this->associateds[$extract['field']]->getPropertyValue($extract['externalField']);
+			}
 		}
 		return $value;
 	}

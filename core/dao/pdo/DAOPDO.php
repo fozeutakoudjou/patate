@@ -138,7 +138,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 		$result['associationJoin'] = '';
 		$result['fields'] = $fields;
 		if(isset($this->definition['referenced']) && $this->definition['referenced']){
-			$newFields = array();
+			$result['fields'] = array();
 			$orderByManuallyAdded = false;
 			if(!empty($orderBy) && !isset($fields[$orderBy])){
 				$fields[$orderBy] = null;
@@ -153,9 +153,8 @@ class DAOPDO extends DAO implements DAOImplementation{
 					$associations[$tab['field']]['join'] = isset($values['join']) ? $values['join'] : JoinType::LEFT;
 					$associations[$tab['field']]['restrictionKey'] = $field;
 				}
-				$newFields[$field] = $values;
+				$result['fields'][$field] = $values;
 			}
-			$result['fields'] = $newFields;
 			foreach($associations as $field => $association){
 				$reference = $this->definition['fields'][$field]['reference'];
 				$module = isset($reference['module']) ? $reference['module'] : '';
@@ -168,19 +167,20 @@ class DAOPDO extends DAO implements DAOImplementation{
 					$result['fields'][$association['restrictionKey']]['preffix'].='_l';
 				}
 				if(!isset($association['get']) || $association['get']){
-					$result['associationSelect'] .= ', '.$dao->getSelect($field, false, true);
+					$result['associationSelect'] .= ', '.$dao->getSelect($field, $useOfLangTmp, $useOfAllLangTmp, $field, false, true);
 					$result['associationsToGet'][$field] = array('dao' =>$dao, 'useOfAllLang' =>$useOfAllLangTmp, 'useOfLang' =>$useOfLangTmp);
 				}
 				if($useOfLangTmp && $dao->defaultModel->isMultilang() && !$useOfAllLangTmp){
 					$result['associationsLang'][] = $field;
 				}
 				$join = isset($association['join']) ? $association['join'] : JoinType::LEFT;
-				$result['associationJoin'] .= ' '.$dao->getTableSelect($lang, $useOfLangTmp, $useOfAllLangTmp, $field, true, $field, $reference['field'], self::DEFAULT_PREFFIX, $join);
+				$referenceField = isset($reference['field'])?$reference['field']:$dao->definition['primary'];
+				$result['associationJoin'] .= ' '.$dao->getTableSelect($lang, $useOfLangTmp, $useOfAllLangTmp, $field, true, $field, $referenceField, self::DEFAULT_PREFFIX, $join);
 			}
 			if(!empty($orderBy) && isset($result['fields'][$orderBy])){
-				if(isset($result['fields'][$orderBy]['value']['preffix'])){
-					$result['orderByPreffix'] = $result['fields'][$orderBy]['value']['preffix'];
-					$result['orderByField'] = $result['fields'][$orderBy]['value']['modelField'];
+				if(isset($result['fields'][$orderBy]['preffix'])){
+					$result['orderByPreffix'] = $result['fields'][$orderBy]['preffix'];
+					$result['orderByField'] = $result['fields'][$orderBy]['modelField'];
 				}
 				if($orderByManuallyAdded){
 					unset($result['fields'][$orderBy]);

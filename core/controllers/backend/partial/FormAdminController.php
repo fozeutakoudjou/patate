@@ -67,10 +67,10 @@ abstract class FormAdminController extends ListAdminController
 		return ($submitted || $this->defaultModel->isLoaded()) ? $this->defaultModel->toArray($this->formFieldPreffix, false, false) : array();
 	}
 	
-	protected function loadFormObject() {
-		$fields = $this->getFormFieldsRestriction();
-		$data = $this->getDAOInstance()->getByFields($fields, false, $this->lang, true, true);
-		if(empty($data)){
+	protected function loadFormObject($id='', $useLang = true, $useAllLang = true) {
+		$fields = $this->getFormFieldsRestriction($id);
+		$data = $this->getDAOInstance()->getByFields($fields, false, $this->lang, $useLang, $useAllLang);
+		if($this->hasErrors() || empty($data)){
 			$this->errors[] = $this->l('Data not found');
 			$return = false;
 		}else{
@@ -132,11 +132,11 @@ abstract class FormAdminController extends ListAdminController
 		return $data;
 	}
 	
-	protected function getFormFieldsRestriction(){
-		$data = Tools::getValue(self::ID_PARAM_URL);
+	protected function getFormFieldsRestriction($id=''){
+		$data = empty($id) ? Tools::getValue(self::ID_PARAM_URL) : $id;
 		$fields =  $this->defaultFormRestriction;
 		if($data){
-			$fields = $this->defaultModel->getPrimaryValuesFromString($data);
+			$fields = array_merge($this->defaultModel->getPrimaryValuesFromString($data), $fields);
 		}else{
 			$this->errors[] = $this->l('invalid Identifier');
 		}
@@ -155,8 +155,8 @@ abstract class FormAdminController extends ListAdminController
 	protected function createFieldByDefinition($fieldDefinition, $field)
     {
 		if($fieldDefinition['type']==Model::TYPE_BOOL){
-			//$input = $this->generator->createSwitch($field, $this->l($field));
-			$input = $this->generator->createRadio($field, $this->l($field));
+			$input = $this->generator->createSwitch($field, $this->l($field));
+			//$input = $this->generator->createRadio($field, $this->l($field));
 		}elseif($field=='email'){
 			$input = $this->generator->createEmailField($field, $this->l($field));
 			//$input->setTranslatable(true);
