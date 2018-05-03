@@ -286,14 +286,20 @@ abstract class BaseAdminController extends Controller
 		$this->addJS($jsUri.'global.js');
 		$this->addCSS($cssUri.'global.css');
 	}
-
+	protected function getDataUsedOncePrefix()
+    {
+        return strtolower($this->controllerClass).'dataUsedOnce';
+    }
     protected function display()
     {
-		/*$dao = $this->getDAOInstance('Group', false);
-		$dao->setUseOfAllLang(true);
-		$group = $dao->getById(21);
-		
-		var_dump($group);*/
+		$cookie = $this->context->getCookie();
+		$dataUsedOncePreffix = $this->getDataUsedOncePrefix();
+		if(isset($cookie->{$dataUsedOncePreffix.'success'})){
+			$this->confirmations[] = $cookie->{$dataUsedOncePreffix.'success'};
+		}
+		foreach($this->dataUsedOnce as $key => $data){
+			$cookie->{$dataUsedOncePreffix.$key} = $data;
+		}
         $this->template->assign(array(
             'useOfHeader' => $this->useOfHeader,
             'useOfHeaderJavascript'=> $this->useOfHeaderJavascript,

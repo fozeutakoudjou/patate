@@ -2,9 +2,11 @@
 namespace core\controllers\backend;
 use core\Tools;
 use core\controllers\backend\partial\FormAdminController;
+use core\constant\ActionCode;
 
 abstract class AdminController extends FormAdminController
-{	
+{
+	protected $dataUsedOnce = array();
 	protected function processAdd(){
 		$this->doEdit(false);
 	}
@@ -39,6 +41,8 @@ abstract class AdminController extends FormAdminController
 						if($result){
 							$this->redirectLink = $this->createUrl();
 							$this->redirectAfter = true;
+						}else{
+							$this->errors[] = sprintf($this->l('An error occured while processing data "%s"'), $model->getSinglePrimaryValue());
 						}
 					}
 				}
@@ -93,30 +97,42 @@ abstract class AdminController extends FormAdminController
 	}
 	
 	protected function processActivate(){
-		
+		$this->doDirectAction(function ($dao, $model){
+			return $dao->activate($model);
+		});
 	}
 	
 	protected function beforeDirectAction($action, $model){
 		return true;
 	}
-	protected function afterDirectAction($result, $model){
+	protected function afterDirectAction($action, $result, $model){
 		
 	}
 	
-	protected function onDirectAction(){
+	protected function doDirectAction($callback){
+		
+		$action = $this->action;
 		$models = $this->prepareDirectActionData(false);
 		if(!$this->hasErrors()){
 			foreach($models as $model){
-				$continue = $this->beforeDirectAction($update, $model);
+				$continue = $this->beforeDirectAction($action, $model);
 				if($continue && !$this->hasErrors()){
-					$result = $update ? $this->getDAOInstance()->changeActive($this->defaultModel, $this->formFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :
-						$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
-					$this->afterDirectAction($update, $model);
+					$result = $callback($this->getDAOInstance(), $model);
+					$this->afterDirectAction($action,$result, $model);
 					if($result){
+						$this->dataUsedOnce['success'] = $action;
 						$this->redirectLink = $this->createUrl();
 						$this->redirectAfter = true;
+					}else{
+						$this->errors[] = sprintf($this->l('An error occured while processing data "%s"'), $model->getSinglePrimaryValue());
 					}
 				}
+			}
+		}
+		if($this->hasErrors()){
+			unset($_POST['submitFilterData']);
+			if($this->checkUserAccess(ActionCode::LISTING)){
+				$this->processList();
 			}
 		}
 	}
@@ -132,6 +148,13 @@ abstract class AdminController extends FormAdminController
 					break;
 				}
 			}
+		}else{
+			$this->errors[] = $this->l('You must select at least an item');
 		}
+		return $models;
 	}
+}
+
+interface DirectActionRunnable{
+	public function run($model);
 }
