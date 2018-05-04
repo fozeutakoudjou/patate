@@ -1,25 +1,48 @@
 <?php
 namespace core\models;
+use core\dao\Factory;
 
 class Right extends Model{
-	private $id;
-	private $idContainer;
-	private $code;
-	private $label;
-	private $description;
+	protected $id;
+	protected $idWrapper;
+	protected $idAction;
+	protected $active;
+	private static $rights;
 	protected $definition = array(
-		'table' => 'right',
+		'entity' => 'right',
 		'primary' => 'id',
 		'auto_increment' => true,
-		'multilang' => true,
 		'referenced' => true,
 		'fields' => array(
-			'idContainer' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'RightContainer'), 'validate' => 'isUnsignedInt'),
-			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
-			'label' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
-			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
+			'idWrapper' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'Wrapper', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
+			'idAction' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'Action', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
+			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1')
 		)
-	);	
+	);
+	
+	public static function createKey($idWrapper, $action)
+    {
+		return $idWrapper.'_'.$action;
+	}
+	
+	public static function load()
+    {
+        if (self::$rights === null) {
+			self::$rights = array();
+			$dao = Factory::getDAOInstance('Right');
+            $list = $dao->getAll(false, null, false, false, 0, 0, '', 0, true, array('idAction'=>array('useOfLang'=>false)));
+			foreach ($list as $right) {
+				self::$rights[self::createKey($right->getIdWrapper(), $right->getAssociated('idAction')->getCode())] = $right;
+			}
+        }
+    }
+	
+	public static function get($idWrapper, $action)
+    {
+        self::load();
+		$key = self::createKey($idWrapper, $action);
+		return isset(self::$rights[$key]) ? self::$rights[$key] : null;
+    }
 
 	public function getId(){
 		return $this->id;
@@ -27,28 +50,22 @@ class Right extends Model{
 	public function setId($id){
 		$this->id = $id;
 	}
-	public function getIdContainer(){
-		return $this->idContainer;
+	public function getIdWrapper(){
+		return $this->idWrapper;
 	}
-	public function setIdContainer($idContainer){
-		$this->idContainer = $idContainer;
+	public function setIdWrapper($idWrapper){
+		$this->idWrapper = $idWrapper;
 	}
-	public function getCode(){
-		return $this->code;
+	public function getIdAction(){
+		return $this->idAction;
 	}
-	public function setCode($code){
-		$this->code = $code;
+	public function setIdAction($idAction){
+		$this->idAction = $idAction;
 	}
-	public function getLabel(){
-		return $this->label;
+	public function isActive(){
+		return $this->active;
 	}
-	public function setLabel($label){
-		$this->label = $label;
-	}
-	public function getDescription(){
-		return $this->description;
-	}
-	public function setDescription($description){
-		$this->description = $description;
+	public function setActive($active){
+		$this->active = $active;
 	}
 }

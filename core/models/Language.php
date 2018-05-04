@@ -4,32 +4,33 @@ namespace core\models;
 use core\dao\Factory;
 
 class Language extends Model{
-	private $id;
-	private $name;
-	private $active;
-	private $isoCode;
-	private $languageCode;
-	private $dateFormatLite;
-	private $dateFormatFull;
-	private $rtl;
+	protected $id;
+	protected $name;
+	protected $active;
+	protected $isoCode;
+	protected $languageCode;
+	protected $dateFormatLite;
+	protected $dateFormatFull;
+	protected $rtl;
 	
 	private static $_LANGUAGES;
 	private static $totalActiveLanguages;
+	
 	protected $definition = array(
-		'table' => 'language',
+		'entity' => 'language',
 		'primary' => 'id',
 		'auto_increment' => true,
 		'fields' => array(
 			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '0'),
-			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
+			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
 			'languageCode' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
 			'dateFormatLite' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'default' => 'Y-m-d'),
 			'dateFormatFull' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'default' => 'Y-m-d H:i:s'),
 			'rtl' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '0')
 		)
-	);	
-	
+	);
+
 	public function getKey(){
 		return $this->isoCode;
 	}

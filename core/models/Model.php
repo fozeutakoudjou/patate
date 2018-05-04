@@ -4,19 +4,9 @@ namespace core\models;
 use core\Validate;
 use core\Tools;
 use core\constant\Separator;
+use core\constant\DataType;
 
-class Model{
-    
-    const TYPE_INT     = 1;
-    const TYPE_BOOL    = 2;
-    const TYPE_STRING  = 3;
-    const TYPE_FLOAT   = 4;
-    const TYPE_DATE    = 5;
-    const TYPE_HTML    = 6;
-    const TYPE_NOTHING = 7;
-    const TYPE_SQL     = 8;
-    const TYPE_DECIMAL = 9;
-    
+class Model implements DataType{
     protected $fieldsValidated = false;
     protected $definition = array();
 	

@@ -13,6 +13,7 @@ use core\models\Language;
 
 use core\generator\html\HtmlGenerator;
 use core\constant\ActionCode;
+use core\constant\WrapperType;
 
 abstract class BaseAdminController extends Controller
 {
@@ -43,6 +44,8 @@ abstract class BaseAdminController extends Controller
 	protected $generator;
 	
 	protected $modelIdentifier;
+	
+	protected $wrapper;
 	
 	const DATA_USED_ONCE_COOKIE_PREFIX = 'dataUsedOnce';
 
@@ -212,20 +215,19 @@ abstract class BaseAdminController extends Controller
 		$this->generator->setRadioOptions($radioOptions);
 		if(!empty($this->modelClassName)){
 			$this->initModel();
+			$this->initWrapper();
 			$this->initActions();
 			$this->restrictAction();
 			$this->initSuccessLabels();
 		}
     }
-	
-	protected function getRightCode($action)
+	protected function initWrapper()
     {
-		$rightCode = $action;
-		if(isset($this->availableActions[$action]) && isset($this->availableActions[$action]['model']) && $this->availableActions[$action]['model']){
-			$rightCode .= '_'.$this->modelClassName;
-		}
-		return Tools::getRightCode($rightCode);
-    }
+		$dao = $this->getDAOInstance('Wrapper', false);
+		$fields = array('type'=>WrapperType::CONTROLLER, 'target'=>$this->controllerClass, 'module'=>$this->moduleName);
+		$this->wrapper = $dao->getByFields($fields);
+		$this->wrapper = empty($this->wrapper) ? $dao->createModel() : $this->wrapper[0];
+	}
 	protected function processAction()
     {
 		$action = StringTools::toCamelCase($this->action, true);
@@ -244,15 +246,8 @@ abstract class BaseAdminController extends Controller
     }
 	public function checkUserAccess($action)
     {
-        $rightCode = $this->getRightCode($action);
-		$rightDao = $this->getDAOInstance('Right', false);
-		$rights = $rightDao->getByField('code', $rightCode, true);
-		if(!empty($rights)){
-			$hasRight = $this->context->user->hasRight($rightCode);
-		}else{
-			$hasRight = true;
-		}
-		return $hasRight;
+        $rightCode = Tools::getRightCode($action);
+		return $this->context->user->hasRight($this->wrapper->getId(), $rightCode);;
     }
 	
 	protected function getDAOInstance($className = '', $fromCurrent = true, $module = ''){

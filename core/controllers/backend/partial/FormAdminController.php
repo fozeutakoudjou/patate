@@ -2,6 +2,7 @@
 namespace core\controllers\backend\partial;
 
 use core\Tools;
+use core\Validate;
 use core\models\Model;
 use core\constant\ActionCode;
 abstract class FormAdminController extends ListAdminController
@@ -24,6 +25,7 @@ abstract class FormAdminController extends ListAdminController
     {
 		$this->errorLabelDefault = $this->l('This field is invalid');
 		$this->errorLabels = array(
+			Validate::VALIDATE_REQUIRED =>$this->l('This field is required'),
 			'isUnsignedInt' =>$this->l('This field must be an unsigned integer'),
 			'isUnsignedFloat' =>$this->l('This field must be an unsigned float'),
 			'isBool' =>$this->l('The value of this field 0 or 1'),
@@ -159,7 +161,7 @@ abstract class FormAdminController extends ListAdminController
 			$input = $this->generator->createEmailField($field, $this->l($field));
 			//$input->setTranslatable(true);
 		}elseif($field=='password'){
-			$input = $this->generator->createPassword($field, $this->l($field));
+			$input = $this->generator->createPasswordField($field, $this->l($field));
 		}elseif($fieldDefinition['type']==Model::TYPE_DATE){
 			//$type = ColumnType::DATE;
 		}else{

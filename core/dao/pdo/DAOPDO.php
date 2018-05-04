@@ -67,7 +67,7 @@ class DAOPDO extends DAO implements DAOImplementation{
         }
         $fieldsString.=')';
         $valuesString.=');';
-        $sql = 'INSERT INTO '.'`'._DB_PREFIX_.$this->definition['table'].'`'.$fieldsString.' VALUES '.$valuesString;
+        $sql = 'INSERT INTO '.'`'._DB_PREFIX_.$this->definition['entity'].'`'.$fieldsString.' VALUES '.$valuesString;
         $query =$this->db->prepare($sql);  
         foreach ($this->definition['fields'] as $field => $value) {
             if ($this->canFieldBeSet($model, $field) && !$model->isLangField($field)) {
@@ -101,7 +101,7 @@ class DAOPDO extends DAO implements DAOImplementation{
         }
         $identifiers = $this->formatIdentifiers($model, $identifiers);
         $condition = $this->getRestrictionFromArray($identifiers, LogicalOperator::AND_, '_cond');
-        $sql = 'UPDATE '._DB_PREFIX_.$this->definition['table']. ' '.self::DEFAULT_PREFFIX .' SET '.$fieldsString .' WHERE '.$condition;
+        $sql = 'UPDATE '._DB_PREFIX_.$this->definition['entity']. ' '.self::DEFAULT_PREFFIX .' SET '.$fieldsString .' WHERE '.$condition;
         $query =$this->db->prepare($sql);
         foreach ($fieldsToUpdate as $field) {
             if ($this->canFieldBeSet($model, $field)) {
@@ -123,7 +123,7 @@ class DAOPDO extends DAO implements DAOImplementation{
     public function _delete($model, $identifiers = array()) {
         $identifiers = $this->formatIdentifiers($model, $identifiers);
         $condition = $this->getRestrictionFromArray($identifiers, LogicalOperator::AND_, '', false);
-        $sql = 'DELETE FROM  '._DB_PREFIX_.$this->definition['table'].' WHERE '.$condition;
+        $sql = 'DELETE FROM  '._DB_PREFIX_.$this->definition['entity'].' WHERE '.$condition;
 		$query =$this->db->prepare($sql);
         $this->addParamsFromArray($query, $identifiers);
         $result = $query->execute();
@@ -156,11 +156,9 @@ class DAOPDO extends DAO implements DAOImplementation{
 				$result['fields'][$field] = $values;
 			}
 			foreach($associations as $field => $association){
-				$reference = $this->definition['fields'][$field]['reference'];
-				$module = isset($reference['module']) ? $reference['module'] : '';
 				$useOfLangTmp = isset($association['useOfLang']) ? $association['useOfLang'] : $useOfLang;
 				$useOfAllLangTmp = isset($association['useOfAllLang']) ? $association['useOfAllLang'] : $useOfAllLang;
-				$dao = Factory::getDAOInstance($reference['class'], $module);
+				$dao = $this->createForeignDAO($field);
 				$dao->setDefinition();
 				if(isset($association['restrictionKey']) && isset($result['fields'][$association['restrictionKey']]) &&
 					$dao->defaultModel->isLangField($result['fields'][$association['restrictionKey']]['modelField'])){
@@ -174,7 +172,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 					$result['associationsLang'][] = $field;
 				}
 				$join = isset($association['join']) ? $association['join'] : JoinType::LEFT;
-				$referenceField = isset($reference['field'])?$reference['field']:$dao->definition['primary'];
+				$referenceField = isset($this->definition['fields'][$field]['reference']['field'])?$this->definition['fields'][$field]['reference']['field']:$dao->definition['primary'];
 				$result['associationJoin'] .= ' '.$dao->getTableSelect($lang, $useOfLangTmp, $useOfAllLangTmp, $field, true, $field, $referenceField, self::DEFAULT_PREFFIX, $join);
 			}
 			if(!empty($orderBy) && isset($result['fields'][$orderBy])){
@@ -249,7 +247,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 		$preffix = empty($preffix) ? self::DEFAULT_PREFFIX : $preffix;
 		$sql = '';
 		$protectedPreffix = bqSQL($preffix);
-		$tableSql = ' `'.bqSQL(_DB_PREFIX_.$this->definition['table']) .'` `'. $protectedPreffix.'` ';
+		$tableSql = ' `'.bqSQL(_DB_PREFIX_.$this->definition['entity']) .'` `'. $protectedPreffix.'` ';
 		if($foreign){
 			$sql.=' '.self::$joinTypeList[$join].' '.$tableSql.
 				' ON (`'. $protectedPreffix.'`.`'. bqSQL($referenceField) .'` = `'. $parentPreffix.'`.`'. bqSQL($foreignField) .'`)';
@@ -294,7 +292,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 		if($this->defaultModel->isMultilang() && $useOfLang && !is_array($this->definition['primary'])){
 			$protectedPreffix = bqSQL($preffix);
 			$langPreffix = $protectedPreffix.'_l';
-			$join .= ' LEFT JOIN `'.bqSQL(_DB_PREFIX_ . $this->definition['table']).'_lang` `'.$langPreffix.'` ON ((`'.$langPreffix.'`.`'.bqSQL('id_' .$this->definition['table']) .'` = `'.
+			$join .= ' LEFT JOIN `'.bqSQL(_DB_PREFIX_ . $this->definition['entity']).'_lang` `'.$langPreffix.'` ON ((`'.$langPreffix.'`.`'.bqSQL('id_' .$this->definition['entity']) .'` = `'.
 			$protectedPreffix.'`.`' . $this->definition['primary'] . '`) '. ($useOfAllLang ? '' : ' AND (`'.$langPreffix.'`.lang = :'.$preffix.'lang)').') ';
 		}
         return $join;
@@ -474,7 +472,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 					$sql = $addSqlInit;
 				}
 				$query=$this->db->prepare($sql);
-				$query->bindParam(':id_' . $this->definition['table'], $idObject);
+				$query->bindParam(':id_' . $this->definition['entity'], $idObject);
 				$query->bindParam(':lang', $lang);
 				foreach ($langFields as $field){
 					if (property_exists($model, $field)){
@@ -489,14 +487,14 @@ class DAOPDO extends DAO implements DAOImplementation{
     
     public function getLangAddSqlInit($langFields)
     {
-    	$sqlInit='INSERT INTO ' . _DB_PREFIX_ . $this->definition['table']. '_lang (' . 'id_'.$this->definition['table'] . ', lang, ' .
-      	implode(',', $langFields) . ') VALUES(:id_' . $this->definition['table'] . ', :lang, :' . implode(',:', $langFields).')';
+    	$sqlInit='INSERT INTO ' . _DB_PREFIX_ . $this->definition['entity']. '_lang (' . 'id_'.$this->definition['entity'] . ', lang, ' .
+      	implode(',', $langFields) . ') VALUES(:id_' . $this->definition['entity'] . ', :lang, :' . implode(',:', $langFields).')';
       	return $sqlInit;
     }
     
     public function getLangUpdateSqlInit($langFields)
     {
-    	$sqlInit= 'UPDATE '._DB_PREFIX_.$this->definition['table'].'_lang SET ';
+    	$sqlInit= 'UPDATE '._DB_PREFIX_.$this->definition['entity'].'_lang SET ';
     	$first= true;
     	foreach ($langFields as $field){
     		if(!$first){
@@ -505,14 +503,14 @@ class DAOPDO extends DAO implements DAOImplementation{
     		$sqlInit.=$field.' = :'.$field;
     		$first = false;
     	}
-    	$sqlInit.=' WHERE (id_'.$this->definition['table'] . ' = :id_' . $this->definition['table'] . ') AND (lang = :lang)';
+    	$sqlInit.=' WHERE (id_'.$this->definition['entity'] . ' = :id_' . $this->definition['entity'] . ') AND (lang = :lang)';
     	return $sqlInit;
     }
     
     public function isObjectSavedForLang($idObject, $lang)
     {
-    	$sql = 'SELECT COUNT(*) AS number FROM '._DB_PREFIX_.$this->definition['table'].
-    	'_lang WHERE (id_'.$this->definition['table'].' = :idObject) AND (lang = :lang)';
+    	$sql = 'SELECT COUNT(*) AS number FROM '._DB_PREFIX_.$this->definition['entity'].
+    	'_lang WHERE (id_'.$this->definition['entity'].' = :idObject) AND (lang = :lang)';
     	$query=$this->db->prepare($sql);
     	$query->bindParam(':idObject', $idObject);
     	$query->bindParam(':lang', $lang);

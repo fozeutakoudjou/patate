@@ -2,20 +2,20 @@
 namespace core\models;
 
 class MailFormat extends Model{
-	private $id;
-	private $template;
-	private $active;
-	private $dateAdd;
-	private $dateUpdate;
-	private $title;
-	private $content;
+	protected $id;
+	protected $template;
+	protected $active;
+	protected $dateAdd;
+	protected $dateUpdate;
+	protected $title;
+	protected $content;
 	protected $definition = array(
-		'table' => 'mail_format',
+		'entity' => 'mail_format',
 		'primary' => 'id',
 		'auto_increment' => true,
 		'multilang' => true,
 		'fields' => array(
-			'template' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
+			'template' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),

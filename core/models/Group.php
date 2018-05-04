@@ -2,17 +2,20 @@
 namespace core\models;
 
 class Group extends Model{
-	private $id;
-	private $dateAdd;
-	private $dateUpdate;
-	private $name;
-	private $description;
+	protected $id;
+	protected $idParent;
+	protected $dateAdd;
+	protected $dateUpdate;
+	protected $name;
+	protected $description;
 	protected $definition = array(
-		'table' => 'group',
+		'entity' => 'group',
 		'primary' => 'id',
 		'auto_increment' => true,
 		'multilang' => true,
+		'referenced' => true,
 		'fields' => array(
+			'idParent' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'Group', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName'),
@@ -25,6 +28,12 @@ class Group extends Model{
 	}
 	public function setId($id){
 		$this->id = $id;
+	}
+	public function getIdParent(){
+		return $this->idParent;
+	}
+	public function setIdParent($idParent){
+		$this->idParent = $idParent;
 	}
 	public function getDateAdd(){
 		return $this->dateAdd;

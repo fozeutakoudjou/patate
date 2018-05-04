@@ -1,49 +1,54 @@
 <?php
 namespace core\models;
 
-use core\Context;
-use core\Validate;
-use core\Tools;
+use core\constant\UserType;
 
 class User extends Model{
-	private $id;
-	private $idProposer;
-	private $lastName;
-	private $firstName;
-	private $gender;
-	private $phone;
-	private $balance;
-	private $active;
-	private $email;
-	private $preferredLang;
-	private $avatar;
-	private $type;
-	private $additionalInfos;
-	private $dateAdd;
-	private $dateUpdate;
-	private $deleted;
+	protected $id;
+	protected $lastName;
+	protected $firstName;
+	protected $gender;
+	protected $phone;
+	protected $active;
+	protected $email;
+	protected $preferredLang;
+	protected $avatar;
+	protected $type;
+	protected $password;
+	protected $additionalInfos;
+	protected $dateAdd;
+	protected $dateUpdate;
+	protected $lastPasswordGeneratedTime;
+	protected $lastConnectionDate;
+	protected $lastConnectionData;
+	protected $deleted;
+	
+	private $accessList;
+	
 	protected $definition = array(
-		'table' => 'user',
+		'entity' => 'user',
 		'primary' => 'id',
 		'auto_increment' => true,
 		'fields' => array(
-			'idProposer' => array('type' => self::TYPE_INT, 'foreign' => true, 'validate' => 'isUnsignedInt'),
-			'lastName' => array('type' => self::TYPE_STRING, 'validate' => 'isName'),
-			'firstName' => array('type' => self::TYPE_STRING, 'validate' => 'isName'),
-			'gender' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
+			'lastName' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isName'),
+			'firstName' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isName'),
+			'gender' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
 			'phone' => array('type' => self::TYPE_STRING, 'validate' => 'isPhoneNumber'),
-			'balance' => array('type' => self::TYPE_FLOAT, 'validate' => 'isUnsignedFloat'),
-			'active' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '1'),
-			'email' => array('type' => self::TYPE_STRING, 'validate' => 'isEmail'),
+			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
+			'email' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isEmail'),
 			'preferredLang' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
 			'avatar' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-			'type' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
+			'type' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),
+			'password' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
 			'additionalInfos' => array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
+			'lastPasswordGeneratedTime' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
+			'lastConnectionDate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
+			'lastConnectionData' => array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'),
 			'deleted' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '0')
 		)
-	);
+	);	
 	
 	/**
      * Check employee informations saved into cookie and return employee validity
@@ -89,18 +94,46 @@ class User extends Model{
 		AND `passwd` = \''.pSQL($passwd).'\'
 		AND `active` = 1');
     }
+	
+	public function isSuperAdmin()
+    {
+		return ($this->type == UserType::SUPER_ADMIN);
+    }
+	public function loadAccess()
+    {
+        if ($this->accessList === null) {
+			$this->accessList = array();
+			$dao = Factory::getDAOInstance('Access');
+			$fields = array('idUser'=>$this->id);
+			$list = $dao->getByFields($fields);
+            $list = $dao->getAll(false, null, false, false, 0, 0, '', 0, true, array('idAction'=>array('useOfLang'=>false)));
+			foreach ($list as $access) {
+				$this->accessList[] = $access->getIdRight();
+			}
+        }
+    }
+	public function hasRight($idWrapper, $action)
+    {
+		$hasRight = false;
+		if($this->isSuperAdmin()){
+			$hasRight = true;
+		}else{
+			$right = Right::get($idWrapper, $action);
+			if($right==null){
+				$hasRight = true;
+			}else{
+				$this->loadAccess();
+				$hasRight = in_array($right->getId(), $this->accessList);
+			}
+		}
+		return $hasRight;
+    }
 
 	public function getId(){
 		return $this->id;
 	}
 	public function setId($id){
 		$this->id = $id;
-	}
-	public function getIdProposer(){
-		return $this->idProposer;
-	}
-	public function setIdProposer($idProposer){
-		$this->idProposer = $idProposer;
 	}
 	public function getLastName(){
 		return $this->lastName;
@@ -125,12 +158,6 @@ class User extends Model{
 	}
 	public function setPhone($phone){
 		$this->phone = $phone;
-	}
-	public function getBalance(){
-		return $this->balance;
-	}
-	public function setBalance($balance){
-		$this->balance = $balance;
 	}
 	public function isActive(){
 		return $this->active;
@@ -162,6 +189,12 @@ class User extends Model{
 	public function setType($type){
 		$this->type = $type;
 	}
+	public function getPassword(){
+		return $this->password;
+	}
+	public function setPassword($password){
+		$this->password = $password;
+	}
 	public function getAdditionalInfos(){
 		return $this->additionalInfos;
 	}
@@ -179,6 +212,24 @@ class User extends Model{
 	}
 	public function setDateUpdate($dateUpdate){
 		$this->dateUpdate = $dateUpdate;
+	}
+	public function getLastPasswordGeneratedTime(){
+		return $this->lastPasswordGeneratedTime;
+	}
+	public function setLastPasswordGeneratedTime($lastPasswordGeneratedTime){
+		$this->lastPasswordGeneratedTime = $lastPasswordGeneratedTime;
+	}
+	public function getLastConnectionDate(){
+		return $this->lastConnectionDate;
+	}
+	public function setLastConnectionDate($lastConnectionDate){
+		$this->lastConnectionDate = $lastConnectionDate;
+	}
+	public function getLastConnectionData(){
+		return $this->lastConnectionData;
+	}
+	public function setLastConnectionData($lastConnectionData){
+		$this->lastConnectionData = $lastConnectionData;
 	}
 	public function isDeleted(){
 		return $this->deleted;

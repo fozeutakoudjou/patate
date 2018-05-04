@@ -1,18 +1,17 @@
 <?php
 namespace core\models;
-
 use core\dao\Factory;
 
 class Configuration extends Model{
-	private $id;
-	private $name;
-	private $value;
-	private $dateUpdate;
-	private $valueLang;
-	protected static $values = array();
-	protected static $dao = null;
+	protected $id;
+	protected $name;
+	protected $value;
+	protected $dateUpdate;
+	protected $valueLang;
+	private static $values = array();
+	private static $dao = null;
 	protected $definition = array(
-		'table' => 'configuration',
+		'entity' => 'configuration',
 		'primary' => 'id',
 		'auto_increment' => true,
 		'multilang' => true,
@@ -23,6 +22,7 @@ class Configuration extends Model{
 			'valueLang' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)
 	);	
+	
 	protected static function getDAO(){
 		if(self::$dao === null){
 			self::$dao = Factory::getDAOInstance('Configuration');

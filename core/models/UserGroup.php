@@ -2,10 +2,10 @@
 namespace core\models;
 
 class UserGroup extends Model{
-	private $idUser;
-	private $idGroup;
+	protected $idUser;
+	protected $idGroup;
 	protected $definition = array(
-		'table' => 'user_group',
+		'entity' => 'user_group',
 		'primary' => array('idUser', 'idGroup'),
 		'fields' => array(
 			'idUser' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),

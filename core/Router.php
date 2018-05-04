@@ -147,7 +147,9 @@ class Router{
 		if (Language::isMultiLanguageActivated()) {
             $this->multilangActivated = true;
         }
-        $this->loadRoutes();
+		if($this->useRoutes){
+			$this->loadRoutes();
+		}
     }
 
     public function useDefaultController()
@@ -242,7 +244,7 @@ class Router{
 		$lang = $context->getLang();
 		$langKeys = $isAdmin ? array() : array_keys($languages);
         if (!in_array($lang,$langKeys)) {
-            $langKeys[] = $lang;
+            $langKeys[] = (string)$lang;
         }
 		
 		$metaRoutes = array();
@@ -306,7 +308,7 @@ class Router{
             }
         }
     }
-
+	
     /**
      *
      * @param string $idRoute Name of the route (need to be uniq, a second route with same name will override the first)
@@ -554,7 +556,7 @@ class Router{
             if (!preg_match('/\.(gif|jpe?g|png|css|js|ico)$/i', parse_url($testRequestUri, PHP_URL_PATH))) {
                 // Add empty route as last route to prevent this greedy regexp to match request uri before right time
 				$lang = (string)Context::getInstance()->getLang();
-                if ($this->emptyRoute) {
+				if ($this->emptyRoute) {
                     $this->addRoute($this->emptyRoute['routeID'], $this->emptyRoute['rule'], $this->emptyRoute['controller'], $lang, array(), array());
                 }
 

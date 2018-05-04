@@ -181,7 +181,8 @@ class Table extends Form{
 	
 	public function getColumnSearchValue($column) {
 		$key = $column->getName();
-		return isset($this->searchData[$key])?$this->searchData[$key] : '';
+		$value = isset($this->searchData[$key])?$this->searchData[$key] : '';
+		return (is_array($value) && isset($value['value']))? $value['value'] : $value;
 	}
 	
 	public function createRowSelector($isHeader = false, $value = null, $templateFile = ''){

@@ -2,20 +2,21 @@
 namespace core\models;
 
 class Access extends Model{
-	private $id;
-	private $idGroup;
-	private $idRight;
-	private $idUser;
-	private $dateAdd;
-	private $dateUpdate;
+	protected $id;
+	protected $idGroup;
+	protected $idRight;
+	protected $idUser;
+	protected $dateAdd;
+	protected $dateUpdate;
 	protected $definition = array(
-		'table' => 'access',
+		'entity' => 'access',
 		'primary' => 'id',
 		'auto_increment' => true,
+		'referenced' => true,
 		'fields' => array(
-			'idGroup' => array('type' => self::TYPE_INT, 'foreign' => true, 'validate' => 'isUnsignedInt'),
-			'idRight' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'validate' => 'isUnsignedInt'),
-			'idUser' => array('type' => self::TYPE_INT, 'foreign' => true, 'validate' => 'isUnsignedInt'),
+			'idGroup' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'Group', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
+			'idRight' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'Right', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
+			'idUser' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'User', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate')
 		)

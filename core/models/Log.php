@@ -2,22 +2,27 @@
 namespace core\models;
 
 class Log extends Model{
-	private $id;
-	private $idUser;
-	private $type;
-	private $data;
-	private $action;
-	private $dateAdd;
+	protected $id;
+	protected $idUser;
+	protected $type;
+	protected $data;
+	protected $action;
+	protected $dateAdd;
+	protected $trackingData;
+	protected $additionalInfos;
 	protected $definition = array(
-		'table' => 'log',
+		'entity' => 'log',
 		'primary' => 'id',
 		'auto_increment' => true,
+		'referenced' => true,
 		'fields' => array(
-			'idUser' => array('type' => self::TYPE_INT, 'foreign' => true, 'validate' => 'isUnsignedInt'),
+			'idUser' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'User', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
 			'type' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
 			'data' => array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'),
 			'action' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
-			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate')
+			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
+			'trackingData' => array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'),
+			'additionalInfos' => array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml')
 		)
 	);	
 
@@ -56,5 +61,17 @@ class Log extends Model{
 	}
 	public function setDateAdd($dateAdd){
 		$this->dateAdd = $dateAdd;
+	}
+	public function getTrackingData(){
+		return $this->trackingData;
+	}
+	public function setTrackingData($trackingData){
+		$this->trackingData = $trackingData;
+	}
+	public function getAdditionalInfos(){
+		return $this->additionalInfos;
+	}
+	public function setAdditionalInfos($additionalInfos){
+		$this->additionalInfos = $additionalInfos;
 	}
 }

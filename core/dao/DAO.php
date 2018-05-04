@@ -367,4 +367,11 @@ class DAO{
     {
 		return $this->isImplementation ? $this : $this->implementation;
     }
+	
+	public function createForeignDAO($field)
+    {
+		$this->setDefinition();
+		$reference = $this->definition['fields'][$field]['reference'];
+		return  Factory::getDAOInstance($reference['class'], (isset($reference['module']) ? $reference['module'] : ''));
+    }
 }

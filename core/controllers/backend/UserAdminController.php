@@ -11,8 +11,8 @@ class UserAdminController extends AdminController
 	public function __construct()
     {
 		parent::__construct();
-        $this->columnsToExclude = array_merge($this->columnsToExclude, array('type', 'preferredLang', 'additionalInfos', 'idProposer'));
-        $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('type', 'additionalInfos', 'idProposer'));
+        $this->columnsToExclude = array_merge($this->columnsToExclude, array('type', 'preferredLang', 'additionalInfos', 'idProposer', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData', 'password'));
+        $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('type', 'additionalInfos', 'idProposer', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData'));
 		$this->addDefaultValues['type'] = UserType::FRONT_USER;
     }
 	

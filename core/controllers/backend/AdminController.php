@@ -42,6 +42,7 @@ abstract class AdminController extends FormAdminController
 							$this->dataUsedOnce['success'] = $this->action;
 							$this->redirectLink = $this->createUrl();
 							$this->redirectAfter = true;
+							$this->resetAllFilters();
 							$this->setCookieDataUsedOnce(true);
 						}else{
 							$this->errors[] = $this->l('An error occured while saving');
@@ -148,6 +149,7 @@ abstract class AdminController extends FormAdminController
 			$this->dataUsedOnce['success'] = $action;
 			$this->redirectLink = $this->createUrl();
 			$this->redirectAfter = true;
+			$this->resetAllFilters();
 			$this->setCookieDataUsedOnce(true);
 		}
 	}

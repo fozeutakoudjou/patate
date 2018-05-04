@@ -2,14 +2,15 @@
 namespace core\controllers\backend\partial;
 use core\Tools;
 use core\StringTools;
-use core\models\Model;
 use core\constant\dao\OrderWay;
 use core\constant\dao\LogicalOperator;
+use core\constant\dao\Operator;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\ActionCode;
 use core\constant\UrlParamType;
 use core\constant\Separator;
+use core\constant\DataType;
 use core\generator\html\interfaces\AccesChecker;
 use core\generator\html\interfaces\UrlCreator;
 
@@ -155,11 +156,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->customizeColumns();
 	}
 	
-	protected function customizeColumns() {
-		/*$field = Tools::formatForeignField('idContainer', 'name');
-		$this->generator->createColumn($this->table, $field, $field, ColumnType::TEXT, SearchType::TEXT, true, true);
-		$this->associationList['idContainer'] = array();*/
-	}
+	protected function customizeColumns() {}
 	protected function getListBaseRestrictionFields() {
 		return $this->baseRestrictionsData;
 	}
@@ -189,9 +186,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$type = ColumnType::TEXT;
 		if($field=='active'){
 			$type = ColumnType::ACTIVE;
-		}elseif($modelType==Model::TYPE_BOOL){
+		}elseif($modelType==DataType::TYPE_BOOL){
 			$type = ColumnType::BOOL;
-		}elseif($modelType==Model::TYPE_DATE){
+		}elseif($modelType==DataType::TYPE_DATE){
 			$type = ColumnType::DATE;
 		}
 		return $type;
@@ -200,9 +197,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected static function getSearchType($modelType, $field)
     {
 		$type = SearchType::TEXT;
-		if($modelType==Model::TYPE_BOOL){
+		if($modelType==DataType::TYPE_BOOL){
 			$type = SearchType::SELECT;
-		}elseif($modelType==Model::TYPE_DATE){
+		}elseif($modelType==DataType::TYPE_DATE){
 			$type = SearchType::DATE;
 		}
 		return $type;
@@ -344,12 +341,27 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			$cookiePrefix = $this->getCookieFilterPrefix();
 			foreach($list as $key => $value){
 				$field = StringTools::strReplaceOnce($cookiePrefix, '', $key);
-				$this->searchData[$field] =  $value;
+				$this->searchData[$field] =  array('operator'=>$this->getOperator($field), 'value'=>$value);
 			}
 		}
 	}
 	
 	protected function getOperator($field){
-		
+		$operator = Operator::EQUALS;
+		if(isset($this->modelDefinition['fields'][$field])){
+			$modelType = $this->modelDefinition['fields'][$field]['type'];
+		}elseif(!in_array($field, $this->defaultModel->getPrimaries())){
+			$extract = Tools::extractForeignField($field);
+			if(isset($extract['externalField'])){
+				$foreignDefinition = $this->getDAOInstance()->createForeignDAO($extract['field'])->createModel()->getDefinition();
+				$modelType = $foreignDefinition['fields'][$extract['externalField']]['type'];
+			}
+		}
+		if(isset($modelType)){
+				if(($modelType==DataType::TYPE_STRING)||($modelType==DataType::TYPE_HTML)){
+				$operator = Operator::CONTAINS;
+			}
+		}
+		return $operator;
 	}
 }
