@@ -9,6 +9,7 @@ class Link extends Command{
 		parent::__construct($label, $icon, $name, $action);
 		$this->setHref($href);
 		$this->setButtonStyleUsed($buttonStyleUsed);
+		$this->setTitle($title);
 	}
 	
 	public function getHref(){

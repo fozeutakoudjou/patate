@@ -4,10 +4,12 @@ use core\generator\html\Block;
 class Cell extends Block{
 	protected $templateFile = 'generator/table/cell';
 	protected $column;
+	protected $rowData;
 	
-	public function __construct($value, $column) {
+	public function __construct($value, $rowData, $column) {
 		$this->setValue($value);
 		$this->setColumn($column);
+		$this->setRowData($rowData);
 	}
 	
 	public function setColumn($column){
@@ -15,6 +17,12 @@ class Cell extends Block{
 	}
 	public function getColumn(){
 		return $this->column;
+	}
+	public function setRowData($rowData){
+		$this->rowData = $rowData;
+	}
+	public function getRowData(){
+		return $this->rowData;
 	}
 	
 	public function generate(){

@@ -39,10 +39,12 @@ abstract class AdminController extends FormAdminController
 							$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
 						$this->afterEdit($result, $update);
 						if($result){
+							$this->dataUsedOnce['success'] = $this->action;
 							$this->redirectLink = $this->createUrl();
 							$this->redirectAfter = true;
+							$this->setCookieDataUsedOnce(true);
 						}else{
-							$this->errors[] = sprintf($this->l('An error occured while processing data "%s"'), $model->getSinglePrimaryValue());
+							$this->errors[] = $this->l('An error occured while saving');
 						}
 					}
 				}
@@ -102,6 +104,18 @@ abstract class AdminController extends FormAdminController
 		});
 	}
 	
+	protected function processDesactivate(){
+		$this->doDirectAction(function ($dao, $model){
+			return $dao->desactivate($model);
+		});
+	}
+	
+	protected function processDelete(){
+		$this->doDirectAction(function ($dao, $model){
+			return $dao->delete($model, (isset($this->modelDefinition['fields']['deleted']) ? true : false));
+		});
+	}
+	
 	protected function beforeDirectAction($action, $model){
 		return true;
 	}
@@ -119,11 +133,7 @@ abstract class AdminController extends FormAdminController
 				if($continue && !$this->hasErrors()){
 					$result = $callback($this->getDAOInstance(), $model);
 					$this->afterDirectAction($action,$result, $model);
-					if($result){
-						$this->dataUsedOnce['success'] = $action;
-						$this->redirectLink = $this->createUrl();
-						$this->redirectAfter = true;
-					}else{
+					if(!$result){
 						$this->errors[] = sprintf($this->l('An error occured while processing data "%s"'), $model->getSinglePrimaryValue());
 					}
 				}
@@ -134,6 +144,11 @@ abstract class AdminController extends FormAdminController
 			if($this->checkUserAccess(ActionCode::LISTING)){
 				$this->processList();
 			}
+		}else{
+			$this->dataUsedOnce['success'] = $action;
+			$this->redirectLink = $this->createUrl();
+			$this->redirectAfter = true;
+			$this->setCookieDataUsedOnce(true);
 		}
 	}
 	

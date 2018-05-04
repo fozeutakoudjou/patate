@@ -39,6 +39,12 @@ class RowAction extends Link{
 	public function createNewLink($values) {
 		$link = new Link($this->label, $this->href, $this->icon, $this->title, $this->buttonStyleUsed, $this->name, $this->action);
 		$link->setClasses($this->classes);
+		$link->setConfirm($this->confirm);
+		if($this->confirm){
+			$description = is_array($values) ? $values[$this->table->getIdentifier()] : $values->__toString();
+			$link->setConfirmText(sprintf($this->confirmText, $description));
+			$link->setAutoConfirm($this->autoConfirm);
+		}
 		$link->setAttributes($this->attributes);
 		if($this->formatter!=null){
 			$data = $this->formatter->format($this);

@@ -25,6 +25,7 @@ abstract class BaseAdminController extends Controller
 	
     protected $modelDefinition;
     protected $formErrors = array();
+    protected $successLabels = array();
 
     /** @var string */
     protected $layout = 'layout';
@@ -42,6 +43,8 @@ abstract class BaseAdminController extends Controller
 	protected $generator;
 	
 	protected $modelIdentifier;
+	
+	const DATA_USED_ONCE_COOKIE_PREFIX = 'dataUsedOnce';
 
     public function __construct()
     {
@@ -88,6 +91,9 @@ abstract class BaseAdminController extends Controller
 		$this->defaultModel = $this->getDAOInstance()->createModel();
 		$this->modelDefinition = $this->defaultModel->getDefinition();
 		$this->modelIdentifier = $this->defaultModel->createSinglePrimary();
+		if(isset($this->modelDefinition['fields']['deleted'])){
+			$this->baseRestrictionsData['deleted']=0;
+		}
 	}
 	
 	protected function initActions()
@@ -115,6 +121,7 @@ abstract class BaseAdminController extends Controller
 				'icon' =>'trash',
 				'label' =>$this->l('Delete'),
 				'title' =>$this->l('Delete'),
+				'confirm' =>true,
 				'row' =>true,
 				'model' =>true
 			),
@@ -126,6 +133,20 @@ abstract class BaseAdminController extends Controller
 			$this->availableActions[ActionCode::ACTIVATE] = array('model' =>true);
 			$this->availableActions[ActionCode::DESACTIVATE] = array('model' =>true);
 		}
+	}
+	protected function initSuccessLabels()
+    {
+		$this->successLabels = array(
+			ActionCode::ADD => $this->l('Added successfully'),
+			ActionCode::UPDATE => $this->l('Updated successfully'),
+			ActionCode::DELETE => $this->l('Deleted successfully'),
+			ActionCode::ACTIVATE => $this->l('Activated successfully'),
+			ActionCode::DESACTIVATE => $this->l('Desactivated successfully'),
+		);
+	}
+	protected function getSuccessLabel($code)
+    {
+		return isset($this->successLabels[$code]) ? $this->successLabels[$code] : $this->l($code.'ed successfully');
 	}
 	protected function restrictAction()
     {
@@ -193,6 +214,7 @@ abstract class BaseAdminController extends Controller
 			$this->initModel();
 			$this->initActions();
 			$this->restrictAction();
+			$this->initSuccessLabels();
 		}
     }
 	
@@ -286,20 +308,24 @@ abstract class BaseAdminController extends Controller
 		$this->addJS($jsUri.'global.js');
 		$this->addCSS($cssUri.'global.css');
 	}
-	protected function getDataUsedOncePrefix()
+	protected function setCookieDataUsedOnce($write = false)
     {
-        return strtolower($this->controllerClass).'dataUsedOnce';
+		$cookie = $this->context->getCookie();
+        $cookie->unsetFamily(self::DATA_USED_ONCE_COOKIE_PREFIX);
+		foreach($this->dataUsedOnce as $key => $data){
+			$cookie->{self::DATA_USED_ONCE_COOKIE_PREFIX.$this->controllerClass.$key} = $data;
+		}
+		if($write){
+			$cookie->write();
+		}
     }
     protected function display()
     {
 		$cookie = $this->context->getCookie();
-		$dataUsedOncePreffix = $this->getDataUsedOncePrefix();
-		if(isset($cookie->{$dataUsedOncePreffix.'success'})){
-			$this->confirmations[] = $cookie->{$dataUsedOncePreffix.'success'};
+		if(isset($cookie->{self::DATA_USED_ONCE_COOKIE_PREFIX.$this->controllerClass.'success'})){
+			$this->confirmations[] = $this->getSuccessLabel($cookie->{self::DATA_USED_ONCE_COOKIE_PREFIX.$this->controllerClass.'success'});
 		}
-		foreach($this->dataUsedOnce as $key => $data){
-			$cookie->{$dataUsedOncePreffix.$key} = $data;
-		}
+		$this->setCookieDataUsedOnce(false);
         $this->template->assign(array(
             'useOfHeader' => $this->useOfHeader,
             'useOfHeaderJavascript'=> $this->useOfHeaderJavascript,

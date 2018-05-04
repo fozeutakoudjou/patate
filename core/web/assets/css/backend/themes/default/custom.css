@@ -27,3 +27,21 @@
 .dropdown-menu>li>.bulk_action .text-danger{
     color: #a94442;
 }
+
+.list-action-enable {
+    font-size: 1.3em;
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.list-action-enable.action-disabled {
+    color: #E08F95;
+}
+
+.list-action-enable.action-enabled {
+    color: #72C279;
+}

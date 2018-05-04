@@ -122,9 +122,9 @@ class DAOPDO extends DAO implements DAOImplementation{
      */
     public function _delete($model, $identifiers = array()) {
         $identifiers = $this->formatIdentifiers($model, $identifiers);
-        $condition = $this->getRestrictionFromArray($identifiers);
-        $sql = 'DELETE FROM  '._DB_PREFIX_.$this->definition['table'].self::DEFAULT_PREFFIX.' WHERE '.$condition;
-        $query =$this->db->prepare($sql);
+        $condition = $this->getRestrictionFromArray($identifiers, LogicalOperator::AND_, '', false);
+        $sql = 'DELETE FROM  '._DB_PREFIX_.$this->definition['table'].' WHERE '.$condition;
+		$query =$this->db->prepare($sql);
         $this->addParamsFromArray($query, $identifiers);
         $result = $query->execute();
         return $result;
@@ -394,7 +394,7 @@ class DAOPDO extends DAO implements DAOImplementation{
         $query->bindParam(':'.$field, $value);
     }
     
-    protected function getRestrictionFromArray($params, $logicalOperator = LogicalOperator::AND_, $valueSuffix = '') {
+    protected function getRestrictionFromArray($params, $logicalOperator = LogicalOperator::AND_, $valueSuffix = '', $usePrefix = true) {
 		$condition = '';
         $first = true;
         foreach ($params as $field => $value) {
@@ -411,17 +411,17 @@ class DAOPDO extends DAO implements DAOImplementation{
 				$preffix = $value['preffix'];
 			}
 			$modelField = is_array($value) && isset($value['modelField']) ? $value['modelField'] : $field;
-            $condition .= $this->getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix);
+            $condition .= $this->getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix);
         }
         return $condition;
     }
 	
-    protected function getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix) {
+    protected function getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix) {
 		$sql = '(';
 		$protectedPreffix = bqSQL($preffix);
 		if(isset(self::$operatorList[$operator])){
 			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['field'] : self::$operatorList[$operator];
-			$sql .= sprintf($formatter, '`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`', ':'.$field.$valueSuffix);
+			$sql .= sprintf($formatter, ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'`', ':'.$field.$valueSuffix);
 		}elseif($operator == Operator::BETWEEN){
 			$i = 1;
 			$values = is_array($value) ? $value['value'] : $value;

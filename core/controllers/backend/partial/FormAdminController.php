@@ -10,7 +10,6 @@ abstract class FormAdminController extends ListAdminController
 	protected $form;
 	protected $formFieldsToExclude = array('dateAdd', 'dateUpdate', 'deleted');
 	protected $addDefaultValues = array();
-	protected $defaultFormRestriction = array();
 	protected $formFieldPreffix = '';
 	protected $formFieldsAccessChecked = false;
 	protected $errorLabels = array();
@@ -32,7 +31,6 @@ abstract class FormAdminController extends ListAdminController
 	}
 	protected function createFormAction()
     {
-		
 		return 'submitFormEdit'.$this->modelClassName;
 	}
 	protected function createForm($update = false)
@@ -134,7 +132,7 @@ abstract class FormAdminController extends ListAdminController
 	
 	protected function getFormFieldsRestriction($id=''){
 		$data = empty($id) ? Tools::getValue(self::ID_PARAM_URL) : $id;
-		$fields =  $this->defaultFormRestriction;
+		$fields =  $this->baseRestrictionsData;
 		if($data){
 			$fields = array_merge($this->defaultModel->getPrimaryValuesFromString($data), $fields);
 		}else{

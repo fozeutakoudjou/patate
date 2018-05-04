@@ -7,6 +7,7 @@ abstract class Command extends Element{
 	protected $targetToHide;
 	protected $confirmText;
 	protected $confirm;
+	protected $autoConfirm;
 	
 	public function __construct($label, $icon = null, $name = '', $action = '') {
 		$this->setLabel($label);
@@ -51,6 +52,12 @@ abstract class Command extends Element{
 	public function setConfirm($confirm) {
 		$this->confirm=$confirm;
 	}
+	public function isAutoConfirm() {
+		return $this->autoConfirm;
+	}
+	public function setAutoConfirm($autoConfirm) {
+		$this->autoConfirm=$autoConfirm;
+	}
 	
 	public function hasCustomContent(){
 		return ($this->customContent!=null);
@@ -65,6 +72,9 @@ abstract class Command extends Element{
 		if($this->confirm){
 			$this->addAttribute('confirm_text', $this->confirmText);
 			$this->addClass('confirm_command');
+			if($this->autoConfirm){
+				$this->addClass('auto_confirm');
+			}
 		}
 		return parent::generate();
 	}

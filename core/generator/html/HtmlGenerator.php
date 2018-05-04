@@ -16,6 +16,7 @@ class HtmlGenerator{
 	protected $activeLang;
 	protected $searchOptions = array();
 	protected $radioOptions = array();
+	protected $activeOptions = array();
 	
 	protected $searchButtonText;
 	protected $resetButtonText;
@@ -34,6 +35,9 @@ class HtmlGenerator{
 	}
 	public function setAccessChecker($accessChecker){
 		Content::setAccessChecker($accessChecker);
+	}
+	public function setActiveOptions($activeOptions){
+		$this->activeOptions=$activeOptions;
 	}
 	public function setSelectAllText($selectAllText){
 		$this->selectAllText=$selectAllText;
@@ -149,6 +153,13 @@ class HtmlGenerator{
 		if(empty($searchOptions) && isset($this->searchOptions[$searchType])){
 			$searchOptions = $this->searchOptions[$searchType];
 		}
+		if(empty($dataOptions)){
+			if($dataType==ColumnType::ACTIVE){
+				$dataOptions = $this->activeOptions;
+			}elseif($dataType==ColumnType::BOOL){
+				$dataOptions = $this->radioOptions;
+			}
+		}
 		return new Column($table, $label, $name, $dataType, $searchType, $sortable, $searchable, $searchOptions, $dataOptions);
 	}
 	
@@ -166,10 +177,19 @@ class HtmlGenerator{
 		return $link;
 	}
 	
-	public function createRowAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $urlParams = array(), $default = false){
+	public function createRowAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $urlParams = array(), $default = false, $confirm = false, $confirmText = '', $autoConfirm = false, $addToTable = true, $class = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
+		
 		$link = new RowAction($table, $label, $href, $icon, $title, $useOfButtonStyle, $name, $action, $urlParams, $default);
-		$table->addRowAction($link);
+		$link->setConfirm($confirm);
+		$link->setConfirmText($confirmText);
+		$link->setAutoConfirm($autoConfirm);
+		if(!empty($class)){
+			$link->addClass($class);
+		}
+		if($addToTable){
+			$table->addRowAction($link);
+		}
 		return $link;
 	}
 	

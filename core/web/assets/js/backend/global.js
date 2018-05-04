@@ -33,10 +33,18 @@ function handleGlobalEvent(){
 			form.find("input[name='action']:first").val(target.attr("data-action"));
 			form.submit();
 		});
-		/*e.preventDefault();
-		var form = $(this).closest("form");
-		form.find("input[name='action']:first").val($(this).attr("data-action"));
-		form.submit();*/
+	});
+	$(document).on("click", ".auto_confirm", function(e){
+		if(!$(this).hasClass("alreadyConfirmed")){
+			checkConfirm(e, function(target){
+				target.addClass("alreadyConfirmed");
+				if(target.is("a")){
+					location.href = target.attr("href");
+				}else{
+					target.click();
+				}
+			});
+		}
 	});
 	
 	$(document).on("click", ".table_search_btn", function(e){
@@ -56,6 +64,7 @@ function checkConfirm(event, callback){
 	var target = $(event.target);
 	if(target.hasClass("confirm_command")){
 		showConfirmDialog(target, callback);
+	}else{
+		callback(target);
 	}
-	callback(target);
 }
