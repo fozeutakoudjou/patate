@@ -189,14 +189,19 @@ class Router{
 				$isVirtual = true;
 			}
 		}
-		if(!isset($controllers[$this->controller])){
+		if(!isset($controllers[$this->controller]) && !$isVirtual){
 			$this->controller = $this->controllerNotFound;
 		}
-		if(!isset($controllers[$this->controller])){
+		if(!isset($controllers[$this->controller]) && !$isVirtual){
 			throw new \Exception('Controller "'.$this->controller.'" does not exist');
 		}else{
-			$class = FileTools::getNamespaceFromFile($controllers[$this->controller]);
-			$controller = new $class();
+			if($isVirtual){
+				$class = FileTools::getNamespaceFromFile($controllers['virtual']);
+				$controller = new $class($virtuals[$this->controller], $this->moduleName);
+			}else{
+				$class = FileTools::getNamespaceFromFile($controllers[$this->controller]);
+				$controller = new $class();
+			}
 			$controller->run();
 		}
     }

@@ -65,7 +65,9 @@ class Table extends Form{
 		$this->bulkActionText = $bulkActionText;
 		$this->searchButton->addClass('table_search_btn');
 	}
-	
+	public function getColumn($name) {
+		return isset($this->columns[$name]) ? $this->columns[$name] : null;
+	}
 	public function createRow($value){
 		$row = new Row($this, $value);
 		$row->setTemplateFile($this->rowTemplateFile, false);

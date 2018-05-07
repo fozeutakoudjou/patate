@@ -50,6 +50,11 @@ class User extends Model{
 		)
 	);	
 	
+	public function __toString()
+    {
+		return $this->firstName. ' '. $this->lastName;
+    }
+	
 	/**
      * Check employee informations saved into cookie and return employee validity
      *
@@ -74,6 +79,8 @@ class User extends Model{
         }
         $this->id = null;
     }
+	
+	
 	
 	/**
      * Check if employee password is the right one

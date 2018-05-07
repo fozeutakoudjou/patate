@@ -11,5 +11,6 @@ class ColumnType{
 	const IMAGE = 6;
 	const POSITION = 7;
 	const BOOL = 8;
-	const CUSTOM = 9;
+	const OPTION = 9;
+	const CUSTOM = 10;
 }

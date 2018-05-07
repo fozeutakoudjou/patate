@@ -23,10 +23,10 @@ class Language extends Model{
 		'fields' => array(
 			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '0'),
-			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
-			'languageCode' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-			'dateFormatLite' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'default' => 'Y-m-d'),
-			'dateFormatFull' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'default' => 'Y-m-d H:i:s'),
+			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isLanguageIsoCode'),
+			'languageCode' => array('type' => self::TYPE_STRING, 'validate' => 'isLanguageCode'),
+			'dateFormatLite' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d'),
+			'dateFormatFull' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d H:i:s'),
 			'rtl' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '0')
 		)
 	);

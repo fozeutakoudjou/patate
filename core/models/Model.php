@@ -101,6 +101,9 @@ class Model implements DataType{
 						$value = $value[0];
 					}
                 }
+				if($fieldName=='password'){
+					$value = Tools::encrypt($value);
+				}
 				$this->setPropertyValue($fieldName, $value);
 				if($isLangField){
 					$this->fillMultilangEmptyFields($fieldName, $languages, $defaultLang);

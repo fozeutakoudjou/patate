@@ -9,6 +9,7 @@ use core\constant\dao\OrderWay;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\generator\html\formatters\ActiveFormatter;
+use core\generator\html\formatters\OptionFormatter;
 class Column extends Element{
 	protected $cellTemplateFile = 'generator/table/cell';
 	protected $searchable;
@@ -84,6 +85,8 @@ class Column extends Element{
 	public function createFromatter(){
 		if(($this->dataType == ColumnType::ACTIVE)||($this->dataType == ColumnType::BOOL)){
 			$this->dataFormatter = new ActiveFormatter();
+		}elseif($this->dataType == ColumnType::OPTION){
+			$this->dataFormatter = new OptionFormatter();
 		}
 	}
 	
