@@ -4,6 +4,7 @@ namespace core\models;
 class Action extends Model{
 	protected $id;
 	protected $code;
+	protected $dependentOnId;
 	protected $name;
 	protected $description;
 	protected $definition = array(
@@ -14,7 +15,8 @@ class Action extends Model{
 		'fields' => array(
 			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
 			'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
-			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
+			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml'),
+			'dependentOnId' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1')
 		)
 	);	
 
@@ -41,5 +43,11 @@ class Action extends Model{
 	}
 	public function setDescription($description){
 		$this->description = $description;
+	}
+	public function isDependentOnId(){
+		return $this->dependentOnId;
+	}
+	public function setDependentOnId($dependentOnId){
+		$this->dependentOnId = $dependentOnId;
 	}
 }

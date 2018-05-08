@@ -208,7 +208,7 @@ abstract class BaseAdminController extends Controller
             Tools::redirect($this->context->getLink()->getAdminLink('login', $redirectParams));
         }*/
 		$this->formLanguages = Language::getLanguages(false);
-		$this->generator = new HtmlGenerator($this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
+		$this->generator = new HtmlGenerator($this->template, $this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
 		$radioOptions = array('1'=>$this->l('Yes'), '0'=>$this->l('No'));
 		$this->generator->setAccessChecker($this);
 		$this->generator->setDefaultFormErrorText($this->l('You have some form errors. Please check below.'));
@@ -365,5 +365,18 @@ abstract class BaseAdminController extends Controller
 	protected function hasErrors()
     {
 		return (!empty($this->errors) || !empty($this->formErrors));
+	}
+	
+	protected function createOptions($modelClassName = '', $module = '', $restrictions = array(), $addEmptyOption = false, $list = null)
+    {
+		$list = ($list === null) ? $this->getDAOInstance($modelClassName, false, $module)->getByFields($restrictions, false, $this->lang, true, false) : $list;
+		$options = array();
+		if($addEmptyOption){
+			$options[''] = '---';
+		}
+		foreach($list as $object){
+			$options[$object->getSinglePrimaryValue()] = $object->__toString();
+		}
+		return $options;
 	}
 }

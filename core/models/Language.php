@@ -21,12 +21,12 @@ class Language extends Model{
 		'primary' => 'id',
 		'auto_increment' => true,
 		'fields' => array(
-			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName'),
+			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isGenericName', 'size' => 32),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '0'),
-			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isLanguageIsoCode'),
-			'languageCode' => array('type' => self::TYPE_STRING, 'validate' => 'isLanguageCode'),
-			'dateFormatLite' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d'),
-			'dateFormatFull' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d H:i:s'),
+			'isoCode' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isLanguageIsoCode', 'size' => 2),
+			'languageCode' => array('type' => self::TYPE_STRING, 'validate' => 'isLanguageCode', 'size' => 5),
+			'dateFormatLite' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d', 'size' => 32),
+			'dateFormatFull' => array('type' => self::TYPE_STRING, 'validate' => 'isPhpDateFormat', 'default' => 'Y-m-d H:i:s', 'size' => 32),
 			'rtl' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '0')
 		)
 	);

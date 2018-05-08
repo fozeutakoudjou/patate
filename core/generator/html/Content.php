@@ -15,6 +15,8 @@ class Content{
 	
 	protected static $accessChecker = null;
 	
+	protected static $template = null;
+	
 	protected $absoluteTemplate = false;
 	
 	public function __construct($html = '') {
@@ -32,8 +34,7 @@ class Content{
 		if(empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action)){
 			$content = $this->html;
 			if(!$this->contentForced && !empty($this->templateFile)){
-				$context = Context::getInstance();
-				$template = $context->getTemplate();
+				$template = self::$template;
 				$file = $this->absoluteTemplate ? $this->templateFile : FileTools::getTemplateDir(true) . $this->templateFile;
 				$template->assign('item', $this);
 				$template->assign('languages', self::$languages);
@@ -90,5 +91,9 @@ class Content{
 	
 	public static function setAccessChecker($accessChecker){
 		self::$accessChecker=$accessChecker;
+	}
+	
+	public static function setTemplate($template){
+		self::$template=$template;
 	}
 }

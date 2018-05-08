@@ -25,13 +25,14 @@ class HtmlGenerator{
 	protected $unselectAllText;
 	protected $emptyRowText;
 	protected $bulkActionText;
-	public function __construct($defaultSubmitText = '', $defaultCancelText = '', $languages = array(), $activeLang = '') {
+	public function __construct($template, $defaultSubmitText = '', $defaultCancelText = '', $languages = array(), $activeLang = '') {
 		$this->setDefaultSubmitText($defaultSubmitText);
 		$this->setDefaultCancelText($defaultCancelText);
 		$this->setLanguages($languages);
 		$this->setActiveLang($activeLang);
 		Content::setLanguages($this->languages);
 		Content::setActiveLang($this->activeLang);
+		Content::setTemplate($template);
 	}
 	public function setAccessChecker($accessChecker){
 		Content::setAccessChecker($accessChecker);

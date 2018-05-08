@@ -160,6 +160,14 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected function getListBaseRestrictionFields() {
 		return $this->baseRestrictionsData;
 	}
+	protected function changeColumnOptions($columnName, $dataType = null, $searchType = null, $dataOptions = null, $searchOptions = null) {
+		$column = $this->table->getColumn($columnName);
+		$column->setDataType(($dataType === null) ? $column->getDataType() : $dataType);
+		$column->setSearchType(($searchType === null) ? $column->getSearchType() : $searchType);
+		$column->setDataOptions(($dataOptions === null) ? $column->getDataOptions() : $dataOptions);
+		$column->setSearchOptions(($searchOptions === null) ? $column->getSearchOptions() : $searchOptions);
+		return $column;
+	}
 	protected function getListSearchData() {
 		$fields = array();
 		return $fields;
