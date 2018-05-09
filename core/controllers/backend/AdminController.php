@@ -29,13 +29,13 @@ abstract class AdminController extends FormAdminController
 				$this->checkFormFieldAccess($update);
 				$this->retrieveSubmittedData($update);
 				if(!$update){
-					$this->setAddDefaultValues($this->formFieldsToExclude);
+					$this->setAddDefaultValues(array_merge($this->formFieldsToExclude, $this->saveFieldsToExclude));
 				}
 				$this->validateFormData($update);
 				if($this->defaultModel->isFieldsValidated() && !$this->hasErrors()){
 					$continue = $this->beforeEdit($update);
 					if($continue && !$this->hasErrors()){
-						$result = $update ? $this->getDAOInstance()->update($this->defaultModel, $this->formFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :
+						$result = $update ? $this->getDAOInstance()->update($this->defaultModel, $this->saveFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :
 							$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
 						$this->afterEdit($result, $update);
 						if($result){

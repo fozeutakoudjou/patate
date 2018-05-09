@@ -37,9 +37,9 @@ abstract class Element extends Content{
 	public function hasClass($class) {
 		return in_array($class, $this->classes);
 	}
-	public function addWrapperClasses($class) {
+	public function addWrapperClass($class) {
 		if (!in_array($class, $this->wrapperClasses)) {
-			$this->wrapperClasses[] =$wrapperClasses;
+			$this->wrapperClasses[] =$class;
 		}
 	}
 	public function setAdditionalData($additionalData) {

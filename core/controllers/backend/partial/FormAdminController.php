@@ -10,6 +10,7 @@ abstract class FormAdminController extends ListAdminController
 	const ERRORS_SEPARATOR = ', ';
 	protected $form;
 	protected $formFieldsToExclude = array('dateAdd', 'dateUpdate', 'deleted');
+	protected $saveFieldsToExclude = array('deleted');
 	protected $addDefaultValues = array();
 	protected $formFieldPreffix = '';
 	protected $formFieldsAccessChecked = false;
@@ -146,7 +147,7 @@ abstract class FormAdminController extends ListAdminController
 	protected function checkFormFieldAccess($update){
 		if(!$this->formFieldsAccessChecked){
 			if(isset($this->modelDefinition['fields']['active']) && (!$this->checkUserAccess(ActionCode::ACTIVATE) || !$this->checkUserAccess(ActionCode::DESACTIVATE))){
-				$this->formFieldsToExclude[] = 'active';
+				$this->saveFieldsToExclude[] = 'active';
 			}
 			$this->formFieldsAccessChecked = true;
 		}

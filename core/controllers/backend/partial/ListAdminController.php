@@ -27,7 +27,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected $defaultOrderColumn;
 	protected $orderColumn;
 	
-	protected $defaultItemsPerPage =2;
+	protected $defaultItemsPerPage =20;
 	protected $itemsPerPage;
 	
 	protected $itemsPerPageOptions;
@@ -51,7 +51,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->generator->setEmptyRowText($this->l('No records found'));
 		$this->generator->setBulkActionText($this->l('Bulk actions'));
 		
-		$this->itemsPerPageOptions = array('20'=>20, '1'=>1, '2'=>2, '50'=>50, '100'=>100, '300'=>300, '1000'=>1000, '0'=>$this->l('All'));
+		$this->itemsPerPageOptions = array('20'=>20, '50'=>50, '100'=>100, '300'=>300, '1000'=>1000, '0'=>$this->l('All'));
 		if($this->defaultModel!=null){
 			$this->defaultOrderColumn =$this->defaultModel->getPrimaries()[0];
 		}

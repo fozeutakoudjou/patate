@@ -204,6 +204,9 @@ class HtmlGenerator{
 		}
 		return new Radio($name, $label, $options);
 	}
+	public function createTree($dao, $headerTemplateFile, $footerTemplateFile, $restrictions = array(), $associations = array(), $itemFormatter = null){
+		return new Tree($dao, $headerTemplateFile, $footerTemplateFile, $restrictions, $associations, $itemFormatter);
+	}
 	
 	public function createSwitch($name, $label = '', $options = array()){
 		$input = $this->createRadio($name, $label, $options);

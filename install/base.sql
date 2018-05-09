@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS `c2w_wrapper_lang` (
 CREATE TABLE IF NOT EXISTS `c2w_action` (
 	`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`code` varchar(50) NOT NULL,
+	`dependentOnId` bool DEFAULT '1' NOT NULL,
 	PRIMARY KEY (`id`), 
 	UNIQUE KEY `UNIQUE_action_code` (`code`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -203,6 +204,7 @@ CREATE TABLE IF NOT EXISTS `c2w_admin_menu` (
 	`level` int(11),                                                                                                                                                                         
 	`newTab` tinyint(1),      
 	`active`              bool DEFAULT '1' NOT NULL,
+	`iconClass`             varchar(15),
 	PRIMARY KEY (`id`),
 	CONSTRAINT FK_admin_menu_wrapper FOREIGN KEY (idWrapper) REFERENCES c2w_wrapper(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
 	CONSTRAINT FK_admin_menu_action FOREIGN KEY (idAction) REFERENCES c2w_action(`id`) ON DELETE CASCADE ON UPDATE CASCADE

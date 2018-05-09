@@ -15,16 +15,15 @@ class Tree extends Block{
 	protected $orderWay;
 	
 	protected $restrictions;
+	protected $associations;
 	
-	protected $prepared = false;
-	
-	
-	
-	public function __construct($dao, $headerTemplateFile, $footerTemplateFile, $restrictions = array(), $parentField = 'idParent', $orderBy = 'position', $orderWay = OrderWay::ASC) {
+	public function __construct($dao, $headerTemplateFile, $footerTemplateFile, $restrictions = array(), $associations = array(), $itemFormatter = null, $parentField = 'idParent', $orderBy = 'position', $orderWay = OrderWay::ASC) {
 		$this->setHeaderTemplateFile($headerTemplateFile);
 		$this->setFooterTemplateFile($footerTemplateFile);
+		$this->setItemFormatter($itemFormatter);
 		$this->dao = $dao;
 		$this->restrictions = $restrictions;
+		$this->associations = $associations;
 		$this->parentField = $parentField;
 		$this->orderBy = $orderBy;
 		$this->orderWay = $orderWay;
@@ -49,8 +48,8 @@ class Tree extends Block{
 		$restrictions = $this->restrictions;
 		$restrictions[$this->parentField] = $idParent;
         if ($items === null) {
-            $items = $dao->getByFields($restrictions, false, $this->lang, true, false, array(), 0, 0, $this->orderBy, $this->orderWay);
-        }
+            $items = $this->dao->getByFields($restrictions, false, self::$activeLang, true, false, $this->associations, 0, 0, $this->orderBy, $this->orderWay);
+		}
         if (! empty($items)) {
             $isFirst = true;
             $isLast = false;
@@ -59,22 +58,27 @@ class Tree extends Block{
 				$object = $items[$i];
 				$id = $object->getSinglePrimaryValue();
 				$restrictions[$this->parentField] = $id;
-				$childrens = $dao->getByFields($restrictions, false, $this->lang, true, false, array(), 0, 0, $this->orderBy, $this->orderWay);
+				$childrens = $this->dao->getByFields($restrictions, false, self::$activeLang, true, false, $this->associations, 0, 0, $this->orderBy, $this->orderWay);
                 $treeItem = new TreeItem($object, $childrens);
                 $treeItem->setFirst($isFirst);
-                self::$template->assign('item', $treeItem);
-                $output .= self::$template->render($this->headerTemplateFile) . self::buildTree($id, $childrens);
-                $isFirst = false;
-				$treeItem->setLast(($i == ($itemsCount - 1)));
-                
-                self::$template->assign('item', $treeItem);
-                $output .= self::$template->fetch($this->footerTemplateFile);
+				if($this->itemFormatter!=null){
+					$this->itemFormatter->format($treeItem);
+				}
+				if(!$treeItem->isRenderingCancelled()){
+					self::$template->assign('item', $treeItem);
+					$output .= self::$template->render($this->headerTemplateFile) . self::buildTree($id, $childrens);
+					$isFirst = false;
+					$treeItem->setLast(($i == ($itemsCount - 1)));
+					
+					self::$template->assign('item', $treeItem);
+					$output .= self::$template->render($this->footerTemplateFile);
+				}
             }
         }
         return $output;
     }
 	
-	public function generateContent($idParent, $items = null)
+	public function generateContent()
     {
 		return $this->buildTree();
 	}

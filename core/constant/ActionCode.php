@@ -9,4 +9,5 @@ class ActionCode{
 	const VIEW = 'view';
 	const ACTIVATE = 'activate';
 	const DESACTIVATE = 'desactivate';
+	const CHANGE_FIELD_VALUE = 'change_value';
 }

@@ -12,6 +12,7 @@ class AdminMenu extends Model{
 	protected $level;
 	protected $newTab;
 	protected $active;
+	protected $iconClass;
 	protected $name;
 	protected $title;
 	protected $link;
@@ -31,6 +32,7 @@ class AdminMenu extends Model{
 			'level' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
 			'newTab' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
+			'iconClass' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
 			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName'),
 			'title' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
 			'link' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName')
@@ -96,6 +98,12 @@ class AdminMenu extends Model{
 	}
 	public function setActive($active){
 		$this->active = $active;
+	}
+	public function getIconClass(){
+		return $this->iconClass;
+	}
+	public function setIconClass($iconClass){
+		$this->iconClass = $iconClass;
 	}
 	public function getName(){
 		return $this->name;

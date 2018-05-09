@@ -12,6 +12,7 @@ use core\models\Configuration;
 use core\models\Language;
 
 use core\generator\html\HtmlGenerator;
+use core\generator\html\formatters\MenuItemFormatter;
 use core\constant\ActionCode;
 use core\constant\WrapperType;
 
@@ -32,7 +33,9 @@ abstract class BaseAdminController extends Controller
     protected $layout = 'layout';
     protected $header = 'header';
     protected $footer = 'footer';
-    protected $defaultAction = ActionCode::LISTING;
+	const DEFAULT_ACTION = ActionCode::LISTING;
+    protected $defaultAction = self::DEFAULT_ACTION;
+    
 	protected $modals = array();
 	protected $metaTitle = array();
 	protected $isAdmin = true;
@@ -224,7 +227,12 @@ abstract class BaseAdminController extends Controller
 	protected function initWrapper()
     {
 		$dao = $this->getDAOInstance('Wrapper', false);
-		$fields = array('type'=>WrapperType::CONTROLLER, 'target'=>$this->controllerClass, 'module'=>$this->moduleName);
+		$fields = array('type'=>WrapperType::CONTROLLER, 'target'=>$this->controllerClass);
+		if($this->isModule){
+			$fields['module'] = $this->moduleName;
+		}else{
+			$fields['module'] = null;
+		}
 		$this->wrapper = $dao->getByFields($fields);
 		$this->wrapper = empty($this->wrapper) ? $dao->createModel() : $this->wrapper[0];
 	}
@@ -247,7 +255,7 @@ abstract class BaseAdminController extends Controller
 	public function checkUserAccess($action)
     {
         $rightCode = Tools::getRightCode($action);
-		return $this->context->user->hasRight($this->wrapper->getId(), $rightCode);;
+		return $this->context->getUser()->hasRight($this->wrapper->getId(), $rightCode);
     }
 	
 	protected function getDAOInstance($className = '', $fromCurrent = true, $module = ''){
@@ -342,6 +350,7 @@ abstract class BaseAdminController extends Controller
 		}
 		$this->template->assign(
             array(
+                'menuContent' => $this->renderMenu(),
                 'page' => $page,
                 'header' => $this->renderTpl($this->header, $this->useModuleHeader),
                 'footer' => $this->renderTpl($this->footer, $this->useModuleFooter),
@@ -350,6 +359,43 @@ abstract class BaseAdminController extends Controller
 
         $this->outputContent($this->getTemplateFile($this->layout, $this->useModuleLayout));
     }
+	
+	protected function renderMenu()
+    {
+		$tree = $this->generator->createTree($this->getDAOInstance('AdminMenu', false), $this->getTemplateFile('header_menu', false),
+			$this->getTemplateFile('footer_menu', false), array('active' => 1),
+			array('idWrapper'=> array('useOfLang'=>false), 'idAction'=> array('useOfLang'=>false)), new MenuItemFormatter($this));
+		return $tree->generateContent();
+	}
+	
+	public function formatMenuItem($item)
+    {
+		$menu = $item->getValue();
+		$action = empty($menu->getIdAction()) ? self::DEFAULT_ACTION : $menu->getAssociated('idAction')->getCode();
+		if(($this->action == $action)&& ($menu->getIdWrapper() == $this->wrapper->getId())){
+			$item->addWrapperClass('active');
+			$item->addAdditionalData('active', 1);
+		}
+		$href = 'javascript:void(0);';
+		if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action)){
+			if($menu->isClickable()){
+				$params = array();
+				if($action!=self::DEFAULT_ACTION){
+					$params['action'] = $action;
+				}
+				$href = $this->context->getLink()->getAdminLink($this->moduleName, strtolower($menu->getAssociated('idWrapper')->getTarget()), $params);
+				if($menu->isClickable()){
+					$item->addAttribute('target', '_blank');
+				}
+			}
+		}else{
+			if(!$item->hasChildrens()){
+				$item->setRenderingCancelled(true);
+			}
+		}
+		
+		$item->addAdditionalData('href', $href);
+	}
 	
 	protected function renderTpl($name, $useModule = true)
     {
@@ -372,7 +418,7 @@ abstract class BaseAdminController extends Controller
 		$list = ($list === null) ? $this->getDAOInstance($modelClassName, false, $module)->getByFields($restrictions, false, $this->lang, true, false) : $list;
 		$options = array();
 		if($addEmptyOption){
-			$options[''] = '---';
+			$options[''] = '--';
 		}
 		foreach($list as $object){
 			$options[$object->getSinglePrimaryValue()] = $object->__toString();

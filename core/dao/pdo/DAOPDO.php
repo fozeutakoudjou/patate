@@ -416,13 +416,15 @@ class DAOPDO extends DAO implements DAOImplementation{
 	
     protected function getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix) {
 		$sql = '(';
+		$values = is_array($value) ? $value['value'] : $value;
 		$protectedPreffix = bqSQL($preffix);
-		if(isset(self::$operatorList[$operator])){
+		if($values===null){
+			$sql .= ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'` IS NULL';
+		}elseif(isset(self::$operatorList[$operator])){
 			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['field'] : self::$operatorList[$operator];
 			$sql .= sprintf($formatter, ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'`', ':'.$field.$valueSuffix);
 		}elseif($operator == Operator::BETWEEN){
 			$i = 1;
-			$values = is_array($value) ? $value['value'] : $value;
 			$values = is_array($values) ? $values : array('' => $values);
 			foreach($values as $key => $val){
 				$sql .= ($i==1) ? ('`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`'.' BETWEEN :' .$field . $key.$valueSuffix) : (' AND :' . $field . $key.$valueSuffix);
@@ -441,13 +443,16 @@ class DAOPDO extends DAO implements DAOImplementation{
         foreach ($params as $field => $value) {
 			$values = is_array($value) ? $value['value'] : $value;
 			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
-			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
-			$values = is_array($values) ? $values : array('' => $values);
-			foreach($values as $key => $val){
-				$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);
-				$tmpValues[$field][$key] = $formattedValue;
-				$query->bindParam(':'.$field.$key.$valueSuffix, $tmpValues[$field][$key]);
+			if($values!==null){
+				$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
+				$values = is_array($values) ? $values : array('' => $values);
+				foreach($values as $key => $val){
+					$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);
+					$tmpValues[$field][$key] = $formattedValue;
+					$query->bindParam(':'.$field.$key.$valueSuffix, $tmpValues[$field][$key]);
+				}
 			}
+			
 		}
     }
     

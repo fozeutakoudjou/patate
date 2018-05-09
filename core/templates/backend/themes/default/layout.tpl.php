@@ -4,7 +4,7 @@
 	<div class="page-sidebar-wrapper">
 		<div class="page-sidebar navbar-collapse collapse">
 			<!-- BEGIN SIDEBAR MENU -->
-			<ul class="page-sidebar-menu" data-auto-scroll="false" data-auto-speed="200">
+			<ul class="page-sidebar-menu  page-header-fixed page-sidebar-menu-hover-submenu " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
 				<!-- DOC: To remove the sidebar toggler from the sidebar you just need to completely remove the below "sidebar-toggler-wrapper" LI element -->
 				<li class="sidebar-toggler-wrapper">
 					<!-- BEGIN SIDEBAR TOGGLER BUTTON -->
@@ -30,27 +30,7 @@
 					</form>
 					<!-- END RESPONSIVE QUICK SEARCH FORM -->
 				</li>
-				<li class="start active">
-					<a href="index.html">
-						<i class="fa fa-home"></i>
-						<span class='titre'>Acceuil</span>
-						<span class="selected"></span>
-					</a>
-				</li>
-				<li class="">
-					<a href="configurations.html">
-						<i class="fa fa-cogs"></i>
-						<span class="title">Configuration</span>
-						<span class="selected"></span>
-					</a>
-					<ul class="sub-menu">
-						<li>
-							<a href="">
-								<span class="title">Config 1</span>
-							</a>
-						</li>
-					</ul>
-				</li>
+				<?php echo $menuContent;?>
 			</ul>
 			<!-- END SIDEBAR MENU -->
 		</div>

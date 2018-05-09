@@ -4,6 +4,7 @@ class TreeItem extends Element{
 	protected $first = false;
 	protected $last = false;
 	protected $subObjects;
+	protected $renderingCancelled = false;
 	
 	public function __construct($value, $subObjects = array()) {
 		$this->setValue($value);
@@ -16,6 +17,13 @@ class TreeItem extends Element{
 	
 	public function setFirst($first) {
 		$this->first = $first;
+	}
+	public function isRenderingCancelled() {
+		return $this->renderingCancelled;
+	}
+	
+	public function setRenderingCancelled($renderingCancelled) {
+		$this->renderingCancelled = $renderingCancelled;
 	}
 	
 	public function isLast() {

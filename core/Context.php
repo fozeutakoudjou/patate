@@ -12,7 +12,7 @@ class Context
     protected static $instance;
 
     /** @var Library\models\User */
-    public $user;
+    protected $user;
 
     /** @var Cookie */
     protected $cookie;

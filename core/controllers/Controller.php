@@ -85,6 +85,7 @@ abstract class Controller
     protected $confirmations;
     protected $warnings;
     protected $informations;
+	protected $defaultAction = '';
 	
     /**
      * Initialize the page

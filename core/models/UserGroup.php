@@ -7,6 +7,7 @@ class UserGroup extends Model{
 	protected $definition = array(
 		'entity' => 'user_group',
 		'primary' => array('idUser', 'idGroup'),
+		'uniques' => array(array(idUser, idGroup)),
 		'fields' => array(
 			'idUser' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),
 			'idGroup' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt')
