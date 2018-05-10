@@ -4,6 +4,7 @@ namespace core\controllers\backend\partial;
 use core\controllers\Controller;
 
 use core\Tools;
+use core\Validate;
 use core\Media;
 use core\StringTools;
 use core\FileTools;
@@ -166,37 +167,21 @@ abstract class BaseAdminController extends Controller
 	public function init()
     {
         parent::init();
-		/*$dao = $this->getDAOInstance('Right', false);
-		//$dao->setUseOfAllLang(true);
-		$fields = array(
-			'id'=>1,
-			'idContainer___name'=>'user'
-		);
-		$association = array(
-			'idContainer'=>array()
-		);
-		$data = $dao->getByFields(array(), false, $association);
-		
-		var_dump($data);
-		var_dump($data[3]->getAssociated('idContainer'));die();*/
 		$user = $this->context->getUser();
 		if (isset($_GET['logout'])) {
-            $this->user->logout();
+            $user->logout();
         }
 		$cookie = $this->context->getCookie();
-        if (isset($cookie->last_activity)) {
-            if ($cookie->last_activity + 900 < time()) {
-                $this->user->logout();
+        if (isset($cookie->lastActivity)) {
+            if ($cookie->lastActivity + 900 < time()) {
+                $user->logout();
             } else {
-                $cookie->last_activity = time();
+                $cookie->lastActivity = time();
             }
         }
 
-        /*if ($this->controllerClass != 'Login' && (!isset($this->user) || !$this->user->isLoggedBack())) {
-            if (isset($this->user)) {
-                $this->user->logout();
-            }
-
+        if ($this->controllerClass != 'Login' && (!isset($user) || !$user->isLoggedBack())) {
+            $user->logout();
             $email = false;
             if (Tools::getValue('email') && Validate::isEmail(Tools::getValue('email'))) {
                 $email = Tools::getValue('email');
@@ -208,8 +193,8 @@ abstract class BaseAdminController extends Controller
 			if($email){
 				$redirectParams['email'] = $email;
 			}
-            Tools::redirect($this->context->getLink()->getAdminLink('login', $redirectParams));
-        }*/
+            Tools::redirect($this->context->getLink()->getAdminLink('', 'login', $redirectParams));
+        }
 		$this->formLanguages = Language::getLanguages(false);
 		$this->generator = new HtmlGenerator($this->template, $this->l('Save'), $this->l('Cancel'), $this->formLanguages, $this->lang);
 		$radioOptions = array('1'=>$this->l('Yes'), '0'=>$this->l('No'));

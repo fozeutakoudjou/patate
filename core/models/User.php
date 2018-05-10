@@ -2,7 +2,11 @@
 namespace core\models;
 
 use core\constant\UserType;
-
+use core\constant\dao\LogicalOperator;
+use core\Tools;
+use core\Context;
+use core\Validate;
+use core\dao\Factory;
 class User extends Model{
 	protected $id;
 	protected $lastName;
@@ -62,9 +66,10 @@ class User extends Model{
      */
     public function isLoggedBack()
     {
+		
 		$cookie = Context::getInstance()->getCookie();
-        $result = (
-			$this->id && Validate::isUnsignedId($this->id) && Employee::checkPassword($this->id, $cookie->passwd) &&
+		$result = (
+			$this->id && Validate::isUnsignedId($this->id) && $this->isAdmin() && self::checkPassword($this->id, $cookie->password) &&
 				(!isset($cookie->remote_addr) || $cookie->remote_addr == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
 		);
 		return $result;
@@ -85,26 +90,35 @@ class User extends Model{
 	/**
      * Check if employee password is the right one
      *
-     * @param string $passwd Password
+     * @param string $password Password
      * @return bool result
      */
-    public static function checkPassword($id_employee, $passwd)
+    public static function checkPassword($id, $password, $isAdmin = false)
     {
-        if (!Validate::isUnsignedId($id_employee) || !Validate::isPasswd($passwd, 8)) {
-            die(Tools::displayError());
+		$passValidate = $isAdmin ? Validate::isPasswordAdmin($password) : Validate::isPassword($password);
+        if (!Validate::isUnsignedId($id) || !$passValidate) {
+            die('Invalid');
         }
-
-        return Db::getInstance()->getValue('
-		SELECT `id_employee`
-		FROM `'._DB_PREFIX_.'employee`
-		WHERE `id_employee` = '.(int)$id_employee.'
-		AND `passwd` = \''.pSQL($passwd).'\'
-		AND `active` = 1');
+		$dao = Factory::getDAOInstance('User');
+		$fields = array('id'=>$id, 'password'=>$password, 'active'=>1);
+		if(!$isAdmin){
+			$fields['type_group']= array(
+				'group'=>true,
+				'logicalOperator'=>LogicalOperator::OR_,
+				'fields'=> Tools::getMultipleValuesRestriction('type', array(UserType::ADMIN, UserType::SUPER_ADMIN))
+			);
+		} 
+		$count = $dao->getByFieldsCount($fields);
+        return ($count>0);
     }
 	
 	public function isSuperAdmin()
     {
 		return ($this->type == UserType::SUPER_ADMIN);
+    }
+	public function isAdmin()
+    {
+		return ($this->type == UserType::ADMIN);
     }
 	public function loadAccess()
     {

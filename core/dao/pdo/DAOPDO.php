@@ -129,7 +129,27 @@ class DAOPDO extends DAO implements DAOImplementation{
         $result = $query->execute();
         return $result;
     }
-	
+	protected function formatRestrictionFields($fields, $associations){
+		$result = array('associations' => $associations, 'fields' => array());
+		foreach ($fields as $fieldKey => $value) {
+			if(isset($value['group']) && $value['group'] && isset($value['fields'])){
+				$formatted = $this->formatRestrictionFields($value['fields'], $associations);
+				$result['fields'][$fieldKey]['fields'] = $formatted['fields'];
+				$result['associations'] = $formatted['associations'];
+			}
+			$fieldName = isset($value['field']) ? $value['field'] : $fieldKey;
+			$values = is_array($value) ? $value : array('value'=>$value);
+			$tab = Tools::extractForeignField($fieldName);
+			if(isset($tab['externalField'])){
+				$values['preffix'] = $tab['field'];
+				$values['modelField'] = $tab['externalField'];
+				$result['associations'][$tab['field']]['join'] = isset($values['join']) ? $values['join'] : JoinType::LEFT;
+				$result['associations'][$tab['field']]['restrictionKey'] = $fieldKey;
+			}
+			$result['fields'][$fieldKey] = $values;
+		}
+		return $result;
+	}
     protected function formatAssociations($fields, $associations, $lang, $useOfLang, $useOfAllLang, $orderBy=''){
 		$result = array();
 		$result['associationsToGet'] = array();
@@ -144,17 +164,9 @@ class DAOPDO extends DAO implements DAOImplementation{
 				$fields[$orderBy] = null;
 				$orderByManuallyAdded = true;
 			}
-			foreach ($fields as $field => $value) {
-				$values = is_array($value) ? $value : array('value'=>$value);
-				$tab = Tools::extractForeignField($field);
-				if(isset($tab['externalField'])){
-					$values['preffix'] = $tab['field'];
-					$values['modelField'] = $tab['externalField'];
-					$associations[$tab['field']]['join'] = isset($values['join']) ? $values['join'] : JoinType::LEFT;
-					$associations[$tab['field']]['restrictionKey'] = $field;
-				}
-				$result['fields'][$field] = $values;
-			}
+			$formatted = $this->formatRestrictionFields($fields, $associations);
+			$result['fields'] = $formatted['fields'];
+			$associations = $formatted['associations'];
 			foreach($associations as $field => $association){
 				$useOfLangTmp = isset($association['useOfLang']) ? $association['useOfLang'] : $useOfLang;
 				$useOfAllLangTmp = isset($association['useOfAllLang']) ? $association['useOfAllLang'] : $useOfAllLang;
@@ -216,7 +228,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 	
 	public function _getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_, $lang = null, $useOfLang = true, $useOfAllLang = false){
 		$lang = empty($lang)?$this->defaultLang : $lang;
-		$formatted = $this->formatAssociations($fields, $associations, $lang, $useOfLang, $useOfAllLang, $orderBy);
+		$formatted = $this->formatAssociations($fields, array(), $lang, $useOfLang, $useOfAllLang, '');
         $restriction=$this->getRestrictionFromArray($formatted['fields'], $logicalOperator);
 		$sharedSql = $this->getTableSelect($lang, $useOfLang, $useOfAllLang) . $formatted['associationJoin'] . (empty($restriction)?'':' WHERE '.$restriction);
 		$params = array('sharedSql'=>$sharedSql, 'formatted'=>$formatted);
@@ -240,7 +252,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 		$this->addLangParam($query, $lang, $useOfLang, $useOfAllLang, $params['formatted']['associationsLang']);
         $query->execute();
 		$data = $query->fetch(\PDO::FETCH_OBJ);
-    	return (int)$data->number;
+		return (int)$data->number;
 	}
 	protected function getTableSelect($lang, $useOfLang, $useOfAllLang, $preffix = '', $foreign = false, $foreignField = '', $referenceField = '', $parentPreffix = '', $join='')
     {
@@ -395,26 +407,31 @@ class DAOPDO extends DAO implements DAOImplementation{
     protected function getRestrictionFromArray($params, $logicalOperator = LogicalOperator::AND_, $valueSuffix = '', $usePrefix = true) {
 		$condition = '';
         $first = true;
-        foreach ($params as $field => $value) {
-			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
-            if ($first) {
-                $first = false;
-            }else{
-                $condition.=' ' .(isset(self::$logicalOperatorList[$logicalOperator]) ? self::$logicalOperatorList[$logicalOperator] : 'AND').' ';
-            }
-			
-			if(!is_array($value) || !isset($value['preffix'])){
-				$preffix = self::DEFAULT_PREFFIX .($this->defaultModel->isLangField($field) ? '_l' :'');
+        foreach ($params as $fieldKey => $value) {
+			if ($first) {
+				$first = false;
 			}else{
-				$preffix = $value['preffix'];
+				$condition.=' ' .(isset(self::$logicalOperatorList[$logicalOperator]) ? self::$logicalOperatorList[$logicalOperator] : 'AND').' ';
 			}
-			$modelField = is_array($value) && isset($value['modelField']) ? $value['modelField'] : $field;
-            $condition .= $this->getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix);
+			if(isset($value['group']) && $value['group'] && isset($value['fields'])){
+				$logicalOperatorTmp = isset($value['logicalOperator']) ? $value['logicalOperator'] : LogicalOperator::AND_;
+				$condition.= '('.$this->getRestrictionFromArray($value['fields'], $logicalOperatorTmp, $fieldKey.$valueSuffix, $usePrefix).')';
+			}else{
+				$fieldName = isset($value['field']) ? $value['field'] : $fieldKey;
+				$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
+				if(!is_array($value) || !isset($value['preffix'])){
+					$preffix = self::DEFAULT_PREFFIX .($this->defaultModel->isLangField($fieldName) ? '_l' :'');
+				}else{
+					$preffix = $value['preffix'];
+				}
+				$modelField = is_array($value) && isset($value['modelField']) ? $value['modelField'] : $fieldName;
+				$condition .= $this->getOperatorQuery($fieldKey, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix);
+			}
         }
         return $condition;
     }
 	
-    protected function getOperatorQuery($field, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix) {
+    protected function getOperatorQuery($fieldKey, $value, $operator, $preffix, $modelField, $valueSuffix, $usePrefix) {
 		$sql = '(';
 		$values = is_array($value) ? $value['value'] : $value;
 		$protectedPreffix = bqSQL($preffix);
@@ -422,12 +439,12 @@ class DAOPDO extends DAO implements DAOImplementation{
 			$sql .= ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'` IS NULL';
 		}elseif(isset(self::$operatorList[$operator])){
 			$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['field'] : self::$operatorList[$operator];
-			$sql .= sprintf($formatter, ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'`', ':'.$field.$valueSuffix);
+			$sql .= sprintf($formatter, ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'`', ':'.$fieldKey.$valueSuffix);
 		}elseif($operator == Operator::BETWEEN){
 			$i = 1;
 			$values = is_array($values) ? $values : array('' => $values);
 			foreach($values as $key => $val){
-				$sql .= ($i==1) ? ('`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`'.' BETWEEN :' .$field . $key.$valueSuffix) : (' AND :' . $field . $key.$valueSuffix);
+				$sql .= ($i==1) ? ('`'.$protectedPreffix.'`.`'.bqSQL($modelField).'`'.' BETWEEN :' .$fieldKey . $key.$valueSuffix) : (' AND :' . $fieldKey . $key.$valueSuffix);
 				$i++;
 				if($i==3){
 					break;
@@ -440,19 +457,22 @@ class DAOPDO extends DAO implements DAOImplementation{
 	
 	protected  function addParamsFromArray($query, $params, $valueSuffix='') {
 		$tmpValues = array();
-        foreach ($params as $field => $value) {
-			$values = is_array($value) ? $value['value'] : $value;
-			$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
-			if($values!==null){
-				$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
-				$values = is_array($values) ? $values : array('' => $values);
-				foreach($values as $key => $val){
-					$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);
-					$tmpValues[$field][$key] = $formattedValue;
-					$query->bindParam(':'.$field.$key.$valueSuffix, $tmpValues[$field][$key]);
+        foreach ($params as $fieldKey => $value) {
+			if(isset($value['group']) && $value['group'] && isset($value['fields'])){
+				$this->addParamsFromArray($query, $value['fields'], $fieldKey.$valueSuffix);
+			}else{
+				$values = is_array($value) ? $value['value'] : $value;
+				$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
+				if($values!==null){
+					$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
+					$values = is_array($values) ? $values : array('' => $values);
+					foreach($values as $key => $val){
+						$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);
+						$tmpValues[$fieldKey][$key] = $formattedValue;
+						$query->bindParam(':'.$fieldKey.$key.$valueSuffix, $tmpValues[$fieldKey][$key]);
+					}
 				}
 			}
-			
 		}
     }
     

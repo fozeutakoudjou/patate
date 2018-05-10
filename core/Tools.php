@@ -405,4 +405,40 @@ class Tools
 		}
         return $result;
     }
+	
+	public static function inArray($value, $array, $callback, $strict = false, $params = array())
+    {
+		$in = false;
+		foreach($array as $arrayValue){
+			$in = $callback($value, $arrayValue, $strict, $params);
+			if($in){
+				break;
+			}
+		}
+		return $in;
+    }
+	
+	public static function inAssociativeArray($value, $array, $valueKey, $strict = false)
+    {
+		return self::inArray($value, $array, function($value, $arrayValue, $strict, $params){
+			return  is_array($value) ? in_array($arrayValue[$params['valueKey']], $value, $strict) : ($strict ? ($arrayValue[$valueKey]===$value) : ($arrayValue[$params['valueKey']]==$value));
+		}, $strict, array('valueKey'=>$valueKey));
+    }
+	
+	public static function inModelArray($value, $models, $valueKey, $strict = false)
+    {
+		return self::inArray($value, $array, function($value, $arrayValue, $strict, $params){
+			$arrayValue =  $arrayValue->getPropertyValue($valueKey);
+			return  is_array($value) ? in_array($arrayValue[$params['valueKey']], $value, $strict) : ($strict ? ($arrayValue[$valueKey]===$value) : ($arrayValue[$params['valueKey']]==$value));
+		}, $strict, array('valueKey'=>$valueKey));
+    }
+	
+	public static function getMultipleValuesRestriction($field, $values)
+    {
+		$result = array();
+		foreach($values as $key => $value){
+			$result[$field.'_'.$key] = array('field'=>$field, 'value'=>$value);
+		}
+		return $result;
+    }
 }

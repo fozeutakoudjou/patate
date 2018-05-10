@@ -342,18 +342,18 @@ class Validate
     /**
      * Check for password validity
      *
-     * @param string $passwd Password to validate
+     * @param string $password Password to validate
      * @param int $size
      * @return bool Validity is ok or not
      */
-    public static function isPasswd($passwd, $size = Validate::PASSWORD_LENGTH)
+    public static function isPassword($password, $size = Validate::PASSWORD_LENGTH)
     {
-        return (Tools::strlen($passwd) >= $size && Tools::strlen($passwd) < 255);
+        return (StringTools::strlen($password) >= $size && StringTools::strlen($password) < 255);
     }
 
-    public static function isPasswdAdmin($passwd)
+    public static function isPasswordAdmin($password)
     {
-        return Validate::isPasswd($passwd, Validate::ADMIN_PASSWORD_LENGTH);
+        return Validate::isPassword($password, Validate::ADMIN_PASSWORD_LENGTH);
     }
 
     /**
@@ -762,15 +762,6 @@ class Validate
     }
 
     /**
-     * @deprecated 1.5.0 Use Validate::isBoolId()
-     */
-    public static function isBool_Id($ids)
-    {
-        Tools::displayAsDeprecated();
-        return Validate::isBoolId($ids);
-    }
-
-    /**
      * Check the localization pack part selected
      *
      * @param string $data Localization pack to check
@@ -850,7 +841,7 @@ class Validate
      */
     public static function isSiret($siret)
     {
-        if (Tools::strlen($siret) != 14) {
+        if (StringTools::strlen($siret) != 14) {
             return false;
         }
         $sum = 0;

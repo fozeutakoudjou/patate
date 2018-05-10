@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `c2w_language` (
 CREATE TABLE IF NOT EXISTS `c2w_group` (
 	`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`idParent` int(11) UNSIGNED,
+	type                 int(11) NOT NULL,
 	dateAdd              datetime,
 	dateUpdate           datetime,
 	PRIMARY KEY (`id`)
@@ -129,7 +130,7 @@ create table c2w_user
    lastConnectionData      text,
    deleted               bool DEFAULT '0',
    primary key (id),
-   UNIQUE KEY `UNIQUE_user_email` (`email`)
+   UNIQUE KEY `UNIQUE_user_email_type` (`type`, `email`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 /*==============================================================*/

@@ -36,18 +36,17 @@ class LoginAdminController extends AdminController
 	
 	protected function processTest()
     {
-		$generator = new HtmlGenerator($this->l('Submit'), $this->l('Back'), $this->formLanguages, $this->lang);
-		$formLogin = $generator->createForm(true, false,  '#', true, $this->l('Login'), '', '', 'submitLogin');
-		$inputEmail = $generator->createTextField('email', $this->l('Email'));
+		$formLogin = $this->generator->createForm(true, false,  '#', true, $this->l('Login'), '', '', 'submitLogin');
+		$inputEmail = $this->generator->createTextField('email', $this->l('Email'));
 		$inputEmail->setTemplateFile('login/generator/input_text', false);
-		$inputEmail->setLeftIcon($generator->createIcon('envelope'));
+		$inputEmail->setLeftIcon($this->generator->createIcon('envelope'));
 		
-		$inputPassword = $generator->createPasswordField('password', $this->l('Password'));
+		$inputPassword = $this->generator->createPasswordField('password', $this->l('Password'));
 		$inputPassword->setTemplateFile('login/generator/input_text', false);
-		$inputPassword->setLeftIcon($generator->createIcon('lock'));
+		$inputPassword->setLeftIcon($this->generator->createIcon('lock'));
 		
-		$inputStayLogged = $generator->createCheckbox('stay_logged_in', 'Stay logged in', true);
-		$passwordLink = $generator->createLink('Forgot Password?', '#', '', 'forget_password');
+		$inputStayLogged = $this->generator->createCheckbox('stay_logged_in', 'Stay logged in', true);
+		$passwordLink = $this->generator->createLink('Forgot Password?', '#', '', 'forget_password');
 		$passwordLink->setShowHide(true);
 		$passwordLink->setTargetToShow('.form_forget_password');
 		$passwordLink->setTargetToHide('.form_login');
@@ -59,8 +58,8 @@ class LoginAdminController extends AdminController
 		$formLogin->addChild($inputStayLogged);
 		$formLogin->addChild($passwordLink);
 		
-		$formForgetPass = $generator->createForm(true, true,  '#', true, $this->l('Forget Password ?'), '', '', 'submitForgot');
-		$inputEmail = $generator->createTextField('email_forgot', $this->l('Email'));
+		$formForgetPass = $this->generator->createForm(true, true,  '#', true, $this->l('Forget Password ?'), '', '', 'submitForgot');
+		$inputEmail = $this->generator->createTextField('email_forgot', $this->l('Email'));
 		$inputEmail->setTemplateFile('login/generator/input_text', false);
 		$formForgetPass->setSubLabel($this->l('Enter your e-mail to reset it.'));
 		$formForgetPass->addClass('form_forget_password');
@@ -75,7 +74,7 @@ class LoginAdminController extends AdminController
 		$this->processResult['content'] = $formLogin->generate().$formForgetPass->generate();
     }
 	
-	protected function checkUserAccess()
+	public function checkUserAccess($action)
     {
 		return true;
     }
