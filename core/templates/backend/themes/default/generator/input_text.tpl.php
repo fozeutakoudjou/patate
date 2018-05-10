@@ -12,22 +12,51 @@
 	<?php endif;?>
 	<div class=" <?php echo $item->getWidth();?>">
 <?php endif;?>
-		<div class="clearfix">
+		<?php 
+			$iconClass = '';
+			if($item->hasLeftIcon()){
+				$iconClass = $item->getLeftIcon()->isAddOnIcon() ? 'input-group' : 'input-icon';
+			}
+			if($item->hasRightIcon()){
+				$class = $item->getRightIcon()->isAddOnIcon() ? 'input-group' : 'input-icon';
+				$iconClass = ($class == $iconClass) ? $iconClass : $iconClass.' '.$class;
+			}
+			/*if(!$item->hasIcon()){
+				$icon = $item->hasLeftIcon() ? $item->getLeftIcon() : $item->getRightIcon();
+				$iconClass = $icon->isAddOnIcon() ? 'input-group' : 'input-icon';
+			}*/
+		?>
+		<div class="clearfix <?php if(!$item->isTranslatable()):?><?php echo $iconClass;?><?php endif;?>">
 			<?php if($item->isTranslatable()):?>
-				<div class="col-lg-9 translatable-field">
+				<div class="col-lg-9 translatable-field <?php echo $iconClass;?>">
 			<?php else:?>
 				<?php $languages=array(''=>'');?>
 			<?php endif;?>
-			
-			<?php if($item->hasLeftIcon()):?><?php echo $item->getLeftIcon()->generate();?><?php endif;?>
+			<?php if($item->hasLeftIcon()):?>
+				<?php if($item->getLeftIcon()->isAddOnIcon()):?>
+					<span class="input-group-addon">
+				<?php endif;?>
+				<?php echo $item->getLeftIcon()->generate();?>
+				<?php if($item->getRightIcon()->isAddOnIcon()):?>
+					</span>
+				<?php endif;?>
+			<?php endif;?>
 			
 			<?php foreach($languages as $key => $lang):?>
 				<?php $name = $tools->getFieldName($item->getName(), $key);?>
-				<input type="<?php echo $item->getType();?>" name="<?php echo $name;?>" id="<?php echo $name;?>" value="<?php echo $item->getFieldValue($key);?>"
+				<input type="<?php echo $item->getType();?>" name="<?php echo $name;?>" value="<?php echo $item->getFieldValue($key);?>"
 				class="form-control <?php echo $item->drawClasses();?> <?php echo $item->getLangClass($key);?>"  <?php echo $item->drawAttributes();?>
 				<?php if($item->hasPlaceholder()):?> placeholder="<?php echo $item->getPlaceholder();?>" <?php endif;?>  style="<?php echo $item->getLangVisible($key);?>"/>
 			<?php endforeach;?>
-			<?php if($item->hasRightIcon()):?><?php echo $item->getRightIcon()->generate();?><?php endif;?>
+			<?php if($item->hasRightIcon()):?>
+				<?php if($item->getRightIcon()->isAddOnIcon()):?>
+					<span class="input-group-addon">
+				<?php endif;?>
+				<?php echo $item->getRightIcon()->generate();?>
+				<?php if($item->getRightIcon()->isAddOnIcon()):?>
+					</span>
+				<?php endif;?>
+			<?php endif;?>
 			<?php if($item->isTranslatable()):?>
 				</div>
 				<div class="col-lg-2">

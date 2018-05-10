@@ -99,17 +99,50 @@ class User extends Model{
         if (!Validate::isUnsignedId($id) || !$passValidate) {
             die('Invalid');
         }
-		$dao = Factory::getDAOInstance('User');
-		$fields = array('id'=>$id, 'password'=>$password, 'active'=>1);
+		$fields = array('id'=>$id);
+		$fields = self::addRestrict($fields, $isAdmin, $password, true);
+		$count = self::getDao()->getByFieldsCount($fields);
+        return ($count>0);
+    }
+	
+	protected static function getDao()
+    {
+		return Factory::getDAOInstance('User');
+    }
+	
+	public static function getAdminByEmail($email, $password = null, $onlyActive = true)
+    {
+		return self::getByEmail($email, $password, $onlyActive, true);
+    }
+	
+	public static function addRestrict($fields, $isAdmin, $password = null, $onlyActive = true)
+    {
 		if(!$isAdmin){
 			$fields['type_group']= array(
 				'group'=>true,
 				'logicalOperator'=>LogicalOperator::OR_,
 				'fields'=> Tools::getMultipleValuesRestriction('type', array(UserType::ADMIN, UserType::SUPER_ADMIN))
 			);
-		} 
-		$count = $dao->getByFieldsCount($fields);
-        return ($count>0);
+		}
+		if($onlyActive){
+			$fields['active']=1; 
+		}
+		if($password!==null){
+			$fields['password']=$password; 
+		}
+		return $fields;
+    }
+	
+	public static function getByEmail($email, $password = null, $onlyActive = true, $isAdmin = false)
+    {
+		$passValidate = $isAdmin ? Validate::isPasswordAdmin($password) : Validate::isPassword($password);
+        if (!Validate::isEmail($email) || (($password != null) && !Validate::isPassword($password))) {
+            die('Invalid');
+        }
+		$fields = array('email'=>$email);
+		$fields = self::addRestrict($fields, $isAdmin, $password, $onlyActive);
+		$users = self::getDao()->getByFields($fields);
+		return empty($users) ? null : $users[0];
     }
 	
 	public function isSuperAdmin()

@@ -1,8 +1,13 @@
+<?php $item->prepareContent();?>
 <?php if(!$item->isContentOnly()):?>
-<form class="login-form <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>">
+<form class="login-form <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> action="<?php echo $item->getFormAction();?>"
+	method="<?php echo $item->getMethod();?>" style="<?php echo $item->drawVisible();?>">
 <?php endif;?>
 <input type="hidden" name="<?php echo $item->getSubmitAction();?>" value="1"/>
 <h3 class="form-title"><?php echo $item->getLabel();?> </h3>
+<div class="alert alert-danger" style="<?php echo $item->drawErrorVisible();?>">
+	<button type="button" class="close" data-dismiss="alert">&times;</button> <?php echo $item->getErrorText();?> 
+</div>
 <?php echo $item->getChild('email')->generate();?>
 <?php echo $item->getChild('password')->generate();?>
 <div class="form-actions">

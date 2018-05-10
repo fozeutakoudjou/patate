@@ -1,13 +1,15 @@
 <?php
 namespace core\controllers\backend;
 use core\generator\html\HtmlGenerator;
-use core\generator\html\Block;
+use core\Validate;
+use core\Tools;
+use core\models\User;
 class LoginAdminController extends AdminController
 {
 	protected $layout = 'login/layout';
 	protected $header = 'login/header';
 	protected $footer = 'login/footer';
-	protected $defaultAction = 'test';
+	protected $defaultAction = 'login';
     public function __construct()
     {
         $this->bootstrap = true;
@@ -34,45 +36,59 @@ class LoginAdminController extends AdminController
         $this->addJS(_PS_JS_DIR_.'vendor/ladda.js');
     }*/
 	
-	protected function processTest()
+	protected function processLogin()
     {
-		$formLogin = $this->generator->createForm(true, false,  '#', true, $this->l('Login'), '', '', 'submitLogin');
+		$this->createForm();
+		$this->formPassword->setVisible(false);
+		$submitted = false;
+		if (Tools::isSubmit($this->form->getSubmitAction())) {
+            $this->doConnect();
+			$submitted = true;
+        } elseif (Tools::isSubmit($this->formPassword->getSubmitAction())) {
+            $this->doForgot();
+			$submitted = true;
+        }
+		if(!$submitted || $this->hasErrors() || Tools::isSubmit($this->formPassword->getSubmitAction())){
+			$this->createFormFields();
+			$this->processResult['content'] = $this->form->generate().$this->formPassword->generate();
+		}
+    }
+	
+	protected function createForm($update = false)
+    {
+		$this->generator->setDefaultCancelText($this->l('Back'));
+		$this->generator->setDefaultSubmitText($this->l('Submit'));
+		$this->generator->setDefaultSubmitIcon('');
+		$this->generator->setDefaultCancelIcon('');
+		
+		$formAction = $this->createUrl();
+		$this->form = $this->generator->createForm(true, false, '#', true, $this->l('Login'), '', $formAction, 'submitLogin'/*, $this->l('Email or password are incorrect')*/);
+		$this->formPassword = $this->generator->createForm(true, true, '#', true, $this->l('Forget Password ?'), '', $formAction, 'submitForgot', '', $this->l('Enter your e-mail to reset it.'));
+		$this->formPassword->addClass('form_forget_password');
+		$this->formPassword->setTemplateFile('login/generator/form_forget_password', false);
+    }
+	
+	protected function createFormFields($update = false)
+    {
 		$inputEmail = $this->generator->createTextField('email', $this->l('Email'));
 		$inputEmail->setTemplateFile('login/generator/input_text', false);
-		$inputEmail->setLeftIcon($this->generator->createIcon('envelope'));
-		
+		$inputEmail->setLeftIcon($this->generator->createIcon('envelope', false));
 		$inputPassword = $this->generator->createPasswordField('password', $this->l('Password'));
 		$inputPassword->setTemplateFile('login/generator/input_text', false);
-		$inputPassword->setLeftIcon($this->generator->createIcon('lock'));
+		$inputPassword->setLeftIcon($this->generator->createIcon('lock', false));
 		
-		$inputStayLogged = $this->generator->createCheckbox('stay_logged_in', 'Stay logged in', true);
-		$passwordLink = $this->generator->createLink('Forgot Password?', '#', '', 'forget_password');
-		$passwordLink->setShowHide(true);
-		$passwordLink->setTargetToShow('.form_forget_password');
-		$passwordLink->setTargetToHide('.form_login');
-		$formLogin->getSubmit()->setIcon(null);
-		$formLogin->setTemplateFile('login/generator/form', false);
-		$formLogin->addClass('form_login');
-		$formLogin->addChild($inputEmail);
-		$formLogin->addChild($inputPassword);
-		$formLogin->addChild($inputStayLogged);
-		$formLogin->addChild($passwordLink);
+		$passwordLink = $this->generator->createLink($this->l('Forgot Password?'), '#', '',$this->l('Forgot Password?'), false,  'forget_password');
+		$this->generator->setAsShowHide($passwordLink, '.form_forget_password', '.form_login');
+		$this->form->setTemplateFile('login/generator/form', false);
+		$this->form->addClass('form_login');
+		$this->form->addChild($inputEmail);
+		$this->form->addChild($inputPassword);
+		$this->form->addChild($this->generator->createCheckbox('stay_logged_in', 'Stay logged in', true));
+		$this->form->addChild($passwordLink);
 		
-		$formForgetPass = $this->generator->createForm(true, true,  '#', true, $this->l('Forget Password ?'), '', '', 'submitForgot');
-		$inputEmail = $this->generator->createTextField('email_forgot', $this->l('Email'));
-		$inputEmail->setTemplateFile('login/generator/input_text', false);
-		$formForgetPass->setSubLabel($this->l('Enter your e-mail to reset it.'));
-		$formForgetPass->addClass('form_forget_password');
-		$formForgetPass->addChild($inputEmail);
-		$formForgetPass->setTemplateFile('login/generator/form_forget_password', false);
-		$formForgetPass->getSubmit()->setIcon(null);
-		$formForgetPass->getCancel()->setLabel($this->l('Back'));
-		$formForgetPass->getCancel()->setShowHide(true);
-		$formForgetPass->getCancel()->setTargetToShow('.form_login');
-		$formForgetPass->getCancel()->setTargetToHide('.form_forget_password');
-		$formForgetPass->setVisible(false);
-		$this->processResult['content'] = $formLogin->generate().$formForgetPass->generate();
-    }
+		$this->formPassword->addChild($inputEmail);
+		$this->generator->setAsShowHide($this->formPassword->getCancel(), '.form_login', '.form_forget_password');
+	}
 	
 	public function checkUserAccess($action)
     {
@@ -163,55 +179,36 @@ class LoginAdminController extends AdminController
         return true;
     }
 
-    /**
-     * All BO users can access the login page
-     *
-     * @return bool
-     */
-    public function viewAccess()
-    {
-        return true;
-    }
-
-    public function postProcess()
-    {
-        if (Tools::isSubmit('submitLogin')) {
-            $this->processLogin();
-        } elseif (Tools::isSubmit('submitForgot')) {
-            $this->processForgot();
-        }
-    }
-
-    public function processLogin()
+    public function doConnect()
     {
         /* Check fields validity */
-        $passwd = trim(Tools::getValue('passwd'));
+        $password = trim(Tools::getValue('password'));
         $email = trim(Tools::getValue('email'));
         if (empty($email)) {
-            $this->errors[] = Tools::displayError('Email is empty.');
+            $this->formErrors['email'] = $this->l('Email is empty.');
         } elseif (!Validate::isEmail($email)) {
-            $this->errors[] = Tools::displayError('Invalid email address.');
+            $this->formErrors['email']  = $this->l('Invalid email address.');
         }
 
-        if (empty($passwd)) {
-            $this->errors[] = Tools::displayError('The password field is blank.');
-        } elseif (!Validate::isPasswd($passwd)) {
-            $this->errors[] = Tools::displayError('Invalid password.');
+        if (empty($password)) {
+            $this->formErrors['password'] = $this->l('The password field is blank.');
+        } elseif (!Validate::isPassword($password)) {
+            $this->formErrors['password'] = $this->l('Invalid password.');
         }
 
-        if (!count($this->errors)) {
-            // Find employee
+        if (!$this->hasErrors()) {
+			$loadedUser = User::getAdminByEmail($email, $password);
+			$user  = ($loadedUser == null) ? $this->context->getUser() : $loadedUser;
             $this->context->employee = new Employee();
             $is_employee_loaded = $this->context->employee->getByEmail($email, $passwd);
             $employee_associated_shop = $this->context->employee->getAssociatedShops();
-            if (!$is_employee_loaded) {
-                $this->errors[] = Tools::displayError('The Employee does not exist, or the password provided is incorrect.');
-                $this->context->employee->logout();
-            } elseif (empty($employee_associated_shop) && !$this->context->employee->isSuperAdmin()) {
-                $this->errors[] = Tools::displayError('This employee does not manage the shop anymore (Either the shop has been deleted or permissions have been revoked).');
-                $this->context->employee->logout();
-            } else {
-                PrestaShopLogger::addLog(sprintf($this->l('Back Office connection from %s', 'AdminTab', false, false), Tools::getRemoteAddr()), 1, null, '', 0, true, (int)$this->context->employee->id);
+            if ($loadedUser == null) {
+                $this->errors[] = $this->l('The user does not exist, or the password provided is incorrect.');
+                $user->logout();
+            }else{
+				
+				//Make log
+                //PrestaShopLogger::addLog(sprintf($this->l('Back Office connection from %s', 'AdminTab', false, false), Tools::getRemoteAddr()), 1, null, '', 0, true, (int)$this->context->employee->id);
 
                 $this->context->employee->remote_addr = (int)ip2long(Tools::getRemoteAddr());
                 // Update cookie
@@ -223,34 +220,45 @@ class LoginAdminController extends AdminController
                 $cookie->remote_addr = $this->context->employee->remote_addr;
 
                 if (!Tools::getValue('stay_logged_in')) {
-                    $cookie->last_activity = time();
+                    $cookie->lastActivity = time();
                 }
 
                 $cookie->write();
 
                 // If there is a valid controller name submitted, redirect to it
-                if (isset($_POST['redirect']) && Validate::isControllerName($_POST['redirect'])) {
+                /*if (isset($_POST['redirect']) && Validate::isControllerName($_POST['redirect'])) {
                     $url = $this->context->link->getAdminLink($_POST['redirect']);
                 } else {
                     $tab = new Tab((int)$this->context->employee->default_tab);
                     $url = $this->context->link->getAdminLink($tab->class_name);
-                }
+                }*/
 
-                if (Tools::isSubmit('ajax')) {
-                    die(Tools::jsonEncode(array('hasErrors' => false, 'redirect' => $url)));
-                } else {
-                    $this->redirect_after = $url;
-                }
+                $this->redirectAfter = true;
             }
-        }
-        if (Tools::isSubmit('ajax')) {
-            die(Tools::jsonEncode(array('hasErrors' => true, 'errors' => $this->errors)));
-        }
+        }else{
+			$this->form->setErrors($this->formErrors);
+			$this->form->setValue(array('email'=>$email));
+		}
     }
 
-    public function processForgot()
+    public function doForgot()
     {
-        if (_PS_MODE_DEMO_) {
+        $email = trim(Tools::getValue('email'));
+        if (empty($email)) {
+            $this->formErrors['email'] = $this->l('Email is empty.');
+        } elseif (!Validate::isEmail($email)) {
+            $this->formErrors['email']  = $this->l('Invalid email address.');
+        }
+
+        if (!$this->hasErrors()) {
+			
+		}else{
+			$this->formPassword->setErrors($this->formErrors);
+			$this->formPassword->setValue(array('email'=>$email));
+			$this->formPassword->setVisible(true);
+			$this->form->setVisible(false);
+		}
+        /*if (_PS_MODE_DEMO_) {
             $this->errors[] = Tools::displayError('This functionality has been disabled.');
         } elseif (!($email = trim(Tools::getValue('email_forgot')))) {
             $this->errors[] = Tools::displayError('Email is empty.');
@@ -301,6 +309,6 @@ class LoginAdminController extends AdminController
             }
         } elseif (Tools::isSubmit('ajax')) {
             die(Tools::jsonEncode(array('hasErrors' => true, 'errors' => $this->errors)));
-        }
+        }*/
     }
 }

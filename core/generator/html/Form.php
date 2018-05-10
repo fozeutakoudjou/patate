@@ -12,12 +12,13 @@ class Form extends Block{
 	
 	protected $enctype='multipart/form-data';
 	
-	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $errorText = '', $method = 'post') {
+	public function __construct($decorated = true, $label ='', $icon = null, $formAction='', $submitAction = '', $errorText = '', $subLabel = '', $method = 'post') {
 		parent::__construct($decorated, $label, $icon);
 		$this->setFormAction($formAction);
 		$this->setMethod($method);
 		$this->setSubmitAction($submitAction);
 		$this->setErrorText($errorText);
+		$this->setSubLabel($subLabel);
 		
 	}
 	

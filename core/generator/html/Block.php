@@ -33,6 +33,13 @@ class Block extends Element{
 	
 	public function generateContent() {
 		$html='';
+		$this->prepareContent();
+		foreach ($this->contents as $content) {
+			$html.=$content->generate();
+		}
+		return $html;
+	}
+	public function prepareContent() {
 		foreach ($this->contents as $content) {
 			if(isset($this->value[$content->getName()]) && $content->needValue() && !$content->isValueSetted()){
 				$content->setValue($this->value[$content->getName()]);
@@ -40,9 +47,7 @@ class Block extends Element{
 			if(isset($this->errors[$content->getName()]) && $content->needError() && !$content->isErrorSetted()){
 				$content->setErrors($this->errors[$content->getName()]);
 			}
-			$html.=$content->generate();
 		}
-		return $html;
 	}
 	public function generate() {
 		return parent::generate();

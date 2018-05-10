@@ -9,7 +9,6 @@ class InputText extends Field{
 	
 	function __construct($name, $label='', $type = 'text') {
 		parent::__construct($name, $label);
-		$this->setName($name);
 		$this->setType($type);
 	}
 	
@@ -42,6 +41,10 @@ class InputText extends Field{
 	
 	public function hasPlaceholder(){
 		return !empty($placeholder->placeholder);
+	}
+	
+	public function hasIcon(){
+		return ($this->hasLeftIcon() || $this->hasRightIcon());
 	}
 	
 	public function hasLeftIcon(){

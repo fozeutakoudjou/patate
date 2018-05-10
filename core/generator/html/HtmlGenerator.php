@@ -95,10 +95,10 @@ class HtmlGenerator{
 		$icon = empty($icon) ? null : $this->createIcon($icon);
 		return new Block($decorated, $label, $icon);
 	}
-	public function createForm($useSubmit = true, $useCancel = true, $cancelLink = '#', $decorated = true, $label = '', $icon = '', $formAction = '', $submitAction = '', $errorText = '', $method = 'post'){
+	public function createForm($useSubmit = true, $useCancel = true, $cancelLink = '#', $decorated = true, $label = '', $icon = '', $formAction = '', $submitAction = '', $errorText = '',  $subLabel = '', $method = 'post'){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
 		$errorText = empty($errorText) ? $this->defaultFormErrorText : $errorText;
-		$form = new Form($decorated, $label, $icon, $formAction, $submitAction, $errorText, $method);
+		$form = new Form($decorated, $label, $icon, $formAction, $submitAction, $errorText,  $subLabel, $method);
 		if($useSubmit){
 			$form->setSubmit($this->createButton($this->defaultSubmitText, true, $this->defaultSubmitIcon));
 		}
@@ -107,12 +107,12 @@ class HtmlGenerator{
 		}
 		return $form;
 	}
-	public function createIcon($value){
-		return new Icon($value, false);
+	public function createIcon($value, $addOnIcon = true){
+		return new Icon($value, false, $addOnIcon);
 	}
 	
-	public function createTextIcon($value){
-		return new Icon($value, true);
+	public function createTextIcon($value, $addOnIcon = true){
+		return new Icon($value, true, $addOnIcon);
 	}
 	
 	public function createContent($content){
@@ -127,6 +127,13 @@ class HtmlGenerator{
 	public function createLink($label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
 		return new Link($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
+	}
+	
+	public function setAsShowHide($item, $targetToShow, $targetToHide){
+		$item->setShowHide(true);
+		$item->setTargetToShow($targetToShow);
+		$item->setTargetToHide($targetToHide);
+		return $item;
 	}
 	
 	public function createTextField($name, $label = ''){
