@@ -15,6 +15,10 @@ class Block extends Element{
 		$this->setDecorated($decorated);
 	}
 	
+	public function setChildValue($name, $value) {
+		return $this->value[$name] = $value;
+	}
+	
 	public function hasChild($name) {
 		return isset($this->contents[$name]);
 	}

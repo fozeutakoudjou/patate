@@ -20,6 +20,7 @@ use core\constant\WrapperType;
 abstract class BaseAdminController extends Controller
 {
 	const ID_PARAM_URL = 'param1';
+	const REDIRECT_PREFIX = 'redirect_';
 	protected $availableActions = array();
 	
     protected $modelClassName;
@@ -186,9 +187,18 @@ abstract class BaseAdminController extends Controller
             if (Tools::getValue('email') && Validate::isEmail(Tools::getValue('email'))) {
                 $email = Tools::getValue('email');
             }
+			if(isset($_GET['email'])){
+				unset($_GET['email']);
+			}
+			
 			$redirectParams = array();
 			if(!isset($_GET['logout']) && ($this->controllerClass != 'PageNotFound') && Tools::getValue('controller')){
-				$redirectParams['redirect'] = strtolower($this->controllerClass);
+				unset($_GET['is_module']);
+				unset($_GET['controllerUri']);
+				foreach($_GET as $key => $value){
+					$redirectParams[self::REDIRECT_PREFIX.$key] = $value;
+					unset($_GET[$key]);
+				}
 			}
 			if($email){
 				$redirectParams['email'] = $email;

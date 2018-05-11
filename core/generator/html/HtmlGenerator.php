@@ -140,6 +140,10 @@ class HtmlGenerator{
 		return new InputText($name, $label, 'text');
 	}
 	
+	public function createHiddenInput($name, $value = null){
+		return new InputHidden($name, $value);
+	}
+	
 	public function createPasswordField($name, $label = ''){
 		return new InputText($name, $label, 'password');
 	}

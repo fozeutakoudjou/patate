@@ -44,7 +44,7 @@
 		<div class="page-header-inner">
 			<!-- BEGIN LOGO -->
 			<div class="page-logo">
-				<a href="admin/index.html">
+				<a href="<?php echo $link->getAdminLink('', 'index');?>">
 					<img src="<?php echo $imgAdminThemeDir;?>logo.png" alt="logo" class="logo-default"/>
 				</a>
 				<div class="menu-toggler sidebar-toggler hide">
@@ -92,8 +92,8 @@
 							<li class="divider">
 							</li>
 							<li>
-								<a href="<?php echo '';?>admin/deconnexion.html">
-								<i class="fa fa-key"></i> Log Out </a>
+								<a href="<?php echo $link->getAdminLink('', 'index', array('logout'=>1));?>">
+								<i class="fa fa-key"></i> <?php echo $tools->l('Log out');?> </a>
 							</li>
 						</ul>
 					</li>

@@ -139,6 +139,7 @@ class User extends Model{
         if (!Validate::isEmail($email) || (($password != null) && !Validate::isPassword($password))) {
             die('Invalid');
         }
+		$password = ($password===null) ? $password : Tools::encrypt($password);
 		$fields = array('email'=>$email);
 		$fields = self::addRestrict($fields, $isAdmin, $password, $onlyActive);
 		$users = self::getDao()->getByFields($fields);

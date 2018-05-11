@@ -1,0 +1,1 @@
+<input type="hidden" name="<?php echo $item->getName();?>" value="<?php echo $item->getValue();?>" class="<?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> />

@@ -63,9 +63,9 @@ class Context
 			$this->cookie = new Cookie($cookieName, '', $cookieLifetime);
 			
 			$daoUser = Factory::getDAOInstance('User');
-			$user = $daoUser->getById($this->cookie->id_user, true);
+			$user = $daoUser->getById($this->cookie->idUser, true);
 			if($isAdmin && ($user != null) && $user->isAdmin()){
-				$cookie->lang = $user->getPrefferedLang();
+				$this->cookie->lang = $user->getPreferredLang();
 			}
 			$activedLanguages = Language::getLanguages(true);
 			$lang = (isset($this->cookie->lang) && $this->cookie->lang && isset($activedLanguages[$this->cookie->lang])) ? $this->cookie->lang : Configuration::get('DEFAULT_LANG');

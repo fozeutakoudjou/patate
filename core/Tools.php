@@ -13,7 +13,7 @@ class Tools
     * @param string $flag Output type (NUMERIC, ALPHANUMERIC, NO_NUMERIC, RANDOM)
     * @return bool|string Password
     */
-    public static function passwdGen($length = 8, $flag = 'ALPHANUMERIC')
+    public static function generatePassword($length = 8, $flag = 'ALPHANUMERIC')
     {
         $length = (int)$length;
 
@@ -196,11 +196,11 @@ class Tools
     /**
     * Encrypt password
     *
-    * @param string $passwd String to encrypt
+    * @param string $password String to encrypt
     */
-    public static function encrypt($passwd)
+    public static function encrypt($password)
     {
-        return md5(_COOKIE_KEY_.$passwd);
+        return md5(_COOKIE_KEY_.$password);
     }
 
     /**
@@ -440,5 +440,37 @@ class Tools
 			$result[$field.'_'.$key] = array('field'=>$field, 'value'=>$value);
 		}
 		return $result;
+    }
+	
+	public static function getRemoteAddress()
+    {
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+        } else {
+            $headers = $_SERVER;
+        }
+
+        if (array_key_exists('X-Forwarded-For', $headers)) {
+            $_SERVER['HTTP_X_FORWARDED_FOR'] = $headers['X-Forwarded-For'];
+        }
+
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'] && (!isset($_SERVER['REMOTE_ADDR'])
+            || preg_match('/^127\..*/i', trim($_SERVER['REMOTE_ADDR'])) || preg_match('/^172\.16.*/i', trim($_SERVER['REMOTE_ADDR']))
+            || preg_match('/^192\.168\.*/i', trim($_SERVER['REMOTE_ADDR'])) || preg_match('/^10\..*/i', trim($_SERVER['REMOTE_ADDR'])))) {
+            if (strpos($_SERVER['HTTP_X_FORWARDED_FOR'], ',')) {
+                $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                return $ips[0];
+            } else {
+                return $_SERVER['HTTP_X_FORWARDED_FOR'];
+            }
+        } else {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+    }
+	
+	public static function getIntRemoteAddress($address = null)
+    {
+		$address = ($address === null) ? self::getRemoteAddress() : $address;
+        return (int)ip2long($address);
     }
 }
