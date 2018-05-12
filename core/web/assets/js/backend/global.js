@@ -1,7 +1,10 @@
 $(document).ready(function() {
 	handleGlobalEvent();
+	handleMenu();
 });
-
+function handleMenu(){
+	$(".menu_item.active").parents(".menu_item").addClass("active");
+}
 function handleGlobalEvent(){
 	$(document).on("click", ".show_hide", function(e){
 		e.preventDefault();
@@ -31,6 +34,7 @@ function handleGlobalEvent(){
 		checkConfirm(e, function(target){
 			var form = target.closest("form");
 			form.find("input[name='action']:first").val(target.attr("data-action"));
+			form.find(".bulkAdditionalData:first").val(target.attr("data-additionals"));
 			form.submit();
 		});
 	});

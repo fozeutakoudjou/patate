@@ -152,8 +152,8 @@ class HtmlGenerator{
 		return new InputText($name, $label, 'email');
 	}
 	
-	public function createCheckbox($name, $label = '', $checked = false){
-		return new Checkbox($name, $label, $checked);
+	public function createCheckbox($name, $label = '', $checked = false, $value = null){
+		return new Checkbox($name, $label, $checked, $value);
 	}
 	
 	public function createTable($label = '', $icon = '', $resetHref = '#', $decorated = true){
@@ -175,27 +175,30 @@ class HtmlGenerator{
 		return new Column($table, $label, $name, $dataType, $searchType, $sortable, $searchable, $searchOptions, $dataOptions);
 	}
 	
-	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = ''){
+	public function createTableAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $accessChecked = false){
 		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$table->addTableAction($link);
+		$link->setAccessChecked($accessChecked);
 		return $link;
 	}
 	
-	public function createBulkAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $confirm = false, $confirmText = ''){
+	public function createBulkAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $confirm = false, $confirmText = '', $accessChecked = false){
 		$link = $this->createLink($label, $href, $icon, $title, $useOfButtonStyle, $name, $action);
 		$table->addBulkAction($link);
 		$link->setConfirm($confirm);
 		$link->setConfirmText($confirmText);
+		$link->setAccessChecked($accessChecked);
 		return $link;
 	}
 	
-	public function createRowAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $urlParams = array(), $default = false, $confirm = false, $confirmText = '', $autoConfirm = false, $addToTable = true, $class = ''){
+	public function createRowAction($table, $label, $href = '#', $icon = '', $title = '', $useOfButtonStyle = false, $name = '', $action = '', $urlParams = array(), $default = false, $confirm = false, $confirmText = '', $autoConfirm = false, $addToTable = true, $class = '', $accessChecked = false){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
 		
 		$link = new RowAction($table, $label, $href, $icon, $title, $useOfButtonStyle, $name, $action, $urlParams, $default);
 		$link->setConfirm($confirm);
 		$link->setConfirmText($confirmText);
 		$link->setAutoConfirm($autoConfirm);
+		$link->setAccessChecked($accessChecked);
 		if(!empty($class)){
 			$link->addClass($class);
 		}

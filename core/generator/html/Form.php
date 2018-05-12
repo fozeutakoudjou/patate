@@ -22,6 +22,11 @@ class Form extends Block{
 		
 	}
 	
+	public function generateContent() {
+		$this->addChild(new InputHidden($this->submitAction, 1));
+		return parent::generateContent();
+	}
+	
 	public function hasCancel(){
 		return ($this->cancel!=null);
 	}

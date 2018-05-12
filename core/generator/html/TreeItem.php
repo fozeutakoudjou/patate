@@ -5,6 +5,7 @@ class TreeItem extends Element{
 	protected $last = false;
 	protected $subObjects;
 	protected $renderingCancelled = false;
+	protected $content;
 	
 	public function __construct($value, $subObjects = array()) {
 		$this->setValue($value);
@@ -32,6 +33,13 @@ class TreeItem extends Element{
 	
 	public function setLast($last) {
 		$this->last = $last;
+	}
+	public function getContent() {
+		return $this->content;
+	}
+	
+	public function setContent($content) {
+		$this->content = $content;
 	}
 	public function setSubObjects($subObjects) {
 		$this->subObjects = $subObjects;

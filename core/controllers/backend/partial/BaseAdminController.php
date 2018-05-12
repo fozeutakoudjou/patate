@@ -150,6 +150,7 @@ abstract class BaseAdminController extends Controller
 			ActionCode::DELETE => $this->l('Deleted successfully'),
 			ActionCode::ACTIVATE => $this->l('Activated successfully'),
 			ActionCode::DESACTIVATE => $this->l('Desactivated successfully'),
+			ActionCode::CHANGE_FIELD_VALUE => $this->l('Value changed successfully'),
 		);
 	}
 	protected function getSuccessLabel($code)
@@ -233,12 +234,13 @@ abstract class BaseAdminController extends Controller
 	}
 	protected function processAction()
     {
+		$actionExist = array_key_exists($this->action, $this->availableActions);
 		$action = StringTools::toCamelCase($this->action, true);
 		$ajaxProcessUsed = false;
-		if($this->ajax && method_exists($this, 'ajaxProcess'.$action)){
+		if($actionExist && $this->ajax && method_exists($this, 'ajaxProcess'.$action)){
 			$this->{'ajaxProcess'.$action}();
 			$ajaxProcessUsed = true;
-		}elseif(method_exists($this, 'process'.$action)){
+		}elseif($actionExist && method_exists($this, 'process'.$action)){
 			$this->{'process'.$action}();
 		}else{
 			$this->errors[] = $this->l('The action you specified does not exist');
@@ -365,21 +367,24 @@ abstract class BaseAdminController extends Controller
 	
 	public function formatMenuItem($item)
     {
+		$item->addWrapperClass('menu_item');
 		$menu = $item->getValue();
+		$title = empty($menu->getTitle()) ? $menu->getName() : $menu->getTitle();
+		$link = $this->generator->createLink($menu->getName(), 'javascript:void(0);', $menu->getIconClass(), $title);
 		$action = empty($menu->getIdAction()) ? self::DEFAULT_ACTION : $menu->getAssociated('idAction')->getCode();
 		if(($this->action == $action)&& ($menu->getIdWrapper() == $this->wrapper->getId())){
 			$item->addWrapperClass('active');
 			$item->addAdditionalData('active', 1);
+			$this->addJsVariable('activeSetted', 1);
 		}
-		$href = 'javascript:void(0);';
 		if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action)){
 			if($menu->isClickable()){
 				$params = array();
 				if($action!=self::DEFAULT_ACTION){
 					$params['action'] = $action;
 				}
-				$href = $this->context->getLink()->getAdminLink($this->moduleName, strtolower($menu->getAssociated('idWrapper')->getTarget()), $params);
-				if($menu->isClickable()){
+				$link->setHref($this->context->getLink()->getAdminLink($this->moduleName, strtolower($menu->getAssociated('idWrapper')->getTarget()), $params));
+				if($menu->isNewTab()){
 					$item->addAttribute('target', '_blank');
 				}
 			}
@@ -389,7 +394,7 @@ abstract class BaseAdminController extends Controller
 			}
 		}
 		
-		$item->addAdditionalData('href', $href);
+		$item->setContent($link);
 	}
 	
 	protected function renderTpl($name, $useModule = true)

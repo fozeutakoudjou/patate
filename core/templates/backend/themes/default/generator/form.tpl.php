@@ -28,7 +28,6 @@
 <form class="form-horizontal <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?> action="<?php echo $item->getFormAction();?>" 
 	method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
 <?php endif;?>
-	<input type="hidden" name="<?php echo $item->getSubmitAction();?>" value="1"/>
 	<div class="form-body">
 		<div class="alert alert-danger" style="<?php echo $item->drawErrorVisible();?>">
 			<button type="button" class="close" data-dismiss="alert">&times;</button> <?php echo $item->getErrorText();?> 

@@ -4,6 +4,7 @@ use core\Tools;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\dao\Operator;
+use core\constant\ActionCode;
 class AdminMenuAdminController extends AdminController
 {	
 	protected $modelClassName = 'AdminMenu';
@@ -21,9 +22,24 @@ class AdminMenuAdminController extends AdminController
 		$this->changeColumnOptions('idAction', ColumnType::OPTION, SearchType::SELECT, $actionOptions, $actionOptions);
 		$parentOptions = $this->createOptions($this->modelClassName, '', array(), true);
 		$this->changeColumnOptions('idParent', ColumnType::OPTION, SearchType::SELECT, $parentOptions, $parentOptions);
+		$this->setColumnAsChangeFieldValue('clickable');
+		$this->setColumnAsChangeFieldValue('newTab');
 		/*$field = Tools::formatForeignField('idWrapper', 'name');
 		$this->generator->createColumn($this->table, $field, $field, ColumnType::TEXT, SearchType::TEXT, true, true);
 		$this->associationList['idWrapper'] = array();*/
+	}
+	protected function createBulkActions() {
+		$this->addBulkChangeFieldValue('clickable', $this->getBoolBulkOptions($this->l('Make selection clickable'), $this->l('Make selection unclickable'), 'hand-pointer-o'));
+		$this->addBulkChangeFieldValue('newTab', $this->getBoolBulkOptions($this->l('Make selection openable in new tab'), $this->l('Make selection openable in same tab'), 'external-link'));
+		parent::createBulkActions();
+	}
+	
+	protected function initSuccessLabels()
+    {
+		$this->successLabels[$this->getValueChangeCode('clickable', 1)] = $this->l('Made clickable successfully');
+		$this->successLabels[$this->getValueChangeCode('clickable', 0)] = $this->l('Made unclickable successfully');
+		$this->successLabels[$this->getValueChangeCode('newTab', 1)] = $this->l('Made openable in a new tab successfully');
+		$this->successLabels[$this->getValueChangeCode('newTab', 0)] = $this->l('Made openable in same tab successfully');
 	}
 	
 	protected function createFieldByDefinition($fieldDefinition, $field)

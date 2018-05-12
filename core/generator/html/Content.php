@@ -8,6 +8,7 @@ class Content{
 	protected $templateFile;
 	protected $action;
 	protected $contentForced = false;
+	protected $accessChecked = false;
 	
 	protected static $languages = array();
 	
@@ -31,7 +32,7 @@ class Content{
 	}
 	public function generate() {
 		$content = '';
-		if(empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action)){
+		if($this->accessChecked || empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action)){
 			$content = $this->html;
 			if(!$this->contentForced && !empty($this->templateFile)){
 				$template = self::$template;
@@ -79,6 +80,12 @@ class Content{
 	
 	public function setAction($action){
 		$this->action=$action;
+	}
+	public function isAccessChecked() {
+		return $this->accessChecked;
+	}
+	public function setAccessChecked($accessChecked){
+		$this->accessChecked=$accessChecked;
 	}
 	
 	public static function setLanguages($languages){

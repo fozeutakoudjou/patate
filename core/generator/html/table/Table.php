@@ -6,6 +6,7 @@ use core\generator\html\Checkbox;
 use core\generator\html\Icon;
 use core\generator\html\Button;
 use core\generator\html\Link;
+use core\generator\html\InputHidden;
 use core\Context;
 class Table extends Form{
 	protected $templateFile = 'generator/table/table';
@@ -65,6 +66,13 @@ class Table extends Form{
 		$this->bulkActionText = $bulkActionText;
 		$this->searchButton->addClass('table_search_btn');
 	}
+	public function generateContent() {
+		$this->addChild(new InputHidden($this->submitAction));
+		$this->addChild(new InputHidden('submitFilterData', 1));
+		$this->addChild(new InputHidden('submitBulkAction', 1));
+		$this->addChild(new InputHidden('bulkAdditionalData', null, 'bulkAdditionalData'));
+		return parent::generateContent();
+	}
 	public function getColumn($name) {
 		return isset($this->columns[$name]) ? $this->columns[$name] : null;
 	}
@@ -115,14 +123,6 @@ class Table extends Form{
 	}
 	public function hasHeader(){
 		return (parent::hasHeader() || !empty($this->tableActions));
-	}
-	
-	public function getSearchSubmitAction(){
-		return 'submitFilterData';
-	}
-	
-	public function getBulkSubmitAction(){
-		return 'submitBulkAction';
 	}
 	
 	public function hasActionBlock(){

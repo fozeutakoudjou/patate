@@ -111,6 +111,16 @@ abstract class AdminController extends FormAdminController
 		});
 	}
 	
+	protected function processChangeValue(){
+		if(Tools::isSubmit('submitBulkAction')){
+			parse_str(Tools::getValue('bulkAdditionalData'), $data);
+			$_POST = array_merge($data, $_POST);
+		}
+		$this->doDirectAction(function ($dao, $model){
+			return $dao->changeValue($model, Tools::getValue('field'), Tools::getValue('value'));
+		}, $this->getValueChangeCode(Tools::getValue('field'), Tools::getValue('value')));
+	}
+	
 	protected function processDelete(){
 		$this->doDirectAction(function ($dao, $model){
 			return $dao->delete($model, (isset($this->modelDefinition['fields']['deleted']) ? true : false));
@@ -124,7 +134,7 @@ abstract class AdminController extends FormAdminController
 		
 	}
 	
-	protected function doDirectAction($callback){
+	protected function doDirectAction($callback, $successCode = ''){
 		
 		$action = $this->action;
 		$models = $this->prepareDirectActionData(false);
@@ -146,7 +156,7 @@ abstract class AdminController extends FormAdminController
 				$this->processList();
 			}
 		}else{
-			$this->dataUsedOnce['success'] = $action;
+			$this->dataUsedOnce['success'] = empty($successCode) ? $action : $successCode;
 			$this->redirectLink = $this->createUrl();
 			$this->redirectAfter = true;
 			$this->resetAllFilters();

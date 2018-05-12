@@ -84,9 +84,6 @@ abstract class Element extends Content{
 	public function getAttributes() {
 		return $this->attributes;
 	}
-	public function generateContent() {
-		
-	}
 	
 	public function drawAttributes() {
 		$result = '';

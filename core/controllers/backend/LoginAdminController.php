@@ -22,6 +22,7 @@ class LoginAdminController extends AdminController
         if (!headers_sent()) {
             header('Login: true');
         }
+		$this->availableActions[$this->defaultAction] = null;
     }
 	
 	protected function processLogin()
@@ -84,11 +85,11 @@ class LoginAdminController extends AdminController
 		$this->form->addClass('form_login');
 		$this->form->addChild($inputEmail);
 		$this->form->addChild($inputPassword);
-		$this->form->addChild($this->generator->createCheckbox('stay_logged_in', 'Stay logged in', true));
+		$this->form->addChild($this->generator->createCheckbox('stay_logged_in', 'Stay logged in', true, '1'));
 		$this->form->addChild($this->generator->createHiddenInput('redirectData'));
 		$this->form->addChild($passwordLink);
 		
-		$this->formPassword->addChild($inputEmail);
+		$this->formPassword->addChild(clone $inputEmail);
 		$this->generator->setAsShowHide($this->formPassword->getCancel(), '.form_login', '.form_forget_password');
 	}
 	

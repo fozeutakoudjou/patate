@@ -515,8 +515,7 @@ class Router{
             }
             $url = 'index.php?'.$query;
         }
-
-        return $preffix . $url.$anchor;
+        return $preffix . ((strpos($url, '?')===0) ? 'index.php' : '') . $url.$anchor;
     }
 
     /**

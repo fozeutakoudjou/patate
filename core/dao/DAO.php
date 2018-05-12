@@ -300,7 +300,8 @@ class DAO{
 		return $result;
     }
 	
-	 protected function changeValue($model, $field, $value) {
+	 public function changeValue($model, $field, $value) {
+		$this->requireValidation = false;
         $this->setDefinition($model);
 		if(isset($this->definition['fields'][$field])){
 			$model->setPropertyValue($field, pSQL($value));

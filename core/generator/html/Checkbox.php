@@ -4,10 +4,13 @@ class Checkbox extends Field{
 	protected $templateFile = 'generator/checkbox';
 	protected $checked;
 	
-	function __construct($name, $label='', $checked = false) {
+	function __construct($name, $label='', $checked = false, $value=null) {
 		$this->setName($name);
 		$this->setLabel($label);
 		$this->setChecked($checked);
+		if($value!==null){
+			$this->setValue($value);
+		}
 	}
 	
 	public function isChecked(){

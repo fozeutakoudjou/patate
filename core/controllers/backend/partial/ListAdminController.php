@@ -78,10 +78,10 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			'0'=>array('label'=>$this->l('No')),
 		);
 		if(isset($this->availableActions[ActionCode::ACTIVATE])){
-			$activeOptions['0']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'remove', $this->l('Disabled'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, array(), false, false, '', false, false, 'action-disabled');
+			$activeOptions['0']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'remove', $this->l('Disabled'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, array(), false, false, '', false, false, 'action-disabled', true);
 		}
 		if(isset($this->availableActions[ActionCode::DESACTIVATE])){
-			$activeOptions['1']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'check', $this->l('Enabled'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, array(), false, false, '', false, false, 'action-enabled');
+			$activeOptions['1']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'check', $this->l('Enabled'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, array(), false, false, '', false, false, 'action-enabled', true);
 		}
 		/*$activeOptions = array(
 			'1'=>array('rowAction'=>$this->generator->createRowAction($this->table, '', '', 'check', $this->l('Enabled'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, array(), false, false, '', false, false, 'action-enabled')),
@@ -95,25 +95,25 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected function createTableActions() {
 		if(isset($this->availableActions[ActionCode::ADD])){
 			$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
-			$this->generator->createTableAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD);
+			$this->generator->createTableAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD, true);
 		}
 	}
 	
 	protected function createBulkActions() {
 		if(isset($this->availableActions[ActionCode::ACTIVATE])){
-			$activateLink = $this->generator->createBulkAction($this->table, $this->l('Activate selection'), '#', 'power-off', $this->l('Activate selection'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE);
+			$activateLink = $this->generator->createBulkAction($this->table, $this->l('Activate selection'), '#', 'power-off', $this->l('Activate selection'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, false, '', true);
 			$activateLink->getIcon()->addClass('text-success');
 			if(!isset($this->availableActions[ActionCode::DESACTIVATE])){
 				$activateLink->addAdditionalData('separator', '1');
 			}
 		}
 		if(isset($this->availableActions[ActionCode::DESACTIVATE])){
-			$desactivateLink = $this->generator->createBulkAction($this->table, $this->l('Desactivate selection'), '#', 'power-off', $this->l('Desactivate selection'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE);
+			$desactivateLink = $this->generator->createBulkAction($this->table, $this->l('Desactivate selection'), '#', 'power-off', $this->l('Desactivate selection'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, false, '', true);
 			$desactivateLink->getIcon()->addClass('text-danger');
 			$desactivateLink->addAdditionalData('separator', '1');
 		}
 		if(isset($this->availableActions[ActionCode::DELETE])){
-			$this->generator->createBulkAction($this->table, $this->l('Delete selection'), '#', 'trash', $this->l('Delete selection'), false, ActionCode::DELETE, ActionCode::DELETE, true, $this->createBulkConfirmText(ActionCode::DELETE));
+			$this->generator->createBulkAction($this->table, $this->l('Delete selection'), '#', 'trash', $this->l('Delete selection'), false, ActionCode::DELETE, ActionCode::DELETE, true, $this->createBulkConfirmText(ActionCode::DELETE), true);
 		}
 	}
 	
@@ -127,7 +127,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 				$useOfButtonStyle = $default ? true : false;
 				$confirm = isset($data['confirm']) ? $data['confirm'] : false;
 				$confirmText = $confirm ? $this->createConfirmText($action) : '';
-				$this->generator->createRowAction($this->table, $label, '', $icon, $title, $useOfButtonStyle, $action, $action, array(), $default, $confirm, $confirmText, true);
+				$this->generator->createRowAction($this->table, $label, '', $icon, $title, $useOfButtonStyle, $action, $action, array(), $default, $confirm, $confirmText, true, true, '', true);
 			}
 		}
 	}
@@ -371,5 +371,42 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			}
 		}
 		return $operator;
+	}
+	
+	protected function setColumnAsChangeFieldValue($name) {
+		$options = array(
+			'1'=>array('rowAction'=>$this->generator->createRowAction($this->table, '', '', 'check', $this->l('Yes'), false, $this->getValueChangeCode($name, 1), ActionCode::CHANGE_FIELD_VALUE, array('field'=>$name, 'value'=>'0'), false, false, '', false, false, 'action-enabled')),
+			'0'=>array('rowAction'=>$this->generator->createRowAction($this->table, '', '', 'remove', $this->l('No'), false, $this->getValueChangeCode($name, 0), ActionCode::CHANGE_FIELD_VALUE, array('field'=>$name, 'value'=>'1'), false, false, '', false, false, 'action-disabled')),
+		);
+		$this->changeColumnOptions($name, ColumnType::BOOL, null, $options, null);
+	}
+	
+	protected function addBulkChangeFieldValue($name, $options) {
+		if(isset($this->availableActions[ActionCode::UPDATE])){
+			foreach($options as $value => $option){
+				$icon = isset($option['icon']) ? $option['icon'] : '';
+				$title = isset($option['title']) ? $option['title'] : $option['label'];
+				$link = $this->generator->createBulkAction($this->table, $option['label'], '#', $icon, $title, false, $this->getValueChangeCode($name, $value), ActionCode::CHANGE_FIELD_VALUE);
+				if(isset($option['iconClass'])){
+					$link->getIcon()->addClass($option['iconClass']);
+				}
+				$link->addAttribute('data-additionals', 'field='.$name.'&value='.$value);
+				$link->setAccessChecked(true);
+			}
+			if(isset($link)){
+				$link->addAdditionalData('separator', '1');
+			}
+		}
+	}
+	
+	protected function getBoolBulkOptions($labelYes, $labelNo, $icon = '') {
+		return array(
+			'1'=>array('label'=>$labelYes, 'icon'=>$icon, 'iconClass'=>'text-success'),
+			'0'=>array('label'=>$labelNo, 'icon'=>$icon, 'iconClass'=>'text-danger')
+		);
+	}
+	
+	protected function getValueChangeCode($field, $value) {
+		return ActionCode::CHANGE_FIELD_VALUE.'_'.$field.'_'.$value;
 	}
 }
