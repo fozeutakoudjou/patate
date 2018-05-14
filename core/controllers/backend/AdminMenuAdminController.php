@@ -5,6 +5,7 @@ use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\dao\Operator;
 use core\constant\ActionCode;
+use core\constant\dao\OrderWay;
 class AdminMenuAdminController extends AdminController
 {	
 	protected $modelClassName = 'AdminMenu';
@@ -14,6 +15,7 @@ class AdminMenuAdminController extends AdminController
         $this->columnsToExclude = array_merge($this->columnsToExclude, array('link', 'level', 'title', 'linkType', 'iconClass'));
         $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('linkType', 'link', 'level'));
         $this->saveFieldsToExclude = array_merge($this->saveFieldsToExclude, array('linkType', 'link'));
+		$this->addDefaultValues['clickable'] = 1;
 		/*$this->addDefaultValues['type'] = UserType::FRONT_USER;
 		$this->genderOptions = array(GenderOption::MALE => $this->l('Male'), GenderOption::FEMALE => $this->l('Female'));*/
     }
@@ -29,7 +31,7 @@ class AdminMenuAdminController extends AdminController
 		$this->associationList['idWrapper'] = array();*/
 	}
 	protected function createBulkActions() {
-		$this->addBulkChangeFieldValue('clickable', $this->getBoolBulkOptions($this->l('Make selection clickable'), $this->l('Make selection unclickable'), 'hand-pointer-o'));
+		$this->addBulkChangeFieldValue('clickable', $this->getBoolBulkOptions($this->l('Make selection clickable'), $this->l('Make selection unclickable'), 'mouse-pointer'));
 		$this->addBulkChangeFieldValue('newTab', $this->getBoolBulkOptions($this->l('Make selection openable in new tab'), $this->l('Make selection openable in same tab'), 'external-link'));
 		parent::createBulkActions();
 	}
@@ -61,6 +63,7 @@ class AdminMenuAdminController extends AdminController
 		$idParent = $this->defaultModel->getIdParent();
 		$return = true;
 		if(empty($idParent)){
+			$idParent = null;
 			$this->defaultModel->setLevel(1);
 		}else{
 			$parent = $this->getDAOInstance($this->modelClassName, false)->getById($idParent, false, null, false, false);
@@ -71,6 +74,19 @@ class AdminMenuAdminController extends AdminController
 				$this->defaultModel->setLevel((int)$parent->getLevel()+1);
 			}
 		}
+		if(!$update){
+			$lastBrother = $this->getDAOInstance($this->modelClassName, false)->getByFields(array('idParent' => $idParent), false, null, false, false, array(), 0, 1, 'position', OrderWay::DESC);
+			$position = empty($lastBrother) ? 1 : (int)$lastBrother[0]->getPosition() + 1;
+			$this->defaultModel->setPosition($position);
+		}
 		return $return;
+	}
+	
+	protected function createFormFields($update = false)
+    {
+		if(!$update){
+			$this->formFieldsToExclude[] = 'position';
+		}
+		parent::createFormFields($update);
 	}
 }

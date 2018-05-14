@@ -21,6 +21,9 @@ abstract class FormAdminController extends ListAdminController
     {
 		parent::init();
 		$this->initErrorLabels();
+		if(isset($this->modelDefinition['fields']['active']) && !isset($this->addDefaultValues['active'])){
+			$this->addDefaultValues['active'] = 1;
+		}
 	}
 	protected function initErrorLabels()
     {
@@ -65,7 +68,15 @@ abstract class FormAdminController extends ListAdminController
 	protected function customizeFormFields($update = false) {}
 	
 	protected function getFormData($submitted, $update = false) {
-		return ($submitted || $this->defaultModel->isLoaded()) ? $this->defaultModel->toArray($this->formFieldPreffix, false, false) : array();
+		$data = ($submitted || $this->defaultModel->isLoaded()) ? $this->defaultModel->toArray($this->formFieldPreffix, false, false) : array();
+		if(!$update && !$submitted){
+			foreach($this->addDefaultValues as $field => $value){
+				if(!in_array($field, $this->formFieldsToExclude)){
+					$data[$field] = $value;
+				}
+			}
+		}
+		return $data;
 	}
 	
 	protected function loadFormObject($id='', $useLang = true, $useAllLang = true) {
@@ -148,6 +159,7 @@ abstract class FormAdminController extends ListAdminController
 		if(!$this->formFieldsAccessChecked){
 			if(isset($this->modelDefinition['fields']['active']) && (!$this->checkUserAccess(ActionCode::ACTIVATE) || !$this->checkUserAccess(ActionCode::DESACTIVATE))){
 				$this->saveFieldsToExclude[] = 'active';
+				$this->formFieldsToExclude[] = 'active';
 			}
 			$this->formFieldsAccessChecked = true;
 		}

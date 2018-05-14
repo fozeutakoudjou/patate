@@ -3,7 +3,12 @@ $(document).ready(function() {
 	handleMenu();
 });
 function handleMenu(){
+	if((typeof(activeMenuSetted)!=="undefined") && (typeof(currentWrapper)!=="undefined") && !activeMenuSetted){
+		var selector = "[data-id_wrapper='"+currentWrapper+"'][data-action='']";
+		$(".menu_item"+selector+":first").addClass("active"); 
+	}
 	$(".menu_item.active").parents(".menu_item").addClass("active");
+	$(".menu_item:not(.no_access)").parents(".menu_item.no_access").show();
 }
 function handleGlobalEvent(){
 	$(document).on("click", ".show_hide", function(e){

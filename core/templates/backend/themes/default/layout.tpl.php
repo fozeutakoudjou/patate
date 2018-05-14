@@ -30,7 +30,7 @@
 					</form>
 					<!-- END RESPONSIVE QUICK SEARCH FORM -->
 				</li>
-				<?php echo $menuContent;?>
+				<?php if(isset($menuContent)):?><?php echo $menuContent;?><?php endif;?>
 			</ul>
 			<!-- END SIDEBAR MENU -->
 		</div>

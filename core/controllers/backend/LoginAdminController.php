@@ -12,6 +12,7 @@ class LoginAdminController extends AdminController
 	protected $header = 'login/header';
 	protected $footer = 'login/footer';
 	protected $defaultAction = 'login';
+	protected $useMenu = false;
     public function __construct()
     {
         $this->useOfHeader = false;

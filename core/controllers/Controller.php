@@ -148,7 +148,7 @@ abstract class Controller
             if ($this->checkUserAccess($this->action)) {
                 $this->ProcessAction();
             } else {
-                $this->errors[] = Tools::displayError('Access denied.');
+                $this->errors[] = $this->l('Access denied.');
             }
             if(!$this->onlyProcess){
 				if ($this->redirectAfter) {

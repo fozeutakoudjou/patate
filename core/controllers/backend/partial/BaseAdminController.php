@@ -52,6 +52,9 @@ abstract class BaseAdminController extends Controller
 	
 	protected $wrapper;
 	
+	protected $activeMenuSetted = false;
+	protected $useMenu = true;
+	
 	const DATA_USED_ONCE_COOKIE_PREFIX = 'dataUsedOnce';
 
     public function __construct()
@@ -248,11 +251,14 @@ abstract class BaseAdminController extends Controller
 		if($this->ajax && !$ajaxProcessUsed){
 			$this->ajaxProcess();
 		}
+		if (!$this->ajax && !$this->onlyProcess && $this->redirectAfter && empty($this->redirectLink)) {
+			$this->redirectLink = $this->createUrl();
+		}
     }
 	public function checkUserAccess($action)
     {
-        $rightCode = Tools::getRightCode($action);
-		return $this->context->getUser()->hasRight($this->wrapper->getId(), $rightCode);
+        //$rightCode = Tools::getRightCode($action);
+		return $this->context->getUser()->hasRight($this->wrapper->getId(), $action);
     }
 	
 	protected function getDAOInstance($className = '', $fromCurrent = true, $module = ''){
@@ -266,7 +272,9 @@ abstract class BaseAdminController extends Controller
 	}
 
     protected function initContent(){
-		
+		if (!$this->ajax && !$this->onlyProcess && $this->useMenu) {
+			$this->template->assign('menuContent', $this->renderMenu());
+		}
 	}
 
     protected function initSecurityFailedPage(){
@@ -347,7 +355,6 @@ abstract class BaseAdminController extends Controller
 		}
 		$this->template->assign(
             array(
-                'menuContent' => $this->renderMenu(),
                 'page' => $page,
                 'header' => $this->renderTpl($this->header, $this->useModuleHeader),
                 'footer' => $this->renderTpl($this->footer, $this->useModuleFooter),
@@ -359,10 +366,16 @@ abstract class BaseAdminController extends Controller
 	
 	protected function renderMenu()
     {
+		var_dump($this);
 		$tree = $this->generator->createTree($this->getDAOInstance('AdminMenu', false), $this->getTemplateFile('header_menu', false),
 			$this->getTemplateFile('footer_menu', false), array('active' => 1),
 			array('idWrapper'=> array('useOfLang'=>false), 'idAction'=> array('useOfLang'=>false)), new MenuItemFormatter($this));
-		return $tree->generateContent();
+		$content = $tree->generateContent();
+		if($this->wrapper != null){
+			$this->addJSVariable('activeMenuSetted', $this->activeMenuSetted);
+			$this->addJSVariable('currentWrapper', $this->wrapper->getId());
+		}
+		return $content;
 	}
 	
 	public function formatMenuItem($item)
@@ -372,10 +385,12 @@ abstract class BaseAdminController extends Controller
 		$title = empty($menu->getTitle()) ? $menu->getName() : $menu->getTitle();
 		$link = $this->generator->createLink($menu->getName(), 'javascript:void(0);', $menu->getIconClass(), $title);
 		$action = empty($menu->getIdAction()) ? self::DEFAULT_ACTION : $menu->getAssociated('idAction')->getCode();
-		if(($this->action == $action)&& ($menu->getIdWrapper() == $this->wrapper->getId())){
+		$item->addAttribute('data-id_wrapper', $menu->getIdWrapper());
+		$item->addAttribute('data-action', ($action!=self::DEFAULT_ACTION) ? $action : '');
+		if(($this->wrapper != null)&& ($this->action == $action)&& ($menu->getIdWrapper() == $this->wrapper->getId())){
 			$item->addWrapperClass('active');
 			$item->addAdditionalData('active', 1);
-			$this->addJsVariable('activeSetted', 1);
+			$this->activeMenuSetted = true;
 		}
 		if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action)){
 			if($menu->isClickable()){
@@ -385,12 +400,15 @@ abstract class BaseAdminController extends Controller
 				}
 				$link->setHref($this->context->getLink()->getAdminLink($this->moduleName, strtolower($menu->getAssociated('idWrapper')->getTarget()), $params));
 				if($menu->isNewTab()){
-					$item->addAttribute('target', '_blank');
+					$link->addAttribute('target', '_blank');
 				}
 			}
 		}else{
-			if(!$item->hasChildrens()){
+			if(!$item->hasChildren()){
 				$item->setRenderingCancelled(true);
+			}else{
+				$item->addClass('no_access');
+				$item->setVisible(false);
 			}
 		}
 		

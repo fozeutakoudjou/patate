@@ -28,6 +28,7 @@ class User extends Model{
 	protected $deleted;
 	
 	private $accessList;
+	private $accessCheckedList = array();
 	
 	protected $definition = array(
 		'entity' => 'user',
@@ -161,7 +162,7 @@ class User extends Model{
 			$dao = Factory::getDAOInstance('Access');
 			$fields = array('idUser'=>$this->id);
 			$list = $dao->getByFields($fields);
-            $list = $dao->getAll(false, null, false, false, 0, 0, '', 0, true, array('idAction'=>array('useOfLang'=>false)));
+            $list = $dao->getAll(false, null, false, false, 0, 0, '', 0, true);
 			foreach ($list as $access) {
 				$this->accessList[] = $access->getIdRight();
 			}
@@ -169,19 +170,23 @@ class User extends Model{
     }
 	public function hasRight($idWrapper, $action)
     {
-		$hasRight = false;
-		if($this->isSuperAdmin()){
-			$hasRight = true;
-		}else{
-			$right = Right::get($idWrapper, $action);
-			if($right==null){
+		$key = $idWrapper.'_'.$action;
+		if(!isset($this->accessCheckedList[$key])){
+			$hasRight = false;
+			if($this->isSuperAdmin()){
 				$hasRight = true;
 			}else{
-				$this->loadAccess();
-				$hasRight = in_array($right->getId(), $this->accessList);
+				$right = Right::get($idWrapper, $action);
+				if($right==null){
+					$hasRight = true;
+				}else{
+					$this->loadAccess();
+					$hasRight = in_array($right->getId(), $this->accessList);
+				}
 			}
+			$this->accessCheckedList[$key] = $hasRight;
 		}
-		return $hasRight;
+		return $this->accessCheckedList[$key];
     }
 
 	public function getId(){
