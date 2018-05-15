@@ -8,16 +8,18 @@ use core\constant\generator\ColumnType;
 class UserAdminController extends AdminController
 {	
 	protected $modelClassName = 'User';
-	protected $baseRestrictionsData = array('type'=>UserType::FRONT_USER);
+	protected $userType = UserType::FRONT_USER;
 	protected $genderOptions;
 	
 	public function __construct()
     {
 		parent::__construct();
-        $this->columnsToExclude = array_merge($this->columnsToExclude, array('type', 'preferredLang', 'additionalInfos', 'idProposer', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData', 'password'));
-        $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('type', 'additionalInfos', 'idProposer', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData'));
-		$this->addDefaultValues['type'] = UserType::FRONT_USER;
+        $this->columnsToExclude = array_merge($this->columnsToExclude, array('type', 'preferredLang', 'additionalInfos', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData', 'password'));
+        $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('type', 'additionalInfos', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData'));
+        $this->saveFieldsToExclude = array_merge($this->saveFieldsToExclude, array('type', 'additionalInfos', 'lastPasswordGeneratedTime', 'lastConnectionDate', 'lastConnectionData'));
 		$this->genderOptions = array(GenderOption::MALE => $this->l('Male'), GenderOption::FEMALE => $this->l('Female'));
+		$this->addDefaultValues['type'] = $this->userType;
+		$this->baseRestrictionsData['type'] = $this->userType;
     }
 	
 	protected function customizeFormFields($update = false) {

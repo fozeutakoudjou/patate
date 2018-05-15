@@ -297,4 +297,8 @@ class User extends Model{
 	public function setDeleted($deleted){
 		$this->deleted = $deleted;
 	}
+	
+	public function getGroups($idsOnly = true, $withParents = true, $useOfLang = false, $lang = false){
+		$this->deleted = $deleted;
+	}
 }

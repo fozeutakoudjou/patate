@@ -13,10 +13,10 @@ class Action extends Model{
 		'auto_increment' => true,
 		'multilang' => true,
 		'fields' => array(
-			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
-			'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
-			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml'),
-			'dependentOnId' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1')
+			'code' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'dependentOnId' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
+			'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)
 	);	
 
@@ -32,6 +32,12 @@ class Action extends Model{
 	public function setCode($code){
 		$this->code = $code;
 	}
+	public function isDependentOnId(){
+		return $this->dependentOnId;
+	}
+	public function setDependentOnId($dependentOnId){
+		$this->dependentOnId = $dependentOnId;
+	}
 	public function getName(){
 		return $this->name;
 	}
@@ -43,11 +49,5 @@ class Action extends Model{
 	}
 	public function setDescription($description){
 		$this->description = $description;
-	}
-	public function isDependentOnId(){
-		return $this->dependentOnId;
-	}
-	public function setDependentOnId($dependentOnId){
-		$this->dependentOnId = $dependentOnId;
 	}
 }

@@ -433,6 +433,15 @@ class Tools
 		}, $strict, array('valueKey'=>$valueKey));
     }
 	
+	public static function getArrayValues($array, $isModel = false, $key = 'id')
+    {
+		$result = array();
+		foreach($array as $arrayValue){
+			$result[] = $isModel ? $arrayValue->getPropertyValue($key) : $arrayValue[$key];
+		}
+		return $result;
+    }
+	
 	public static function getMultipleValuesRestriction($field, $values)
     {
 		$result = array();

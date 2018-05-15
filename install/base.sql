@@ -156,6 +156,7 @@ create table c2w_access
    idGroup int(11) UNSIGNED,
    idRight int(11) UNSIGNED NOT NULL,
    idUser int(11) UNSIGNED,
+   `active`              bool DEFAULT '1' NOT NULL,
    dateAdd              datetime,
    dateUpdate           datetime,
    primary key (id),

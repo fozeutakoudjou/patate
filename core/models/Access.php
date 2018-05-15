@@ -8,6 +8,7 @@ class Access extends Model{
 	protected $idUser;
 	protected $dateAdd;
 	protected $dateUpdate;
+	protected $active;
 	protected $definition = array(
 		'entity' => 'access',
 		'primary' => 'id',
@@ -18,7 +19,8 @@ class Access extends Model{
 			'idRight' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'Right', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
 			'idUser' => array('type' => self::TYPE_INT, 'foreign' => true, 'reference' => array('class' =>'User', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
-			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate')
+			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
+			'active' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'default' => '1')
 		)
 	);	
 
@@ -57,5 +59,11 @@ class Access extends Model{
 	}
 	public function setDateUpdate($dateUpdate){
 		$this->dateUpdate = $dateUpdate;
+	}
+	public function isActive(){
+		return $this->active;
+	}
+	public function setActive($active){
+		$this->active = $active;
 	}
 }

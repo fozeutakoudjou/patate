@@ -28,7 +28,7 @@
 		?>
 		<div class="clearfix <?php if(!$item->isTranslatable()):?><?php echo $iconClass;?><?php endif;?>">
 			<?php if($item->isTranslatable()):?>
-				<div class="col-lg-9 translatable-field <?php echo $iconClass;?>">
+				<div class="col-lg-10 translatable-div <?php echo $iconClass;?>">
 			<?php else:?>
 				<?php $languages=array(''=>'');?>
 			<?php endif;?>
@@ -59,7 +59,7 @@
 			<?php endif;?>
 			<?php if($item->isTranslatable()):?>
 				</div>
-				<div class="col-lg-2">
+				<div class="col-lg-2 lang_list_div">
 					<?php echo $item->drawLangList();?>
 				</div>
 			<?php endif;?>

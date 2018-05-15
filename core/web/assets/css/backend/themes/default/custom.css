@@ -45,3 +45,12 @@
 .list-action-enable.action-enabled {
     color: #72C279;
 }
+
+.translatable-div {
+    padding-left:0px;
+    padding-right:0px;
+}
+
+.lang_list_div{
+	padding-right:0px;
+}

@@ -8,6 +8,7 @@ class PageNotFoundAdminController extends AdminController
 		parent::__construct();
 		$this->defaultAction = '404';
 		$this->action = $this->defaultAction;
+		$this->availableActions[$this->defaultAction] = null;
 	}
 	
 	public function checkUserAccess($action)

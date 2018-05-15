@@ -15,11 +15,11 @@ class MailFormat extends Model{
 		'auto_increment' => true,
 		'multilang' => true,
 		'fields' => array(
-			'template' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName'),
+			'template' => array('type' => self::TYPE_STRING, 'required' => true, 'unique' => true, 'validate' => 'isGenericName', 'maxSize' => '100'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
 			'dateAdd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 			'dateUpdate' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
-			'title' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName'),
+			'title' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '255'),
 			'content' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)
 	);	

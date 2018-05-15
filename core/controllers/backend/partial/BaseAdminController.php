@@ -366,7 +366,6 @@ abstract class BaseAdminController extends Controller
 	
 	protected function renderMenu()
     {
-		var_dump($this);
 		$tree = $this->generator->createTree($this->getDAOInstance('AdminMenu', false), $this->getTemplateFile('header_menu', false),
 			$this->getTemplateFile('footer_menu', false), array('active' => 1),
 			array('idWrapper'=> array('useOfLang'=>false), 'idAction'=> array('useOfLang'=>false)), new MenuItemFormatter($this));
@@ -393,7 +392,7 @@ abstract class BaseAdminController extends Controller
 			$this->activeMenuSetted = true;
 		}
 		if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action)){
-			if($menu->isClickable()){
+			if($menu->isClickable() && !empty($menu->getIdWrapper())){
 				$params = array();
 				if($action!=self::DEFAULT_ACTION){
 					$params['action'] = $action;

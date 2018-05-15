@@ -15,9 +15,9 @@ class Wrapper extends Model{
 		'multilang' => true,
 		'fields' => array(
 			'type' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),
-			'module' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-			'target' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-			'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
+			'module' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'target' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'name' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '50'),
 			'description' => array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml')
 		)
 	);	

@@ -7,7 +7,7 @@ class UserGroup extends Model{
 	protected $definition = array(
 		'entity' => 'user_group',
 		'primary' => array('idUser', 'idGroup'),
-		'uniques' => array(array(idUser, idGroup)),
+		'uniques' => array(array('idUser', 'idGroup')),
 		'fields' => array(
 			'idUser' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),
 			'idGroup' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt')
@@ -25,5 +25,13 @@ class UserGroup extends Model{
 	}
 	public function setIdGroup($idGroup){
 		$this->idGroup = $idGroup;
+	}
+	
+	public static function getUsers($idGroup){
+		
+	}
+	
+	public static function getGroups($idUser, $get){
+		
 	}
 }

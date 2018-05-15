@@ -32,10 +32,10 @@ class AdminMenu extends Model{
 			'level' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
 			'newTab' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
 			'active' => array('type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool', 'default' => '1'),
-			'iconClass' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName'),
-			'title' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName'),
-			'link' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName')
+			'iconClass' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'maxSize' => '15'),
+			'name' => array('type' => self::TYPE_STRING, 'required' => true, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'title' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '50'),
+			'link' => array('type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'maxSize' => '60')
 		)
 	);	
 

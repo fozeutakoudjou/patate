@@ -47,9 +47,9 @@ class AdminMenuAdminController extends AdminController
 	protected function createFieldByDefinition($fieldDefinition, $field)
     {
 		if($field == 'idWrapper'){
-			$input = $this->generator->createSelect($field, $this->l($field), $this->createOptions('Wrapper'));
+			$input = $this->generator->createSelect($field, $this->l($field), $this->createOptions('Wrapper', '', array(), true));
 		}elseif($field == 'idAction'){
-			$input = $this->generator->createSelect($field, $this->l($field), $this->createOptions('Action', '', array('dependentOnId'=>0)));
+			$input = $this->generator->createSelect($field, $this->l($field), $this->createOptions('Action', '', array('dependentOnId'=>0), true));
 		}elseif($field == 'idParent'){
 			$restrictions = $this->defaultModel->isLoaded() ? array('id'=>array('value'=>$this->defaultModel->getId(), 'operator'=>Operator::DIFFERENT)):array();
 			$input = $this->generator->createSelect($field, $this->l($field), $this->createOptions($this->modelClassName, '', $restrictions, true));
