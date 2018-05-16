@@ -12,7 +12,7 @@ class AdminMenuAdminController extends AdminController
 	public function __construct()
     {
 		parent::__construct();
-        $this->columnsToExclude = array_merge($this->columnsToExclude, array('link', 'level', 'title', 'linkType', 'iconClass'));
+        $this->columnsToExclude = array_merge($this->columnsToExclude, array('link', 'level', 'title', 'linkType', 'iconClass', 'idParent'));
         $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('linkType', 'link', 'level'));
         $this->saveFieldsToExclude = array_merge($this->saveFieldsToExclude, array('linkType', 'link'));
 		$this->addDefaultValues['clickable'] = 1;
@@ -22,8 +22,8 @@ class AdminMenuAdminController extends AdminController
 	protected function customizeColumns() {
 		$actionOptions = $this->createOptions('Action', '', array('dependentOnId'=>0), true);
 		$this->changeColumnOptions('idAction', ColumnType::OPTION, SearchType::SELECT, $actionOptions, $actionOptions);
-		$parentOptions = $this->createOptions($this->modelClassName, '', array(), true);
-		$this->changeColumnOptions('idParent', ColumnType::OPTION, SearchType::SELECT, $parentOptions, $parentOptions);
+		/*$parentOptions = $this->createOptions($this->modelClassName, '', array(), true);
+		$this->changeColumnOptions('idParent', ColumnType::OPTION, SearchType::SELECT, $parentOptions, $parentOptions);*/
 		$this->setColumnAsChangeFieldValue('clickable');
 		$this->setColumnAsChangeFieldValue('newTab');
 		/*$field = Tools::formatForeignField('idWrapper', 'name');
@@ -60,6 +60,9 @@ class AdminMenuAdminController extends AdminController
 	}
 	
 	protected function beforeEdit($update = false){
+		if(!$update && isset($this->extraListParams['parent'])){
+			$this->defaultModel->setIdParent($this->extraListParams['parent']);
+		}
 		$idParent = $this->defaultModel->getIdParent();
 		$return = true;
 		if(empty($idParent)){
@@ -86,7 +89,42 @@ class AdminMenuAdminController extends AdminController
     {
 		if(!$update){
 			$this->formFieldsToExclude[] = 'position';
+			$this->formFieldsToExclude[] = 'idParent';
 		}
 		parent::createFormFields($update);
+	}
+	
+	protected function retrieveExtraListParams(){
+		
+		$idParent = Tools::getValue('parent');
+		if(!empty($idParent)){
+			$this->extraListParams['parent'] = (int)$idParent;
+		}
+	}
+	
+	protected function customizeTable() {
+		if(isset($this->extraListParams['parent'])){
+			$object = $this->getDAOInstance()->getById($this->extraListParams['parent']);
+			if($object!=null){
+				$this->table->setLabel(sprintf($this->l('Submenus of menu %s'), $object->__toString()));
+			}
+		}
+	}
+	
+	protected function getRestrictionFromExtraListParams() {
+		$restriction=parent::getRestrictionFromExtraListParams();
+		if(isset($this->extraListParams['parent'])){
+			$restriction['idParent'] = $this->extraListParams['parent'];
+		}else{
+			$restriction['idParent'] = null;
+		}
+		return $restriction;
+	}
+	
+	protected function createRowsActions() {
+		parent::createRowsActions();
+		if(isset($this->availableActions[ActionCode::LISTING])){
+			$this->generator->createRowAction($this->table, $this->l('Children'), '', '', $this->l('Children'), false, 'subMenusList', ActionCode::LISTING, array('idParamKey'=>'parent'), false, false, '', true, true, '', true);
+		}
 	}
 }

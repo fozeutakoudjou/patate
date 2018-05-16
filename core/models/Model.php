@@ -5,6 +5,8 @@ use core\Validate;
 use core\Tools;
 use core\constant\Separator;
 use core\constant\DataType;
+/*use core\dao\Factory;
+use core\FileTools;*/
 
 class Model implements DataType{
     protected $fieldsValidated = false;
@@ -17,6 +19,15 @@ class Model implements DataType{
     protected $associateds = array();
 	
     protected $singlePrimaryField;
+	/*private static $dao;
+	
+	protected static function getDAO(){
+		if(self::$dao === null){
+			$class = get_called_class();
+			self::$dao = Factory::getDAOInstance(Tools::getClassNameWithoutNamespace($class), FileTools::getModuleFromNamespace($class));
+		}
+		return self::$dao;
+	}*/
     
     public function __construct($data = array(), $fromDB = false, $lang = '', $useOfAllLang = false, $languages = array(), $preffix = ''){
 		if(!empty($data)){

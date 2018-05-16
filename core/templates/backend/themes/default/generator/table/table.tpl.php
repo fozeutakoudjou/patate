@@ -6,6 +6,11 @@
 <?php if($item->isDecorated()):?>
 	<div class="portlet light bordered <?php echo $item->drawWrapperClasses();?>" 
 		style="<?php echo $item->drawVisible();?>">
+	<?php if($item->isAjaxActivatorEnabled()):?>
+		<div class="portlet-title">
+			<?php echo $item->createAjaxActivator()->generate();?>
+		</div>
+	<?php endif;?>
 	<?php if($item->hasHeader()):?>
 		<div class="portlet-title">
 			<?php if($item->hasIcon() || $item->hasLabel()):?>

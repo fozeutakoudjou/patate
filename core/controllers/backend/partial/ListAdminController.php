@@ -97,6 +97,10 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
 			$this->generator->createTableAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD, true);
 		}
+		if(isset($this->availableActions[ActionCode::LISTING])){
+			$url = $this->createUrl(array('action'=>ActionCode::LISTING));
+			$this->generator->createTableAction($this->table, $this->l('Refresh'), $url, 'refresh', $this->l('Refresh'), true, ActionCode::LISTING, ActionCode::LISTING, true);
+		}
 	}
 	
 	protected function createBulkActions() {
@@ -160,6 +164,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected function getListBaseRestrictionFields() {
 		return $this->baseRestrictionsData;
 	}
+	protected function getRestrictionFromExtraListParams() {
+		return array();
+	}
 	protected function changeColumnOptions($columnName, $dataType = null, $searchType = null, $dataOptions = null, $searchOptions = null) {
 		$column = $this->table->getColumn($columnName);
 		$column->setDataType(($dataType === null) ? $column->getDataType() : $dataType);
@@ -176,6 +183,8 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$restrictions = is_array($this->searchData) ? $this->searchData : array();
 		$baseRestrictions = $this->getListBaseRestrictionFields();
 		$restrictions = is_array($baseRestrictions) ? array_merge($restrictions, $baseRestrictions) : $restrictions;
+		$extraRestrictions = $this->getRestrictionFromExtraListParams();
+		$restrictions = is_array($extraRestrictions) ? array_merge($restrictions, $extraRestrictions) : $restrictions;
 		$limit = (int)(($this->itemsPerPage===null) ? $this->defaultItemsPerPage : $this->itemsPerPage);
 		$start = ($this->currentPage-1)*$limit;
 		$orderWay = (int)(($this->orderWay===null) ? $this->defaultOrderWay : $this->orderWay);

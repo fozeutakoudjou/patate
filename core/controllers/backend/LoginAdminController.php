@@ -94,7 +94,7 @@ class LoginAdminController extends AdminController
 		$this->generator->setAsShowHide($this->formPassword->getCancel(), '.form_login', '.form_forget_password');
 	}
 	
-	public function checkUserAccess($action)
+	public function checkUserAccess($action, $idWrapper = null)
     {
 		return true;
     }
@@ -123,7 +123,7 @@ class LoginAdminController extends AdminController
 
         if (!$this->hasErrors()) {
 			$user = User::getAdminByEmail($email, $password);
-            if ($user == null) {
+			if ($user == null) {
                 $this->errors[] = $this->l('The user does not exist, or the password provided is incorrect.');
                 $this->context->getUser()->logout();
             }else{
@@ -136,7 +136,7 @@ class LoginAdminController extends AdminController
                 $cookie->idUser = $user->getId();
                 $cookie->email = $user->getEmail();
                 $cookie->password = $user->getPassword();;
-                $cookie->remoteAddress = Tools::getIntRemoteAddress($remoteAddress);
+                $cookie->remoteAddress = Tools::getNumericRemoteAddress($remoteAddress);
 
                 if (!Tools::getValue('stay_logged_in')) {
                     $cookie->lastActivity = time();

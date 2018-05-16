@@ -70,8 +70,8 @@ class User extends Model{
 		
 		$cookie = Context::getInstance()->getCookie();
 		$result = (
-			$this->id && Validate::isUnsignedId($this->id) && $this->isAdmin() && self::checkPassword($this->id, $cookie->password) &&
-				(!isset($cookie->remote_addr) || $cookie->remote_addr == ip2long(Tools::getRemoteAddr()) || !Configuration::get('COOKIE_CHECKIP'))
+			$this->id && Validate::isUnsignedId($this->id) && ($this->isAdmin() || $this->isSuperAdmin()) && self::checkPassword($this->id, $cookie->password, true) &&
+				(!isset($cookie->remoteAddress) || ($cookie->remoteAddress == Tools::getNumericRemoteAddress()) || !Configuration::get('COOKIE_CHECKIP'))
 		);
 		return $result;
     }
@@ -298,7 +298,7 @@ class User extends Model{
 		$this->deleted = $deleted;
 	}
 	
-	public function getGroups($idsOnly = true, $withParents = true, $useOfLang = false, $lang = false){
+	public function getGroups($idsOnly = true, $withParents = true, $useOfLang = false, $lang = null){
 		$this->deleted = $deleted;
 	}
 }

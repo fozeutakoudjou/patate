@@ -9,7 +9,7 @@ class Configuration extends Model{
 	protected $dateUpdate;
 	protected $valueLang;
 	private static $values = array();
-	private static $dao = null;
+	private static $dao;
 	protected $definition = array(
 		'entity' => 'configuration',
 		'primary' => 'id',
@@ -31,8 +31,7 @@ class Configuration extends Model{
 	}
 	public static function get($name, $useOfAllLang = false, $lang = ''){
 		if(!isset(self::$values[$name])){
-			$dao = self::getDAO();
-			$config = $dao->getByField('name',$name, false, false, null, true, true);
+			$config = self::getDAO()->getByField('name',$name, false, false, null, true, true);
 			if(empty($config)){
 				$value = false;
 			}else{
@@ -50,7 +49,7 @@ class Configuration extends Model{
 	}
 	
 	public static function set($name, $value, $isLangValue = false){
-		$dao = Factory::getDAOInstance('Configuration');
+		$dao = self::getDAO();
 		$config = $dao->getByField('name',$name);
 		if(empty($config)){
 			$config = new Configuration();

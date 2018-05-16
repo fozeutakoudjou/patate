@@ -7,12 +7,16 @@ use core\generator\html\Icon;
 use core\generator\html\Button;
 use core\generator\html\Link;
 use core\generator\html\InputHidden;
+use core\generator\html\Radio;
 use core\Context;
 class Table extends Form{
 	protected $templateFile = 'generator/table/table';
 	protected $rowTemplateFile = 'generator/table/row';
 	
-	protected $ajaxActive;
+	protected $ajaxActive = true;
+	protected $ajaxActivatorEnabled = true;
+	protected $ajaxActivatorOptions;
+	protected $ajaxActivatorLabel;
 	protected $formPosition;
 	
 	protected $totalResult;
@@ -65,6 +69,12 @@ class Table extends Form{
 		$this->emptyRowText = $emptyRowText;
 		$this->bulkActionText = $bulkActionText;
 		$this->searchButton->addClass('table_search_btn');
+	}
+	public function generate(){
+		if($this->ajaxActive){
+			$this->addClass('list_ajax');
+		}
+		return parent::generate();
 	}
 	public function generateContent() {
 		$this->addChild(new InputHidden($this->submitAction));
@@ -230,11 +240,31 @@ class Table extends Form{
 		$this->columns[$column->getName()] = $column;
 	}
 	
+	public function createAjaxActivator() {
+		$item = new Radio('', $this->ajaxActivatorLabel, $this->ajaxActivatorOptions, true);
+		$item->setWrapperWidth('col-lg-5');
+		$item->setValue($this->ajaxActive);
+		return $item;
+	}
+	
 	public function isAjaxActive() {
 		return $this->ajaxActive;
 	}
 	public function setAjaxActive($ajaxActive) {
 		$this->ajaxActive=$ajaxActive;
+	}
+	
+	public function isAjaxActivatorEnabled() {
+		return $this->ajaxActivatorEnabled;
+	}
+	public function setAjaxActivatorEnabled($ajaxActivatorEnabled) {
+		$this->ajaxActivatorEnabled=$ajaxActivatorEnabled;
+	}
+	public function setAjaxActivatorOptions($ajaxActivatorOptions) {
+		$this->ajaxActivatorOptions=$ajaxActivatorOptions;
+	}
+	public function setAjaxActivatorLabel($ajaxActivatorLabel) {
+		$this->ajaxActivatorLabel=$ajaxActivatorLabel;
 	}
 	
 	public function getEmptyRowText() {

@@ -9,6 +9,7 @@ class Content{
 	protected $action;
 	protected $contentForced = false;
 	protected $accessChecked = false;
+	protected $idWrapper = null;
 	
 	protected static $languages = array();
 	
@@ -27,12 +28,15 @@ class Content{
 	public function setHtml($html) {
 		$this->html=$html;
 	}
+	public function setIdWrapper($idWrapper) {
+		$this->idWrapper=$idWrapper;
+	}
 	public function gethtml() {
 		return $this->html;
 	}
 	public function generate() {
 		$content = '';
-		if($this->accessChecked || empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action)){
+		if($this->accessChecked || empty($this->action) || (self::$accessChecker==null) || self::$accessChecker->checkUserAccess($this->action, $this->idWrapper)){
 			$content = $this->html;
 			if(!$this->contentForced && !empty($this->templateFile)){
 				$template = self::$template;

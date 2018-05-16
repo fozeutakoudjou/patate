@@ -81,8 +81,8 @@ class Group extends Model{
 		return $groups;
 	}
 	
-	protected static function getDao()
+	/*protected static function getDao()
     {
 		return Factory::getDAOInstance('Group');
-    }
+    }*/
 }

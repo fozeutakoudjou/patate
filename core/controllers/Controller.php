@@ -404,9 +404,7 @@ abstract class Controller
 	protected function setControllerName()
     {
 		$class = get_class($this);
-        $bits = explode('\\', $class);
-        $this->controllerClass = end($bits);
-        $this->controllerClass = str_replace(FileTools::getControllerSuffix($this->isAdmin), '', $this->controllerClass);
+        $this->controllerClass = str_replace(FileTools::getControllerSuffix($this->isAdmin), '', Tools::getClassNameWithoutNamespace($class));
     }
 	
 	protected function getDAOInstance($className, $fromCurrent = true, $module = ''){

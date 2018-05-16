@@ -25,6 +25,7 @@ class HtmlGenerator{
 	protected $unselectAllText;
 	protected $emptyRowText;
 	protected $bulkActionText;
+	protected $defaultAjaxActivatorLabel;
 	public function __construct($template, $defaultSubmitText = '', $defaultCancelText = '', $languages = array(), $activeLang = '') {
 		$this->setDefaultSubmitText($defaultSubmitText);
 		$this->setDefaultCancelText($defaultCancelText);
@@ -39,6 +40,9 @@ class HtmlGenerator{
 	}
 	public function setActiveOptions($activeOptions){
 		$this->activeOptions=$activeOptions;
+	}
+	public function setDefaultAjaxActivatorLabel($defaultAjaxActivatorLabel){
+		$this->defaultAjaxActivatorLabel=$defaultAjaxActivatorLabel;
 	}
 	public function setSelectAllText($selectAllText){
 		$this->selectAllText=$selectAllText;
@@ -158,7 +162,10 @@ class HtmlGenerator{
 	
 	public function createTable($label = '', $icon = '', $resetHref = '#', $decorated = true){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Table($decorated, $label, $icon, $this->searchButtonText, $this->resetButtonText, $this->emptyRowText, $this->selectAllText, $this->unselectAllText, $this->bulkActionText, $resetHref);
+		$table = new Table($decorated, $label, $icon, $this->searchButtonText, $this->resetButtonText, $this->emptyRowText, $this->selectAllText, $this->unselectAllText, $this->bulkActionText, $resetHref);
+		$table->setAjaxActivatorOptions($this->radioOptions);
+		$table->setAjaxActivatorLabel($this->defaultAjaxActivatorLabel);
+		return $table;
 	}
 	
 	public function createColumn($table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array()){
@@ -223,8 +230,6 @@ class HtmlGenerator{
 	}
 	
 	public function createSwitch($name, $label = '', $options = array()){
-		$input = $this->createRadio($name, $label, $options);
-		$input->setTemplateFile('generator\switch', false);
-		return $input;
+		return $this->createRadio($name, $label, $options, true);
 	}
 }

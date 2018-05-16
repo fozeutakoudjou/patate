@@ -11,7 +11,7 @@ class PageNotFoundAdminController extends AdminController
 		$this->availableActions[$this->defaultAction] = null;
 	}
 	
-	public function checkUserAccess($action)
+	public function checkUserAccess($action, $idWrapper = null)
     {
         return true;
     }

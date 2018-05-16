@@ -442,6 +442,12 @@ class Tools
 		return $result;
     }
 	
+	public static function getClassNameWithoutNamespace($class)
+    {
+		$bits = explode('\\', $class);
+        return end($bits);
+    }
+	
 	public static function getMultipleValuesRestriction($field, $values)
     {
 		$result = array();
@@ -477,9 +483,13 @@ class Tools
         }
     }
 	
-	public static function getIntRemoteAddress($address = null)
+	public static function getNumericRemoteAddress($address = null)
     {
 		$address = ($address === null) ? self::getRemoteAddress() : $address;
         return (int)ip2long($address);
+    }
+	public static function displayError($str)
+    {
+		return $str;
     }
 }

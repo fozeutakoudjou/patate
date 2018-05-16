@@ -54,22 +54,33 @@ abstract class BaseAdminController extends Controller
 	
 	protected $activeMenuSetted = false;
 	protected $useMenu = true;
+
+	protected $extraListParams = array();
 	
 	const DATA_USED_ONCE_COOKIE_PREFIX = 'dataUsedOnce';
 
     public function __construct()
     {
 		parent::__construct();
-        global $timer_start;
-        $this->timer_start = $timer_start;
+        /*global $timer_start;
+        $this->timer_start = $timer_start;*/
     }
-	
+	protected function retrieveExtraListParams(){
+		
+	}
 	public function createUrl($params = array()){
-		return $this->context->getLink()->getAdminLink($this->moduleName, strtolower($this->controllerClass), $params);
+		$controller = isset($params['controller']) ? $params['controller'] : $this->controllerClass;
+		$module = isset($params['module']) ? $params['module'] : $this->moduleName;
+		unset($params['controller']);
+		unset($params['module']);
+		if(($module==$this->moduleName)&&($controller==$this->controllerClass)){
+			$params = array_merge($this->extraListParams, $params);
+		}
+		return $this->context->getLink()->getAdminLink($module, strtolower($controller), $params);
 	}
 	
 	public function createActionUrl($params, $values){
-		if(isset($params['params']) && is_array(isset($params['params']))){
+		if(isset($params['params']) && is_array($params['params'])){
 			foreach($params['params'] as $key => $param){
 				$value = '';
 				if(isset($param['value'])){
@@ -82,7 +93,12 @@ abstract class BaseAdminController extends Controller
 			unset($params['params']);
 		}
 		if(!isset($params[self::ID_PARAM_URL])){
-			$params[self::ID_PARAM_URL] = $this->getFieldValue($values, $this->modelIdentifier);
+			$key = self::ID_PARAM_URL;
+			if(isset($params['idParamKey'])){
+				$key = $params['idParamKey'];
+				unset($params['idParamKey']);
+			}
+			$params[$key] = $this->getFieldValue($values, $this->modelIdentifier);
 		}
 		return $this->createUrl($params);
 	}
@@ -214,6 +230,7 @@ abstract class BaseAdminController extends Controller
 		$radioOptions = array('1'=>$this->l('Yes'), '0'=>$this->l('No'));
 		$this->generator->setAccessChecker($this);
 		$this->generator->setDefaultFormErrorText($this->l('You have some form errors. Please check below.'));
+		$this->generator->setDefaultAjaxActivatorLabel($this->l('Execute action using ajax?'));
 		$this->generator->setRadioOptions($radioOptions);
 		if(!empty($this->modelClassName)){
 			$this->initModel();
@@ -226,7 +243,7 @@ abstract class BaseAdminController extends Controller
 	protected function initWrapper()
     {
 		$dao = $this->getDAOInstance('Wrapper', false);
-		$fields = array('type'=>WrapperType::CONTROLLER, 'target'=>$this->controllerClass);
+		$fields = array('type'=>WrapperType::ADMIN_CONTROLLER, 'target'=>$this->controllerClass);
 		if($this->isModule){
 			$fields['module'] = $this->moduleName;
 		}else{
@@ -240,6 +257,7 @@ abstract class BaseAdminController extends Controller
 		$actionExist = array_key_exists($this->action, $this->availableActions);
 		$action = StringTools::toCamelCase($this->action, true);
 		$ajaxProcessUsed = false;
+		$this->retrieveExtraListParams();
 		if($actionExist && $this->ajax && method_exists($this, 'ajaxProcess'.$action)){
 			$this->{'ajaxProcess'.$action}();
 			$ajaxProcessUsed = true;
@@ -255,10 +273,10 @@ abstract class BaseAdminController extends Controller
 			$this->redirectLink = $this->createUrl();
 		}
     }
-	public function checkUserAccess($action)
+	public function checkUserAccess($action, $idWrapper = null)
     {
-        //$rightCode = Tools::getRightCode($action);
-		return $this->context->getUser()->hasRight($this->wrapper->getId(), $action);
+        $idWrapper = ($idWrapper === null) ? $this->wrapper->getId() : $idWrapper;
+		return $this->context->getUser()->hasRight($idWrapper, $action);
     }
 	
 	protected function getDAOInstance($className = '', $fromCurrent = true, $module = ''){
@@ -391,7 +409,8 @@ abstract class BaseAdminController extends Controller
 			$item->addAdditionalData('active', 1);
 			$this->activeMenuSetted = true;
 		}
-		if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action)){
+		if($this->checkUserAccess($action, $menu->getIdWrapper())){
+		/*if($this->context->getUser()->hasRight($menu->getIdWrapper(), $action))*/
 			if($menu->isClickable() && !empty($menu->getIdWrapper())){
 				$params = array();
 				if($action!=self::DEFAULT_ACTION){

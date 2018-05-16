@@ -31,7 +31,7 @@ class UserGroup extends Model{
 		
 	}
 	
-	public static function getGroups($idUser, $get){
+	public static function getGroups($idUser, $idsOnly = true, $withParents = true, $useOfLang = false, $lang = null){
 		
 	}
 }
