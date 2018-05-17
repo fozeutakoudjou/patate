@@ -20,6 +20,8 @@ class Content{
 	protected static $template = null;
 	
 	protected $absoluteTemplate = false;
+	protected static $mediaSetter;
+	protected static $mediaUriCreator;
 	
 	public function __construct($html = '') {
 		$this->setHtml($html);
@@ -107,4 +109,13 @@ class Content{
 	public static function setTemplate($template){
 		self::$template=$template;
 	}
+	
+	public static function setMediaSetter($mediaSetter)
+    {
+		self::$mediaSetter = $mediaSetter;
+    }
+	public static function setMediaUriCreator($mediaUriCreator)
+    {
+		self::$mediaUriCreator = $mediaUriCreator;
+    }
 }

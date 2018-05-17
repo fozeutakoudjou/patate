@@ -6,6 +6,7 @@ use core\generator\html\table\RowAction;
 use core\generator\html\table\Row;
 use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
+use core\Context;
 class HtmlGenerator{
 	protected $defaultSubmitText;
 	protected $defaultCancelText;
@@ -34,6 +35,9 @@ class HtmlGenerator{
 		Content::setLanguages($this->languages);
 		Content::setActiveLang($this->activeLang);
 		Content::setTemplate($template);
+		$context = Context::getInstance();
+		Content::setMediaSetter($context->getMediaSetter());
+		Content::setMediaUriCreator($context->getLink());
 	}
 	public function setAccessChecker($accessChecker){
 		Content::setAccessChecker($accessChecker);
@@ -219,11 +223,11 @@ class HtmlGenerator{
 		return new Select($name, $label, $options);
 	}
 	
-	public function createRadio($name, $label = '', $options = array()){
+	public function createRadio($name, $label = '', $options = array(), $switch = false){
 		if(empty($options)){
 			$options = $this->radioOptions;
 		}
-		return new Radio($name, $label, $options);
+		return new Radio($name, $label, $options, $switch);
 	}
 	public function createTree($dao, $headerTemplateFile, $footerTemplateFile, $restrictions = array(), $associations = array(), $itemFormatter = null){
 		return new Tree($dao, $headerTemplateFile, $footerTemplateFile, $restrictions, $associations, $itemFormatter);

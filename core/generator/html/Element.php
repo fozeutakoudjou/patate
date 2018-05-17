@@ -7,6 +7,7 @@ abstract class Element extends Content{
 	protected $label;
 	protected $icon;
 	protected $attributes=array();
+	protected $wrapperAttributes=array();
 	protected $classes=array();
 	protected $labelDisabled = false;
 	protected $wrapperClasses=array();
@@ -66,6 +67,13 @@ abstract class Element extends Content{
 		$this->attributes[$name] =$value;
 	}
 	
+	public function addWrapperAttribute($name, $value = null) {
+		$this->setWrapperAttribute($name, $value);
+	}
+	public function setWrapperAttribute($name, $value = null) {
+		$this->wrapperAttributes[$name] =$value;
+	}
+	
 	public function addAdditionalData($name, $value = null) {
 		$this->additionalData[$name] =$value;
 	}
@@ -86,19 +94,28 @@ abstract class Element extends Content{
 	}
 	
 	public function drawAttributes() {
+		return $this->drawAttributesFromList($this->attributes);
+	}
+	public function drawWrapperAttributes() {
+		return $this->drawAttributesFromList($this->wrapperAttributes);
+	}
+	
+	protected function drawAttributesFromList($attributes) {
 		$result = '';
-		foreach ($this->attributes as $key => $value) {
+		foreach ($attributes as $key => $value) {
 			$result.=' '.$key.(($value ===null)?'':'="'.$value.'"');
 		}
 		return $result;
 	}
-	
+	protected function drawWrapperClassesFromList($classes) {
+		return implode(' ', $classes);
+	}
 	public function drawClasses() {
-		return implode(' ', $this->classes);
+		return $this->drawWrapperClassesFromList($this->classes);
 	}
 	
 	public function drawWrapperClasses() {
-		return implode(' ', $this->wrapperClasses);
+		return $this->drawWrapperClassesFromList($this->wrapperClasses);
 	}
 	
 	public function getLabel(){

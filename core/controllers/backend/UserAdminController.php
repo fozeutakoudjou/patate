@@ -4,6 +4,7 @@ namespace core\controllers\backend;
 use core\constant\UserType;
 use core\constant\GenderOption;
 use core\constant\generator\ColumnType;
+use core\constant\generator\SearchType;
 
 class UserAdminController extends AdminController
 {	
@@ -43,8 +44,6 @@ class UserAdminController extends AdminController
 	}
 	
 	protected function customizeColumns() {
-		$genderCol = $this->table->getColumn('gender');
-		$genderCol->setDataType(ColumnType::OPTION);
-		$genderCol->setDataOptions($this->genderOptions);
+		$this->changeColumnOptions('gender', ColumnType::OPTION, SearchType::SELECT, $this->genderOptions, $this->genderOptions);
 	}
 }

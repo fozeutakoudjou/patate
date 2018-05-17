@@ -54,3 +54,10 @@
 .lang_list_div{
 	padding-right:0px;
 }
+
+.loader_modal_icon{
+    font-size: 80px;
+}
+.loader_modal{
+    text-align: center;
+}

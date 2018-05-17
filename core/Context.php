@@ -29,6 +29,8 @@ class Context
     protected $initialized = false;
 	
     protected $template = false;
+	
+    protected $mediaSetter;
     
     public static function getInstance()
     {
@@ -128,5 +130,13 @@ class Context
 	public function getController()
     {
 		return $this->controller;
+    }
+	public function getMediaSetter()
+    {
+		return $this->mediaSetter;
+    }
+	public function setMediaSetter($mediaSetter)
+    {
+		$this->mediaSetter = $mediaSetter;
     }
 }

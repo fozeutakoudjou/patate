@@ -8,12 +8,20 @@ abstract class Command extends Element{
 	protected $confirmText;
 	protected $confirm;
 	protected $autoConfirm;
+	protected $ajaxEnabled = false;
 	
 	public function __construct($label, $icon = null, $name = '', $action = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
 		$this->setName($name);
 		$this->setAction($action);
+	}
+	
+	public function isAjaxEnabled() {
+		return $this->ajaxEnabled;
+	}
+	public function setAjaxEnabled($ajaxEnabled) {
+		$this->ajaxEnabled=$ajaxEnabled;
 	}
 	
 	public function getCustomContent() {
@@ -75,6 +83,9 @@ abstract class Command extends Element{
 			if($this->autoConfirm){
 				$this->addClass('auto_confirm');
 			}
+		}
+		if($this->ajaxEnabled){
+			$this->addClass('ajaxCommand');
 		}
 		return parent::generate();
 	}

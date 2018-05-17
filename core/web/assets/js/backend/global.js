@@ -47,10 +47,12 @@ function handleGlobalEvent(){
 		if(!$(this).hasClass("alreadyConfirmed")){
 			checkConfirm(e, function(target){
 				target.addClass("alreadyConfirmed");
-				if(target.is("a")){
-					location.href = target.attr("href");
+				if(target.hasClass("listCommand")){
+					if(typeof(TableManager)==="object"){
+						TableManager.checkCommand(target, continuePropagation);
+					}
 				}else{
-					target.click();
+					continuePropagation(target);
 				}
 			});
 		}
@@ -60,6 +62,14 @@ function handleGlobalEvent(){
 		var form = $(this).closest("form");
 		form.find("input[name='action']:first").val("");
 	});
+}
+
+function continuePropagation(target){
+	if(target.is("a")){
+		location.href = target.attr("href");
+	}else{
+		target.click();
+	}
 }
 
 function showConfirmDialog(target, callback){

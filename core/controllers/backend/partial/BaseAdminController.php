@@ -331,6 +331,9 @@ abstract class BaseAdminController extends Controller
 		$jsUri = $link->getJSURI(true, '', false);
 		$cssUri = $link->getCSSURI(true, '', false);
         $this->addJS($librariesUri.'jquery/ui/jquery-ui.min.js', array('isLibrary' => true), false);
+		$this->addJS($jsUri.'ArrayTools.js');
+		$this->addJS($jsUri.'Tools.js');
+		$this->addJS($jsUri.'Theme.js');
 		$this->addJS($jsUri.'global.js');
 		$this->addCSS($cssUri.'global.css');
 	}

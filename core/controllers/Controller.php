@@ -2,17 +2,19 @@
 namespace core\controllers;
 
 use core\Context;
+use core\interfaces\MediaSetter;
 use core\Media;
 use core\Tools;
 use core\StringTools;
 use core\FileTools;
 use core\dao\Factory;
+use core\constant\MediaPosition;
 
 use core\models\Language;
 
 use core\models\Configuration;
 
-abstract class Controller
+abstract class Controller implements MediaSetter
 {
     /** @var Context */
     protected $context;
@@ -86,6 +88,7 @@ abstract class Controller
     protected $warnings;
     protected $informations;
 	protected $defaultAction = '';
+	protected $mediaGroups = array();
 	
     /**
      * Initialize the page
@@ -106,7 +109,7 @@ abstract class Controller
     protected function setMedia(){
 		$link = $this->context->getLink();
 		$this->addJquery();
-		$this->addJSVariable('baseUrl', $link->getBaseLink(), false, Media::POSITION_FIRST);
+		$this->addJSVariable('baseUrl', $link->getBaseLink(), false, MediaPosition::FIRST);
 	}
 
     public function __construct($action = null, $ajax = null, $onlyProcess = false, $changeContextController = true)
@@ -122,6 +125,7 @@ abstract class Controller
 		$this->lang = $this->context->getLang();
 		if($changeContextController){
 			$this->context->setController($this);
+			$this->context->setMediaSetter($this);
 		}
 		if (!headers_sent()
             && isset($_SERVER['HTTP_USER_AGENT'])
@@ -226,7 +230,9 @@ abstract class Controller
      */
     abstract protected function redirect();
 	
-
+	public function hasMediaAdded($alias){
+		
+	}
     /**
      * Adds a new stylesheet(s) to the page header.
      *
@@ -291,7 +297,7 @@ abstract class Controller
      */
     public function addJquery($version = null, $folder = null, $minifier = true)
     {
-		$params = array('position' => Media::POSITION_FIRST, 'isLibrary' => true);
+		$params = array('position' => MediaPosition::FIRST, 'isLibrary' => true);
         $this->addJS(Media::getJqueryPath($version, $folder, $minifier), $params, false);
     }
 
@@ -321,7 +327,7 @@ abstract class Controller
         }
     }
 	
-	public function addJSVariable($name, $value, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+	public function addJSVariable($name, $value, $displayInHead = false, $position = MediaPosition::LAST)
     {
 		$this->jsVariables[$name] = array(
 			'value' => $value,
@@ -330,7 +336,7 @@ abstract class Controller
 		);
     }
 	
-	public function addJSContent($content, $displayInHead = false, $position = MEDIA::POSITION_LAST)
+	public function addJSContent($content, $displayInHead = false, $position = MediaPosition::LAST)
     {
 		$this->jsContents[] = array(
 			'content' => $content,
@@ -339,13 +345,25 @@ abstract class Controller
 		);
     }
 	
-	public function addCSSContent($content, $position = MEDIA::POSITION_LAST)
+	public function addCSSContent($content, $position = MediaPosition::LAST)
     {
 		$this->cssContents[] = array(
 			'content' => $content,
 			'position' => $position,
 		);
     }
+	
+	public function addMediaGroup($alias){
+		$this->mediaGroups[$alias] = $alias;
+	}
+	
+	public function removeMediaGroup($alias){
+		unset($this->mediaGroups[$alias]);
+	}
+	
+	public function hasMediaGroup($alias){
+		return isset($this->mediaGroups[$alias]);
+	}
 
     /**
      * Checks if the controller has been called from XmlHttpRequest (AJAX)

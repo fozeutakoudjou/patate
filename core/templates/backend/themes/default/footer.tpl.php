@@ -34,12 +34,14 @@
 <script src="<?php echo $librariesDir;?>js/jquery.cokie.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>uniform/jquery.uniform.min.js" type="text/javascript"></script>
 <script src="<?php echo $librariesDir;?>bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
+<script src="<?php echo $librariesDir;?>js/bootbox.min.js" type="text/javascript"></script>
 
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'app.min.js');?>" type="text/javascript"></script>
 
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'layout.min.js');?>" type="text/javascript"></script>
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-sidebar.min.js');?>" type="text/javascript"></script>
 <script src="<?php echo $tools->getMedia($jsAdminThemeDir.'quick-nav.min.js');?>" type="text/javascript"></script>
+<script src="<?php echo $tools->getMedia($jsAdminThemeDir.'Theme.js');?>" type="text/javascript"></script>
 
 <script>
 	$(document).ready(function()

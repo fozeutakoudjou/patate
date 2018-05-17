@@ -1,11 +1,9 @@
-<?php /*$tools->addCSS($librariesDir.'datatables/datatables.min.css', array(), false);*/?>
-<?php /*$tools->addCSS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.css', array(), false);*/?>
-
-<?php /*$tools->addJS($librariesDir.'datatables/datatables.min.js', array(), false);*/?>
-<?php /*$tools->addJS($librariesDir.'datatables/plugins/bootstrap/datatables.bootstrap.js', array(), false);*/?>
+<?php if(!$item->isContentOnly()):?>
+<div class="<?php echo $item->getAdditional('topWrapperClasses');?>">
+<?php if($item->canDrawEditionFormAtTop()): echo $item->createFormBlock()->generate(); endif;?>
+<?php endif;?>
 <?php if($item->isDecorated()):?>
-	<div class="portlet light bordered <?php echo $item->drawWrapperClasses();?>" 
-		style="<?php echo $item->drawVisible();?>">
+	<div class="portlet light bordered <?php echo $item->drawWrapperClasses();?>" <?php echo $item->drawWrapperAttributes();?> style="<?php echo $item->drawVisible();?>">
 	<?php if($item->isAjaxActivatorEnabled()):?>
 		<div class="portlet-title">
 			<?php echo $item->createAjaxActivator()->generate();?>
@@ -38,11 +36,9 @@
 		<div class="portlet-body">
 		
 <?php else:?>
-	<div class="<?php echo $item->drawWrapperClasses();?>" style="<?php echo $item->drawVisible();?>">
+	<div>
 <?php endif;?>
-<?php if(!$item->isContentOnly()):?>
-	<form action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
-<?php endif;?>
+	<form class="<?php echo $item->getAdditional('formClasses');?>" action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
 	<?php echo $item->generateContent();?>
 	<div class="table-container table-responsive">
 		<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
@@ -156,4 +152,9 @@
 	</div>
 <?php else:?>
 	</div>
+<?php endif;?>
+
+<?php if(!$item->isContentOnly()):?>
+<?php if($item->canDrawEditionFormAtBottom()): echo $item->createFormBlock()->generate(); endif;?>
+</div>
 <?php endif;?>

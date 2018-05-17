@@ -19,6 +19,10 @@ class TemplateTools{
 		return FileTools::getMediaUri($uri);
 	}
 	
+	public function getImage($src){
+		return $this->getMedia($src);
+	}
+	
 	public function l($string){
 		return $string;
 	}
@@ -26,44 +30,4 @@ class TemplateTools{
 	public function getFieldName($name, $lang = ''){
 		return Tools::getLangFieldKey($name, $lang);
 	}
-	
-	public function addJS($jsUri, $params = array(), $checkPath = true)
-    {
-		Context::getInstance()->getController()->addJS($jsUri, $params, $checkPath);
-    }
-
-    public function removeJS($jsUri, $checkPath = true)
-    {
-		Context::getInstance()->getController()->removeJS($jsUri, $checkPath);
-    }
-	
-	public function addCSS($cssUri, $params = array(), $checkPath = true)
-    {
-		Context::getInstance()->getController()->addCSS($cssUri, $params, $checkPath);
-    }
-
-    public function removeCSS($cssUri, $checkPath = true)
-    {
-		Context::getInstance()->getController()->removeCSS($cssUri, $checkPath);
-    }
-	
-    public function addJqueryPlugin($name, $folder = null, $css = true, $module = '')
-    {
-		Context::getInstance()->getController()->addJqueryPlugin($name, $folder, $css, $module);
-    }
-	
-	public function addJSVariable($name, $value, $displayInHead = false, $position = MEDIA::POSITION_LAST)
-    {
-		Context::getInstance()->getController()->addJSVariable($name, $value, $displayInHead, $position);
-    }
-	
-	public function addJSContent($content, $displayInHead = false, $position = MEDIA::POSITION_LAST)
-    {
-		Context::getInstance()->getController()->addJSContent($content, $displayInHead, $position);
-    }
-	
-	public function addCSSContent($content, $position = MEDIA::POSITION_LAST)
-    {
-		Context::getInstance()->getController()->addCSSContent($content, $position);
-    }
 }

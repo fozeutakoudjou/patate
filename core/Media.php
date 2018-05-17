@@ -1,10 +1,8 @@
 <?php
 namespace core;
+use core\constant\MediaPosition;
 class Media
 {
-	const POSITION_FIRST = 'first';
-	const POSITION_LAST = 'last';
-	
 	const LIBRARY_KEY = 'libraries';
 	const NOT_LIBRARY_KEY = 'others';
 	const HEAD_KEY = 'head';
@@ -36,7 +34,7 @@ class Media
 			}else{
 				if(!empty($uri)){
 					if(!isset($params['position'])){
-						$params['position'] = self::POSITION_LAST;
+						$params['position'] = MediaPosition::LAST;
 					}
 					$list[$uri] = $params;
 				}
@@ -47,11 +45,11 @@ class Media
 	
 	public static function sortList($list){
 		uasort($list, function($item1, $item2){
-			$position1 = isset($item1['position']) ? $item1['position'] : Media::POSITION_LAST;
-			$position2 = isset($item2['position']) ? $item2['position'] : Media::POSITION_LAST;
-			if($position1==Media::POSITION_FIRST){
+			$position1 = isset($item1['position']) ? $item1['position'] : MediaPosition::LAST;
+			$position2 = isset($item2['position']) ? $item2['position'] : MediaPosition::LAST;
+			if($position1==MediaPosition::FIRST){
 				return -1;
-			}elseif($position1==Media::POSITION_LAST){
+			}elseif($position1==MediaPosition::LAST){
 				return 1;
 			}else{
 				return (int)$position1 - (int)$position2;

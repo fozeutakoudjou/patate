@@ -16,7 +16,8 @@ class AdministratorAdminController extends UserAdminController
 		$idWrapper = empty($wrapper) ? 0 : $wrapper[0]->getId();
 		if(!empty($idWrapper) && $this->checkUserAccess(ActionCode::LISTING, $idWrapper)){
 			$params = array('controller'=>'access', 'module'=>'', 'type'=>UrlParamType::USER, 'idParamKey'=>'target');
-			$this->generator->createRowAction($this->table, $this->l('Access'), '', '', $this->l('Access'), false, 'userAccess', ActionCode::LISTING, $params, false, false, '', true, true, '', true);
+			$link = $this->generator->createRowAction($this->table, $this->l('Access'), '', '', $this->l('Access'), false, 'userAccess', ActionCode::LISTING, $params, false, false, '', true, true, 'openInDialog', true);
+			$link->setAjaxEnabled(true);
 		}
 	}
 }

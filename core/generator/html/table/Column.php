@@ -51,6 +51,7 @@ class Column extends Element{
 				foreach($this->sortLinks as $link){
 					$link->setLabelDisabled(true);
 					$link->addClass('sort_link');
+					$link->addClass('listCommand');
 					if($this->isActiveSortWay($link->getAdditional('way'))){
 						$link->addClass('active');
 					}

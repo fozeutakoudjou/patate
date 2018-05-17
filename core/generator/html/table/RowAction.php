@@ -42,6 +42,8 @@ class RowAction extends Link{
 		$link->setConfirm($this->confirm);
 		$link->setAttributes($this->attributes);*/
 		$link = clone $this;
+		$link->addClass('listCommand');
+		$link->addClass('rowAction');
 		if($this->confirm){
 			$description = is_array($values) ? $values[$this->table->getIdentifier()] : $values->__toString();
 			$link->setConfirmText(sprintf($this->confirmText, $description));

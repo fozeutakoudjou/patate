@@ -38,6 +38,8 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected $limitParams = array(0=>'all');
 	protected $searchData;
 	protected $baseRestrictionsData = array();
+	protected $executeActionUsingAjax = true;
+	protected $ajaxActivatorEnabled = true;
 	
 	public function init()
     {
@@ -72,7 +74,9 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table->setOrderWay(($this->orderWay === null)? $this->defaultOrderWay : $this->orderWay);
 		$this->table->setFilterPrefix($this->filterPrefix);
 		$this->table->setSearchData($this->searchData);
-		$this->customizeTable();
+		$this->table->setAjaxEnabled($this->executeActionUsingAjax);
+		$this->table->setAjaxActivatorEnabled($this->ajaxActivatorEnabled);
+		
 		$activeOptions = array(
 			'1'=>array('label'=>$this->l('Yes')),
 			'0'=>array('label'=>$this->l('No')),
@@ -88,6 +92,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			'0'=>array('rowAction'=>$this->generator->createRowAction($this->table, '', '', 'remove', $this->l('Disabled'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, array(), false, false, '', false, false, 'action-disabled')),
 		);*/
 		$this->generator->setActiveOptions($activeOptions);
+		$this->customizeTable();
 	}
 	
 	protected function customizeTable() {}

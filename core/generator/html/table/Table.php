@@ -8,16 +8,16 @@ use core\generator\html\Button;
 use core\generator\html\Link;
 use core\generator\html\InputHidden;
 use core\generator\html\Radio;
-use core\Context;
+use core\constant\FormPosition;
 class Table extends Form{
 	protected $templateFile = 'generator/table/table';
 	protected $rowTemplateFile = 'generator/table/row';
 	
-	protected $ajaxActive = true;
+	protected $ajaxEnabled = true;
 	protected $ajaxActivatorEnabled = true;
 	protected $ajaxActivatorOptions;
 	protected $ajaxActivatorLabel;
-	protected $formPosition;
+	protected $formPosition = FormPosition::TOP;
 	
 	protected $totalResult;
 	protected $itemsPerPage;
@@ -55,6 +55,8 @@ class Table extends Form{
 	protected $selectAll;
 	protected $unselectAll;
 	protected $maxPageDisplayed = 5;
+	protected $formWidth = 'col-lg-5';
+	protected $listWidth = 'col-lg-7';
 	
 	protected $filterPrefix;
 	
@@ -69,12 +71,35 @@ class Table extends Form{
 		$this->emptyRowText = $emptyRowText;
 		$this->bulkActionText = $bulkActionText;
 		$this->searchButton->addClass('table_search_btn');
+		if(!self::$mediaSetter->hasMediaGroup('tableManager')){
+			self::$mediaSetter->addJS(self::$mediaUriCreator->getJSURI(true, '', false).'TableManager.js');
+			self::$mediaSetter->addMediaGroup('tableManager');
+		}
 	}
 	public function generate(){
-		if($this->ajaxActive){
-			$this->addClass('list_ajax');
+		$this->addWrapperClass('listWrapper');
+		$this->addAdditionalData('topWrapperClasses', 'listWrapperTopParent');
+		$this->addAdditionalData('formClasses', 'formList');
+		$this->addWrapperAttribute('data-form_open_mode', (($this->formPosition==FormPosition::DIALOG) ? 'dialog' : 'side'));
+		$this->addWrapperAttribute('data-list_width', $this->listWidth);
+		$this->addAdditionalData('topWrapperClasses', 'listWrapperTopParent');
+		if($this->ajaxEnabled){
+			$this->addWrapperClass('ajaxList');
 		}
+		/*self::$template->assign('FormPosition', new FormPosition());*/
 		return parent::generate();
+	}
+	public function canDrawEditionFormAtTop(){
+		return (($this->formPosition==FormPosition::TOP)||($this->formPosition==FormPosition::LEFT));
+	}
+	public function canDrawEditionFormAtBottom(){
+		return (($this->formPosition==FormPosition::BOTTOM)||($this->formPosition==FormPosition::RIGHT));
+	}
+	public function createFormBlock(){
+		$block = new Block(false);
+		$block->setVisible(false);
+		$block->setWidth($this->formWidth);
+		return $block;
 	}
 	public function generateContent() {
 		$this->addChild(new InputHidden($this->submitAction));
@@ -241,17 +266,18 @@ class Table extends Form{
 	}
 	
 	public function createAjaxActivator() {
-		$item = new Radio('', $this->ajaxActivatorLabel, $this->ajaxActivatorOptions, true);
+		$item = new Radio('ajaxActivator', $this->ajaxActivatorLabel, $this->ajaxActivatorOptions, true);
 		$item->setWrapperWidth('col-lg-5');
-		$item->setValue($this->ajaxActive);
+		$item->setValue($this->ajaxEnabled);
+		$item->addClass('ajaxActivator');
 		return $item;
 	}
 	
-	public function isAjaxActive() {
-		return $this->ajaxActive;
+	public function isAjaxEnabled() {
+		return $this->ajaxEnabled;
 	}
-	public function setAjaxActive($ajaxActive) {
-		$this->ajaxActive=$ajaxActive;
+	public function setAjaxEnabled($ajaxEnabled) {
+		$this->ajaxEnabled=$ajaxEnabled;
 	}
 	
 	public function isAjaxActivatorEnabled() {
@@ -306,6 +332,8 @@ class Table extends Form{
 	}
 	
 	public function addTableAction($action) {
+		$action->addClass('listCommand');
+		$action->addClass('tableAction');
 		$this->tableActions[$action->getName()] = $action;
 	}
 	public function getTableActions() {
