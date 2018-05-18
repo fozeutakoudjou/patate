@@ -10,6 +10,7 @@ class Field extends Element{
 	//protected $errors;
 	protected $labelObject;
 	protected $labelWidth;
+	protected $errors = '';
 	
 	protected $translatable = false;
 	protected $fieldOnly = false;

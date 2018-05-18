@@ -99,9 +99,13 @@ class HtmlGenerator{
 	}
 	
 	
-	public function createBlock($decorated = true, $label = '', $icon = ''){
+	public function createBlock($decorated = true, $label = '', $icon = '', $class = ''){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
-		return new Block($decorated, $label, $icon);
+		$block =  new Block($decorated, $label, $icon);
+		if(!empty($class)){
+			$block->addClass($class);
+		}
+		return $block;
 	}
 	public function createForm($useSubmit = true, $useCancel = true, $cancelLink = '#', $decorated = true, $label = '', $icon = '', $formAction = '', $submitAction = '', $errorText = '',  $subLabel = '', $method = 'post'){
 		$icon = empty($icon) ? null : $this->createIcon($icon);
@@ -111,8 +115,11 @@ class HtmlGenerator{
 			$form->setSubmit($this->createButton($this->defaultSubmitText, true, $this->defaultSubmitIcon));
 		}
 		if($useCancel){
-			$form->setCancel($this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon, $this->defaultCancelText, true, '', ''));
+			$cancel = $this->createLink($this->defaultCancelText, $cancelLink, $this->defaultCancelIcon, $this->defaultCancelText, true, '', '');
+			$cancel->addClass('btnCancel');
+			$form->setCancel($cancel);
 		}
+		$form->addClass('formEdit');
 		return $form;
 	}
 	public function createIcon($value, $addOnIcon = true){

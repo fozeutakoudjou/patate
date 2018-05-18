@@ -6,6 +6,7 @@ use core\constant\generator\SearchType;
 use core\constant\dao\Operator;
 use core\constant\ActionCode;
 use core\constant\dao\OrderWay;
+use core\constant\FormPosition;
 class AdminMenuAdminController extends AdminController
 {	
 	protected $modelClassName = 'AdminMenu';
@@ -99,6 +100,9 @@ class AdminMenuAdminController extends AdminController
 		$idParent = Tools::getValue('parent');
 		if(!empty($idParent)){
 			$this->extraListParams['parent'] = (int)$idParent;
+			$this->executeActionUsingAjax = true;
+			$this->ajaxActivatorEnabled = false;
+			$this->ajaxFormPosition = FormPosition::TOP;
 		}
 	}
 	
@@ -123,8 +127,9 @@ class AdminMenuAdminController extends AdminController
 	
 	protected function createRowsActions() {
 		parent::createRowsActions();
-		if(isset($this->availableActions[ActionCode::LISTING])){
-			$this->generator->createRowAction($this->table, $this->l('Children'), '', '', $this->l('Children'), false, 'subMenusList', ActionCode::LISTING, array('idParamKey'=>'parent'), false, false, '', true, true, '', true);
+		if($this->isActionEnabled(ActionCode::LISTING)){
+			$link = $this->generator->createRowAction($this->table, $this->l('Children'), '', '', $this->l('Children'), false, 'subMenusList', ActionCode::LISTING, array('idParamKey'=>'parent'), false, false, '', true, true, 'openInDialog', true);
+			$link->setAjaxEnabled(true);
 		}
 	}
 }

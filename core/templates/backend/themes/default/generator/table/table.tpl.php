@@ -1,5 +1,5 @@
 <?php if(!$item->isContentOnly()):?>
-<div class="<?php echo $item->getAdditional('topWrapperClasses');?>">
+<div class="row <?php echo $item->getAdditional('topWrapperClasses');?>" id="<?php echo $item->createTopParentId();?>">
 <?php if($item->canDrawEditionFormAtTop()): echo $item->createFormBlock()->generate(); endif;?>
 <?php endif;?>
 <?php if($item->isDecorated()):?>

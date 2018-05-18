@@ -190,7 +190,7 @@ abstract class Controller implements MediaSetter
     {
 		$output = $this->processResult;
 		$output['errors'] = $this->errors;
-		$output['hasError'] = count($this->errors)>0;
+		$output['hasErrors'] = count($this->errors)>0;
 		$output['errors'] = $this->errors;
         die(Tools::jsonEncode($output));
     }

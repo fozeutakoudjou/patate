@@ -39,11 +39,11 @@
 <!-- END SIDEBAR -->
 <!-- BEGIN CONTENT -->
 	<div class="page-content-wrapper">
-		<div class="page-content">
-			<?php $tools->includeTpl('notification/confirmations', false);?>
+		<div class="page-content <?php echo $pageContentClasses;?>">
+			<div class="<?php echo $pageSuccessClasses;?>"><?php $tools->includeTpl('notification/confirmations', false);?></div>
 			<?php $tools->includeTpl('notification/informations', false);?>
 			<?php $tools->includeTpl('notification/warnings', false);?>
-			<?php $tools->includeTpl('notification/errors', false);?>
+			<div class="<?php echo $pageErrorsClasses;?>"><?php $tools->includeTpl('notification/errors', false);?></div>
 			
 			<?php echo $page; ?>
 			<!-- END CONTENT -->

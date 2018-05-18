@@ -39,11 +39,10 @@ abstract class AdminController extends FormAdminController
 							$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
 						$this->afterEdit($result, $update);
 						if($result){
-							$this->dataUsedOnce['success'] = $this->action;
-							$this->redirectLink = $this->createUrl();
+							$this->processResult['success'] = $this->action;
 							$this->redirectAfter = true;
 							$this->resetAllFilters();
-							$this->setCookieDataUsedOnce(true);
+							
 						}else{
 							$this->errors[] = $this->l('An error occured while saving');
 						}
@@ -64,6 +63,7 @@ abstract class AdminController extends FormAdminController
 				$this->form->setValue($data);
 				$this->form->setErrors($this->formatFormErrors());
 				$this->processResult['content'] = $this->form->generate();
+				$this->processResult['formContentType'] = 1;
 			}
 		}
 	}
@@ -77,26 +77,29 @@ abstract class AdminController extends FormAdminController
 	protected function processList(){
 		if(Tools::isSubmit('submitFilterData')){
 			$this->updateListSearchData();
-			$this->redirectLink = $this->createUrl();
 			$this->redirectAfter = true;
 		}elseif(Tools::getValue('resetAllFilters')){
 			$this->resetAllFilters();
-			$this->redirectLink = $this->createUrl();
 			$this->redirectAfter = true;
 		}else{
-			$this->retrieveListSearchData();
-			$this->formatListSearchData();
-			$this->retrieveListUrlParam();
-			$this->createTable();
-			$this->createColumns();
-			$this->createTableActions();
-			$this->createBulkActions();
-			$this->createRowsActions();
-			$data = $this->formatListData($this->getListData());
-			$this->table->setTotalResult($data['total']);
-			$this->table->setValue($data['list']);
-			$this->processResult['content'] = $this->table->generate();
+			$this->renderList();
 		}
+	}
+	
+	protected function renderList(){
+		$this->retrieveListSearchData();
+		$this->formatListSearchData();
+		$this->retrieveListUrlParam();
+		$this->createTable();
+		$this->createColumns();
+		$this->createTableActions();
+		$this->createBulkActions();
+		$this->createRowsActions();
+		$data = $this->formatListData($this->getListData());
+		$this->table->setTotalResult($data['total']);
+		$this->table->setValue($data['list']);
+		$this->processResult['content'] = $this->table->generate();
+		$this->processResult['listContentType'] = 1;
 	}
 	
 	protected function processActivate(){
@@ -156,11 +159,9 @@ abstract class AdminController extends FormAdminController
 				$this->processList();
 			}
 		}else{
-			$this->dataUsedOnce['success'] = empty($successCode) ? $action : $successCode;
-			$this->redirectLink = $this->createUrl();
+			$this->processResult['success'] = empty($successCode) ? $action : $successCode;
 			$this->redirectAfter = true;
 			$this->resetAllFilters();
-			$this->setCookieDataUsedOnce(true);
 		}
 	}
 	

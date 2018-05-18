@@ -5,13 +5,14 @@ use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\UrlParamType;
 use core\constant\ActionCode;
+use core\constant\FormPosition;
 class AccessAdminController extends AdminController
 {	
 	protected $modelClassName = 'Access';
-	protected function initActions()
+	protected function restrictAction()
     {
-		parent::initActions();
-		unset($this->availableActions[ActionCode::UPDATE]);
+		parent::restrictAction();
+		$this->restrictedActions[]=ActionCode::UPDATE;
 	}
 	protected function beforeEdit($update = false){
 		if(!$update && isset($this->extraListParams['parent'])){
@@ -42,8 +43,10 @@ class AccessAdminController extends AdminController
 	protected function createFormFields($update = false)
     {
 		if(!$update){
-			$this->formFieldsToExclude[] = 'position';
-			$this->formFieldsToExclude[] = 'idParent';
+			if(isset($this->extraListParams['type'])){
+				$this->formFieldsToExclude[] = 'idUser';
+				$this->formFieldsToExclude[] = 'idGroup';
+			}
 		}
 		parent::createFormFields($update);
 	}
@@ -71,6 +74,9 @@ class AccessAdminController extends AdminController
 		if(!empty($type)){
 			$this->extraListParams['type'] = $type;
 			$this->extraListParams['target'] = (int)Tools::getValue('target');
+			$this->executeActionUsingAjax = true;
+			$this->ajaxActivatorEnabled = false;
+			$this->ajaxFormPosition = FormPosition::TOP;
 		}
 	}
 	

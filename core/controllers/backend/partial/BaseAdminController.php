@@ -21,7 +21,11 @@ abstract class BaseAdminController extends Controller
 {
 	const ID_PARAM_URL = 'param1';
 	const REDIRECT_PREFIX = 'redirect_';
+	const PAGE_CONTENT_CLASSES = 'pageContent';
+	const ERRORS_CLASSES = 'pageErrors';
+	const SUCCESS_CLASSES = 'pageSuccess';
 	protected $availableActions = array();
+	protected $restrictedActions = array();
 	
     protected $modelClassName;
 	
@@ -180,7 +184,7 @@ abstract class BaseAdminController extends Controller
     {
 		foreach($this->availableActions as $key => $value){
 			if(!$this->checkUserAccess($key)){
-				unset($this->availableActions[$key]);
+				$this->restrictedActions[]=$key;
 			}
 		}
 	}
@@ -254,7 +258,7 @@ abstract class BaseAdminController extends Controller
 	}
 	protected function processAction()
     {
-		$actionExist = array_key_exists($this->action, $this->availableActions);
+		$actionExist = $this->isActionEnabled($this->action);
 		$action = StringTools::toCamelCase($this->action, true);
 		$ajaxProcessUsed = false;
 		$this->retrieveExtraListParams();
@@ -271,6 +275,24 @@ abstract class BaseAdminController extends Controller
 		}
 		if (!$this->ajax && !$this->onlyProcess && $this->redirectAfter && empty($this->redirectLink)) {
 			$this->redirectLink = $this->createUrl();
+			if(isset($this->processResult['success'])){
+				$this->dataUsedOnce['success'] = $this->processResult['success'];
+				$this->setCookieDataUsedOnce(true);
+			}
+		}
+    }
+	protected function isActionEnabled($action)
+    {
+		return !in_array($action, $this->restrictedActions);
+	}
+	protected function ajaxProcess()
+    {
+        parent::ajaxProcess();
+		if (!isset($this->processResult['content']) && $this->redirectAfter && empty($this->redirectLink)) {
+			$this->renderList();
+		}
+		if(isset($this->processResult['success'])){
+			$this->processResult['success'] = $this->getSuccessLabel($this->processResult['success']);
 		}
     }
 	public function checkUserAccess($action, $idWrapper = null)
@@ -336,6 +358,8 @@ abstract class BaseAdminController extends Controller
 		$this->addJS($jsUri.'Theme.js');
 		$this->addJS($jsUri.'global.js');
 		$this->addCSS($cssUri.'global.css');
+		$this->addCSS($librariesUri.'toastr/toastr.min.css', array('isLibrary' => true), false);
+		$this->addJS($librariesUri.'toastr/toastr.min.js', array('isLibrary' => true), false);
 	}
 	protected function setCookieDataUsedOnce($write = false)
     {
@@ -348,6 +372,10 @@ abstract class BaseAdminController extends Controller
 			$cookie->write();
 		}
     }
+	/*protected function drawAjaxPageContent()
+    {
+		$content = $this->generator->createBlock(false, '', '', self::PAGE_CONTENT_CLASSES);
+	}*/
     protected function display()
     {
 		$cookie = $this->context->getCookie();
@@ -357,6 +385,9 @@ abstract class BaseAdminController extends Controller
 		$this->setCookieDataUsedOnce(false);
         $this->template->assign(array(
             'useOfHeader' => $this->useOfHeader,
+            'pageContentClasses' => self::PAGE_CONTENT_CLASSES,
+            'pageErrorsClasses' => self::ERRORS_CLASSES,
+            'pageSuccessClasses' => self::SUCCESS_CLASSES,
             'useOfHeaderJavascript'=> $this->useOfHeaderJavascript,
             'useOfFooter' => $this->useOfFooter,
         ));

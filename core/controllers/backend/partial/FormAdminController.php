@@ -58,7 +58,7 @@ abstract class FormAdminController extends ListAdminController
 			if(!in_array($field, $this->formFieldsToExclude)){
 				$input = $this->createFieldByDefinition($fieldDefinition, $field);
 				$input->setLabelWidth('col-lg-3');
-				$input->setWidth('col-lg-6');
+				$input->setWidth('col-lg-9');
 				$this->form->addChild($input);
 			}
 		}

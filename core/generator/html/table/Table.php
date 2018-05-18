@@ -17,7 +17,7 @@ class Table extends Form{
 	protected $ajaxActivatorEnabled = true;
 	protected $ajaxActivatorOptions;
 	protected $ajaxActivatorLabel;
-	protected $formPosition = FormPosition::TOP;
+	protected $formPosition = FormPosition::DIALOG;
 	
 	protected $totalResult;
 	protected $itemsPerPage;
@@ -78,16 +78,27 @@ class Table extends Form{
 	}
 	public function generate(){
 		$this->addWrapperClass('listWrapper');
-		$this->addAdditionalData('topWrapperClasses', 'listWrapperTopParent');
+		$topWrapperClasses = 'listWrapperTopParent';
+		
 		$this->addAdditionalData('formClasses', 'formList');
-		$this->addWrapperAttribute('data-form_open_mode', (($this->formPosition==FormPosition::DIALOG) ? 'dialog' : 'side'));
-		$this->addWrapperAttribute('data-list_width', $this->listWidth);
+		$openMode = ($this->formPosition==FormPosition::DIALOG) ? 'dialog' : '';
+		if(($this->formPosition==FormPosition::LEFT)||($this->formPosition==FormPosition::RIGHT)){
+			$openMode= 'side';
+			$this->addWrapperAttribute('data-list_width', $this->listWidth);
+		}
+		$this->addWrapperAttribute('data-form_open_mode', $openMode);
 		$this->addAdditionalData('topWrapperClasses', 'listWrapperTopParent');
+		$this->searchResetButton->addClass('listCommand');
 		if($this->ajaxEnabled){
 			$this->addWrapperClass('ajaxList');
+			$topWrapperClasses.=' ajaxParent';
 		}
+		$this->addAdditionalData('topWrapperClasses', $topWrapperClasses);
 		/*self::$template->assign('FormPosition', new FormPosition());*/
 		return parent::generate();
+	}
+	public function createTopParentId(){
+		return 'listWrapperTopParent'.'_'. strtotime(date("Y-m-d H:i:s"));
 	}
 	public function canDrawEditionFormAtTop(){
 		return (($this->formPosition==FormPosition::TOP)||($this->formPosition==FormPosition::LEFT));
@@ -98,7 +109,10 @@ class Table extends Form{
 	public function createFormBlock(){
 		$block = new Block(false);
 		$block->setVisible(false);
-		$block->setWidth($this->formWidth);
+		$block->addClass('listEditionFormBlock');
+		if(($this->formPosition==FormPosition::LEFT)||($this->formPosition==FormPosition::RIGHT)){
+			$block->setWidth($this->formWidth);
+		}
 		return $block;
 	}
 	public function generateContent() {
@@ -118,6 +132,7 @@ class Table extends Form{
 	}
 	public function createItemPerPageLink($itemsPerPage, $label) {
 		$link = new Link($label, $this->urlCreator->createLimitUrl($itemsPerPage));
+		$link->addClass('listCommand');
 		return $link;
 	}
 	public function isActiveItemPerPage($value){
@@ -148,11 +163,13 @@ class Table extends Form{
 			if(!empty($templateFile)){
 				$pagination->setTemplateFile($this->rowTemplateFile, $absolutePath);
 			}
+			$pagination->setLinkClasses('listCommand');
 			$content = $pagination->generate();
 		}
 		
 		return $content;
 	}
+
 	public function getItemsPerPageLabel(){
 		return isset($this->itemsPerPageOptions[$this->itemsPerPage]) ? $this->itemsPerPageOptions[$this->itemsPerPage] : $this->itemsPerPage;
 	}

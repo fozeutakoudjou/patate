@@ -13,8 +13,9 @@ class Pagination extends Block{
 	protected $maxPageDisplayed;
 	protected $urlCreator;
 	protected $totalPage;
+	protected $linkClasses;
 	
-	public function __construct($table = null, $totalResult = 0, $itemsPerPage = 20, $currentPage = 1, $maxPageDisplayed = 5, $urlCreator = null) {
+	public function __construct($table = null, $totalResult = 0, $itemsPerPage = 20, $currentPage = 1, $maxPageDisplayed = 5, $urlCreator = null, $linkClasses = '') {
 		if($table!=null){
 			$totalResult = $table->getTotalResult();
 			$itemsPerPage = $table->getItemsPerPage();
@@ -27,6 +28,10 @@ class Pagination extends Block{
 		$this->setCurrentPage($currentPage);
 		$this->setMaxPageDisplayed($maxPageDisplayed);
 		$this->setUrlCreator($urlCreator);
+		$this->setLinkClasses($linkClasses);
+	}
+	public function setLinkClasses($linkClasses) {
+		$this->linkClasses=$linkClasses;
 	}
 	public function isFirstEnabled() {
 		return $this->currentPage !=1;
@@ -60,8 +65,11 @@ class Pagination extends Block{
 	}
 	public function createLink($page, $enabled=true, $useLabel = true, $icon = null) {
 		$label = $useLabel ? $page : '';
-		$href = $enabled ? $this->urlCreator->createPaginationUrl($page) : '#';
+		$href = $enabled ? $this->urlCreator->createPaginationUrl($page) : 'javascript:void(0);';
 		$link = new Link($label, $href, $icon);
+		if($enabled && !empty($this->linkClasses)){
+			$link->addClass($this->linkClasses);
+		}
 		return $link;
 	}
 	public function getStartPage() {

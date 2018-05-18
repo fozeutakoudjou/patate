@@ -11,6 +11,7 @@ use core\constant\ActionCode;
 use core\constant\UrlParamType;
 use core\constant\Separator;
 use core\constant\DataType;
+use core\constant\FormPosition;
 use core\generator\html\interfaces\AccesChecker;
 use core\generator\html\interfaces\UrlCreator;
 
@@ -40,6 +41,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected $baseRestrictionsData = array();
 	protected $executeActionUsingAjax = true;
 	protected $ajaxActivatorEnabled = true;
+	protected $ajaxFormPosition = FormPosition::DIALOG;
 	
 	public function init()
     {
@@ -76,15 +78,16 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 		$this->table->setSearchData($this->searchData);
 		$this->table->setAjaxEnabled($this->executeActionUsingAjax);
 		$this->table->setAjaxActivatorEnabled($this->ajaxActivatorEnabled);
+		$this->table->setFormPosition($this->ajaxFormPosition);
 		
 		$activeOptions = array(
 			'1'=>array('label'=>$this->l('Yes')),
 			'0'=>array('label'=>$this->l('No')),
 		);
-		if(isset($this->availableActions[ActionCode::ACTIVATE])){
+		if($this->isActionEnabled(ActionCode::ACTIVATE)){
 			$activeOptions['0']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'remove', $this->l('Disabled'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, array(), false, false, '', false, false, 'action-disabled', true);
 		}
-		if(isset($this->availableActions[ActionCode::DESACTIVATE])){
+		if($this->isActionEnabled(ActionCode::DESACTIVATE)){
 			$activeOptions['1']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'check', $this->l('Enabled'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, array(), false, false, '', false, false, 'action-enabled', true);
 		}
 		/*$activeOptions = array(
@@ -98,37 +101,37 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected function customizeTable() {}
 	
 	protected function createTableActions() {
-		if(isset($this->availableActions[ActionCode::ADD])){
+		if($this->isActionEnabled(ActionCode::ADD)){
 			$addLink = $this->createUrl(array('action'=>ActionCode::ADD));
 			$this->generator->createTableAction($this->table, $this->l('Add new'), $addLink, 'plus', $this->l('Add new'), true, ActionCode::ADD, ActionCode::ADD, true);
 		}
-		if(isset($this->availableActions[ActionCode::LISTING])){
+		if($this->isActionEnabled(ActionCode::LISTING)){
 			$url = $this->createUrl(array('action'=>ActionCode::LISTING));
 			$this->generator->createTableAction($this->table, $this->l('Refresh'), $url, 'refresh', $this->l('Refresh'), true, ActionCode::LISTING, ActionCode::LISTING, true);
 		}
 	}
 	
 	protected function createBulkActions() {
-		if(isset($this->availableActions[ActionCode::ACTIVATE])){
+		if($this->isActionEnabled(ActionCode::ACTIVATE)){
 			$activateLink = $this->generator->createBulkAction($this->table, $this->l('Activate selection'), '#', 'power-off', $this->l('Activate selection'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, false, '', true);
 			$activateLink->getIcon()->addClass('text-success');
-			if(!isset($this->availableActions[ActionCode::DESACTIVATE])){
+			if(!$this->isActionEnabled(ActionCode::DESACTIVATE)){
 				$activateLink->addAdditionalData('separator', '1');
 			}
 		}
-		if(isset($this->availableActions[ActionCode::DESACTIVATE])){
+		if($this->isActionEnabled(ActionCode::DESACTIVATE)){
 			$desactivateLink = $this->generator->createBulkAction($this->table, $this->l('Desactivate selection'), '#', 'power-off', $this->l('Desactivate selection'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, false, '', true);
 			$desactivateLink->getIcon()->addClass('text-danger');
 			$desactivateLink->addAdditionalData('separator', '1');
 		}
-		if(isset($this->availableActions[ActionCode::DELETE])){
+		if($this->isActionEnabled(ActionCode::DELETE)){
 			$this->generator->createBulkAction($this->table, $this->l('Delete selection'), '#', 'trash', $this->l('Delete selection'), false, ActionCode::DELETE, ActionCode::DELETE, true, $this->createBulkConfirmText(ActionCode::DELETE), true);
 		}
 	}
 	
 	protected function createRowsActions() {
 		foreach($this->availableActions as $action => $data){
-			if(isset($data['row'])){
+			if($this->isActionEnabled($action) && isset($data['row'])){
 				$label = isset($data['row']) ? $data['label'] : '';
 				$icon = isset($data['icon']) ? $data['icon'] : '';
 				$title = isset($data['title']) ? $data['title'] : $label;
@@ -349,6 +352,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	protected function resetAllFilters(){
 		$cookie = $this->context->getCookie();
 		$cookie->unsetFamily($this->getCookieFilterPrefix());
+		$cookie->write();
 	}
 	protected function retrieveListSearchData(){
 		$cookiePrefix = $this->getCookieFilterPrefix();
@@ -396,7 +400,7 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	}
 	
 	protected function addBulkChangeFieldValue($name, $options) {
-		if(isset($this->availableActions[ActionCode::UPDATE])){
+		if($this->isActionEnabled(ActionCode::UPDATE)){
 			foreach($options as $value => $option){
 				$icon = isset($option['icon']) ? $option['icon'] : '';
 				$title = isset($option['title']) ? $option['title'] : $option['label'];

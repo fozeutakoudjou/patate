@@ -4,12 +4,12 @@
 		<?php if($item->hasLabelObject()):?>
 			<?php echo $item->getLabelObject()->generate();?>
 		<?php else:?>
-			<label class="control-label col-lg-3">
+			<label class="control-label <?php echo $item->getLabelWidth();?>">
 				<?php echo $item->getLabel();?>
 			</label>
 		<?php endif;?>
 	<?php endif;?>
-	<div class="col-lg-9">
+	<div class="<?php echo $item->getWidth();?>">
 <?php endif;?>
 		<?php $options = $item->getOptions();?>
 		<select class="form-control <?php echo $item->drawClasses();?>"  <?php echo $item->drawAttributes();?> name="<?php echo $item->getName();?>">

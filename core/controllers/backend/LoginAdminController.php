@@ -23,7 +23,6 @@ class LoginAdminController extends AdminController
         if (!headers_sent()) {
             header('Login: true');
         }
-		$this->availableActions[$this->defaultAction] = null;
     }
 	
 	protected function processLogin()
