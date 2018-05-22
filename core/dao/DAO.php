@@ -371,8 +371,32 @@ class DAO{
 	
 	public function createForeignDAO($field)
     {
-		$this->setDefinition();
-		$reference = $this->definition['fields'][$field]['reference'];
-		return  Factory::getDAOInstance($reference['class'], (isset($reference['module']) ? $reference['module'] : ''));
+		$dao = null;
+		$this->setDefinition($field);
+		if(isset($this->definition['fields'][$field]) && isset($this->definition['fields'][$field]['reference'])){
+			$dao = $this->getExternaDAO($this->definition['fields'][$field]['reference']);
+        }else{
+            throw new \Exception('Field "' . $field.'" doest not have any reference');
+        }
+		return $dao;
     }
+	
+	protected function getExternaDAO($params)
+    {
+		return  Factory::getDAOInstance($params['class'], (isset($params['module']) ? $params['module'] : ''));
+    }
+	
+	public function getMultipleAssociatedData($associated, $id, $idsOnly = true, $useOfLang = false, $lang = null, $restrictions = array(), $associations = array()){
+		$this->setDefinition();
+		$data = array();
+		if(isset($this->definition['multipleAssociateds']) && isset($this->definition['multipleAssociateds'][$associated]) && !is_array($this->definition['primary'])){
+			if(!isset($restrictions[$this->definition['primary']])){
+				$restrictions[$this->definition['primary']] = $id;
+			}
+			$data = $this->getExternaDAO($this->definition['multipleAssociateds'][$associated])->getByFields($restrictions, false, $lang, $useOfLang, false, $associations);
+		}else{
+			throw new \Exception('multiple association "' . $associated.'" doest not have exist or is not available for multiple primary');
+		}
+		return $data;
+	}
 }

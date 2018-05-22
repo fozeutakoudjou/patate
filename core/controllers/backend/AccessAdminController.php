@@ -14,7 +14,7 @@ class AccessAdminController extends AdminController
 		parent::restrictAction();
 		$this->restrictedActions[]=ActionCode::UPDATE;
 	}
-	protected function beforeEdit($update = false){
+	/*protected function beforeEdit($update = false){
 		if(!$update && isset($this->extraListParams['parent'])){
 			$this->defaultModel->setIdParent($this->extraListParams['parent']);
 		}
@@ -38,7 +38,7 @@ class AccessAdminController extends AdminController
 			$this->defaultModel->setPosition($position);
 		}
 		return $return;
-	}
+	}*/
 	
 	protected function createFormFields($update = false)
     {
