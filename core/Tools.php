@@ -405,6 +405,20 @@ class Tools
 		}
         return $result;
     }
+	public static function joinArray($array, $callback, $separator = ',', $params = array())
+    {
+		$string = '';
+        $first = true;
+        foreach ($array as $key => $value) {
+			if ($first) {
+				$first = false;
+			}else{
+				$string.=$separator;
+			}
+			$string.= ($callback == null) ? $value : $callback($key, $value, $params);
+        }
+        return $string;
+    }
 	
 	public static function inArray($value, $array, $callback, $strict = false, $params = array())
     {
@@ -421,23 +435,25 @@ class Tools
 	public static function inAssociativeArray($value, $array, $valueKey, $strict = false)
     {
 		return self::inArray($value, $array, function($value, $arrayValue, $strict, $params){
-			return  is_array($value) ? in_array($arrayValue[$params['valueKey']], $value, $strict) : ($strict ? ($arrayValue[$valueKey]===$value) : ($arrayValue[$params['valueKey']]==$value));
+			$valueKey = $params['valueKey'];
+			return  is_array($value) ? in_array($arrayValue[$valueKey], $value, $strict) : ($strict ? ($arrayValue[$valueKey]===$value) : ($arrayValue[$valueKey]==$value));
 		}, $strict, array('valueKey'=>$valueKey));
     }
 	
-	public static function inModelArray($value, $models, $valueKey, $strict = false)
+	public static function inModelArray($value, $array, $valueKey, $strict = false)
     {
 		return self::inArray($value, $array, function($value, $arrayValue, $strict, $params){
+			$valueKey = $params['valueKey'];
 			$arrayValue =  $arrayValue->getPropertyValue($valueKey);
-			return  is_array($value) ? in_array($arrayValue[$params['valueKey']], $value, $strict) : ($strict ? ($arrayValue[$valueKey]===$value) : ($arrayValue[$params['valueKey']]==$value));
+			return  is_array($value) ? in_array($arrayValue, $value, $strict) : ($strict ? ($arrayValue===$value) : ($arrayValue==$value));
 		}, $strict, array('valueKey'=>$valueKey));
     }
 	
-	public static function getArrayValues($array, $isModel = false, $key = 'id')
+	public static function getArrayValues($array, $isModel = false, $key = 'id', $getAssociatedObject = false)
     {
 		$result = array();
 		foreach($array as $arrayValue){
-			$result[] = $isModel ? $arrayValue->getPropertyValue($key) : $arrayValue[$key];
+			$result[] = $isModel ? ($getAssociatedObject ? $arrayValue->getAssociated($key) : $arrayValue->getPropertyValue($key)) : $arrayValue[$key];
 		}
 		return $result;
     }

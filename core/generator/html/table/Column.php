@@ -162,7 +162,12 @@ class Column extends Element{
 	public function getCellValue($data) {
 		$value = '';
 		if(is_object($data)){
-			$value = $data->getPropertyValue($this->name);
+			if($this->dataType == ColumnType::TO_STRING_FOREIGN){
+				$associated = $data->getAssociated($this->name);
+				$value = ($associated == null) ? $value : $associated->__toString();
+			}else{
+				$value = ($this->dataType == ColumnType::TO_STRING) ? $data->__toString() : $data->getPropertyValue($this->name);
+			}
 		}elseif(is_array($data)){
 			$value = $data[$this->name];
 		} 

@@ -61,6 +61,8 @@ abstract class BaseAdminController extends Controller
 
 	protected $extraListParams = array();
 	
+	protected $processCancelled = false;
+	
 	const DATA_USED_ONCE_COOKIE_PREFIX = 'dataUsedOnce';
 
     public function __construct()
@@ -258,26 +260,28 @@ abstract class BaseAdminController extends Controller
 	}
 	protected function processAction()
     {
+		$this->retrieveExtraListParams();
 		$actionExist = $this->isActionEnabled($this->action);
 		$action = StringTools::toCamelCase($this->action, true);
 		$ajaxProcessUsed = false;
-		$this->retrieveExtraListParams();
-		if($actionExist && $this->ajax && method_exists($this, 'ajaxProcess'.$action)){
-			$this->{'ajaxProcess'.$action}();
-			$ajaxProcessUsed = true;
-		}elseif($actionExist && method_exists($this, 'process'.$action)){
-			$this->{'process'.$action}();
-		}else{
-			$this->errors[] = $this->l('The action you specified does not exist');
-		}
-		if($this->ajax && !$ajaxProcessUsed){
-			$this->ajaxProcess();
-		}
-		if (!$this->ajax && !$this->onlyProcess && $this->redirectAfter && empty($this->redirectLink)) {
-			$this->redirectLink = $this->createUrl();
-			if(isset($this->processResult['success'])){
-				$this->dataUsedOnce['success'] = $this->processResult['success'];
-				$this->setCookieDataUsedOnce(true);
+		if(!$this->processCancelled){
+			if($actionExist && $this->ajax && method_exists($this, 'ajaxProcess'.$action)){
+				$this->{'ajaxProcess'.$action}();
+				$ajaxProcessUsed = true;
+			}elseif($actionExist && method_exists($this, 'process'.$action)){
+				$this->{'process'.$action}();
+			}else{
+				$this->errors[] = $this->l('The action you specified does not exist');
+			}
+			if($this->ajax && !$ajaxProcessUsed){
+				$this->ajaxProcess();
+			}
+			if (!$this->ajax && !$this->onlyProcess && $this->redirectAfter && empty($this->redirectLink)) {
+				$this->redirectLink = $this->createUrl();
+				if(isset($this->processResult['success'])){
+					$this->dataUsedOnce['success'] = $this->processResult['success'];
+					$this->setCookieDataUsedOnce(true);
+				}
 			}
 		}
     }

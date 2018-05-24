@@ -15,7 +15,7 @@ abstract class AdminController extends FormAdminController
 		$this->doEdit(true);
 	}
 	
-	protected function doEdit($update = false){
+	protected function doEdit($update = false, $onlySave = false){
 		$submitted = Tools::isSubmit($this->createFormAction());
 		$continue = true;
 		$objectLoaded = false;
@@ -39,10 +39,11 @@ abstract class AdminController extends FormAdminController
 							$this->getDAOInstance()->add($this->defaultModel, true, $this->formLanguages);
 						$this->afterEdit($result, $update);
 						if($result){
-							$this->processResult['success'] = $this->action;
-							$this->redirectAfter = true;
-							$this->resetAllFilters();
-							
+							if(!$onlySave){
+								$this->processResult['success'] = $this->action;
+								$this->redirectAfter = true;
+								$this->resetAllFilters();
+							}
 						}else{
 							$this->errors[] = $this->l('An error occured while saving');
 						}
@@ -51,21 +52,24 @@ abstract class AdminController extends FormAdminController
 			}
 			
 		}
-		if($continue && !$this->redirectAfter){
+		if($continue && !$this->redirectAfter && !$onlySave){
 			if($update && !$objectLoaded){
 				$continue = $this->loadFormObject();
 			}
 			
 			if($continue){
-				$this->createForm($update);
-				$this->createFormFields($update);
-				$data = $this->formatFormData($this->getFormData($submitted, $update), $submitted, $update);
-				$this->form->setValue($data);
-				$this->form->setErrors($this->formatFormErrors());
-				$this->processResult['content'] = $this->form->generate();
-				$this->processResult['formContentType'] = 1;
+				$this->renderForm($submitted, $update);
 			}
 		}
+	}
+	protected function renderForm($submitted = false, $update = false){
+		$this->createForm($update);
+		$this->createFormFields($update);
+		$data = $this->formatFormData($this->getFormData($submitted, $update), $submitted, $update);
+		$this->form->setValue($data);
+		$this->form->setErrors($this->formatFormErrors());
+		$this->processResult['content'] = $this->form->generate();
+		$this->processResult['formContentType'] = 1;
 	}
 	protected function beforeEdit($update = false){
 		return true;

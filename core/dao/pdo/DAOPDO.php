@@ -450,6 +450,14 @@ class DAOPDO extends DAO implements DAOImplementation{
 					break;
 				}
 			}
+		}elseif(($operator == Operator::IN_LIST)||($operator == Operator::NOT_IN_LIST)){
+			$sql .= ($usePrefix ? '`'.$protectedPreffix.'`.' : '').'`'.bqSQL($modelField).'` '.(($operator == Operator::IN_LIST) ? 'IN' : 'NOT IN').'(';
+			$values = is_array($values) ? $values : array('' => $values);
+			
+			$sql .= Tools::joinArray($values, function($arrayKey, $arrayValue, $params){
+				return ':' .$params['fieldKey'] . $arrayKey.$params['valueSuffix'];
+			}, ',', array('fieldKey' => $fieldKey, 'valueSuffix' => $valueSuffix));
+			$sql .=')';
 		}
 		$sql .= ')';
 		return $sql;
@@ -464,7 +472,7 @@ class DAOPDO extends DAO implements DAOImplementation{
 				$values = is_array($value) ? $value['value'] : $value;
 				$operator = (is_array($value) && isset($value['operator'])) ? $value['operator'] : Operator::EQUALS;
 				if($values!==null){
-					$formatter = is_array(self::$operatorList[$operator]) ? self::$operatorList[$operator]['value'] : '';
+					$formatter = (isset(self::$operatorList[$operator]) && is_array(self::$operatorList[$operator])) ? self::$operatorList[$operator]['value'] : '';
 					$values = is_array($values) ? $values : array('' => $values);
 					foreach($values as $key => $val){
 						$formattedValue = empty($formatter) ? $val : sprintf($formatter, $val);

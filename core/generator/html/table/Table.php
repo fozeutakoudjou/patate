@@ -13,11 +13,14 @@ class Table extends Form{
 	protected $templateFile = 'generator/table/table';
 	protected $rowTemplateFile = 'generator/table/row';
 	
-	protected $ajaxEnabled = true;
-	protected $ajaxActivatorEnabled = true;
+	protected $ajaxEnabled = false;
+	protected $ajaxActivatorEnabled = false;
 	protected $ajaxActivatorOptions;
 	protected $ajaxActivatorLabel;
 	protected $formPosition = FormPosition::DIALOG;
+	protected $formEnabled = true;
+	protected $tableFooterEnabled = true;
+	protected $rowSelectetorEnabledWhatever = false;
 	
 	protected $totalResult;
 	protected $itemsPerPage;
@@ -28,7 +31,7 @@ class Table extends Form{
 	protected $orderColumn;
 	
 	protected $defaultAction;
-	protected $identifier;
+	protected $identifier = 'id';
 	
 	protected $searchButton;
 	protected $searchResetButton;
@@ -68,13 +71,16 @@ class Table extends Form{
 		$this->searchResetButton = new Link($resetText, $resetHref, new Icon('times'), $resetText, true, 'searchResetButton');
 		$this->selectAll = new Link($selectAllText, '#', new Icon('check-square'), $selectAllText);
 		$this->unselectAll = new Link($unselectAllText, '#', new Icon('square-o'), $unselectAllText);
-		$this->emptyRowText = $emptyRowText;
+		$this->setEmptyRowText($emptyRowText);
 		$this->bulkActionText = $bulkActionText;
 		$this->searchButton->addClass('table_search_btn');
 		if(!self::$mediaSetter->hasMediaGroup('tableManager')){
 			self::$mediaSetter->addJS(self::$mediaUriCreator->getJSURI(true, '', false).'TableManager.js');
 			self::$mediaSetter->addMediaGroup('tableManager');
 		}
+	}
+	public function setEmptyRowText($emptyRowText){
+		$this->emptyRowText = $emptyRowText;
 	}
 	public function generate(){
 		$this->addWrapperClass('listWrapper');
@@ -128,6 +134,7 @@ class Table extends Form{
 	public function createRow($value){
 		$row = new Row($this, $value);
 		$row->setTemplateFile($this->rowTemplateFile, false);
+		$row->addClass('trData');
 		return $row;
 	}
 	public function createItemPerPageLink($itemsPerPage, $label) {
@@ -190,7 +197,7 @@ class Table extends Form{
 	}
 	
 	public function needRowSelector(){
-		return $this->hasBulkActions();
+		return ($this->rowSelectetorEnabledWhatever || $this->hasBulkActions());
 	}
 	
 	public function hasBulkActions(){
@@ -295,6 +302,18 @@ class Table extends Form{
 	}
 	public function setAjaxEnabled($ajaxEnabled) {
 		$this->ajaxEnabled=$ajaxEnabled;
+	}
+	public function isFormEnabled() {
+		return $this->formEnabled;
+	}
+	public function setFormEnabled($formEnabled) {
+		$this->formEnabled=$formEnabled;
+	}
+	public function isTableFooterEnabled() {
+		return $this->tableFooterEnabled;
+	}
+	public function setTableFooterEnabled($tableFooterEnabled) {
+		$this->tableFooterEnabled=$tableFooterEnabled;
 	}
 	
 	public function isAjaxActivatorEnabled() {

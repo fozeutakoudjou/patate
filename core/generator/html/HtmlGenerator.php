@@ -1,6 +1,7 @@
 <?php
 namespace core\generator\html;
 use core\generator\html\table\Table;
+use core\generator\html\table\TableCheckboxMultiple;
 use core\generator\html\table\Column;
 use core\generator\html\table\RowAction;
 use core\generator\html\table\Row;
@@ -242,5 +243,22 @@ class HtmlGenerator{
 	
 	public function createSwitch($name, $label = '', $options = array()){
 		return $this->createRadio($name, $label, $options, true);
+	}
+	
+	public function createTableCheckboxMultiple($columns = array(), $emptyRowText = ''){
+		$table = new TableCheckboxMultiple();
+		foreach($columns as $name => $value){
+			$label = (is_array($value) && isset($value['label'])) ? $value['label'] : $value;
+			$dataType = (is_array($value) && isset($value['dataType'])) ? $value['dataType'] : ColumnType::TEXT;
+			$this->createColumn($table, $label, $name, $dataType, SearchType::TEXT, false, false);
+		}
+		$table->setEmptyRowText($emptyRowText);
+		return $table;
+	}
+	public function createInputCustomContent($content, $name='', $label, $fieldOnly, $width = null, $labelWidth = null){
+		$input = new InputCustomContent($content, $name, $label, $fieldOnly);
+		$input->setWidth(($width === null) ? 'col-lg-9' : $width);
+		$input->setLabelWidth(($labelWidth === null) ? 'col-lg-3' : $labelWidth);
+		return $input;
 	}
 }

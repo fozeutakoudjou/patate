@@ -153,6 +153,7 @@ class Field extends Element{
 	}
 	
 	public function getErrorText($lang = ''){
+		var_dump($this->errors);
 		if($this->translatable && $this->hasErrorLang($lang)){
 			$text = '('.(isset(self::$languages[$lang]) ? self::$languages[$lang]->getIsoCode() : $lang).') ' . $this->errors[$lang];
 		}else{

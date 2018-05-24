@@ -153,7 +153,7 @@ class DAO{
      * @param int|array $id
      * @return Model
      */
-    public function getById($id, $onlyActive = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $associations = array()) {
+    public function getById($id, $onlyActive = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $associations = array(), $excludeDeleted = true) {
         $this->setDefinition();
         if(is_array($this->definition['primary'])){
             $fields = $id;
@@ -161,7 +161,7 @@ class DAO{
             $fields =array($this->definition['primary']=>$id);
         }
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        $result = $this->getByFields($fields, false, $associations);
+        $result = $this->getByFields($fields, false, $lang, $useOfLang, $useOfAllLang, $associations, 0, 0, '', OrderWay::DESC, LogicalOperator::AND_, $excludeDeleted);
         return empty($result)?null:$result[0];
     }
     
@@ -172,13 +172,13 @@ class DAO{
      * @return array
      */
     public function getAll($returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $start = 0, $limit = 0,
-            $orderBy = '', $orderWay = OrderWay::DESC, $onlyActive = false, $associations = array()) {
+            $orderBy = '', $orderWay = OrderWay::DESC, $onlyActive = false, $associations = array(), $excludeDeleted = true) {
         $this->setDefinition();
         $fields = array();
         if($onlyActive && isset($this->definition['fields']['active'])){
             $fields['active'] = true;
         }
-        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay);
+        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay, LogicalOperator::AND_, $excludeDeleted);
     }
     
     /**
@@ -188,9 +188,9 @@ class DAO{
      * @return array
      */
     public function getByFields($fields, $returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, $associations = array(), 
-		$start = 0, $limit = 0, $orderBy ='', $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_) {
+		$start = 0, $limit = 0, $orderBy ='', $orderWay = OrderWay::DESC, $logicalOperator = LogicalOperator::AND_, $excludeDeleted = true) {
         $this->setDefinition();
-		$fields = $this->addDelectedParam($fields);
+		$fields = $this->addDelectedParam($fields, $excludeDeleted);
         $result = $this->getImplementation()->_getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay, $logicalOperator);
 		return $result;
     }
@@ -202,9 +202,9 @@ class DAO{
      * @param array $fields
      * @return int
      */
-    public function getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_, $lang = null, $useOfLang = true, $useOfAllLang = false) {
+    public function getByFieldsCount($fields, $logicalOperator = LogicalOperator::AND_, $lang = null, $useOfLang = true, $useOfAllLang = false, $excludeDeleted = true) {
         $this->setDefinition();
-		$fields = $this->addDelectedParam($fields);
+		$fields = $this->addDelectedParam($fields, $excludeDeleted);
         return $this->getImplementation()->_getByFieldsCount($fields, $logicalOperator, $lang = null, $useOfLang = true, $useOfAllLang = false);
     }
 	
@@ -216,24 +216,24 @@ class DAO{
      * @return array
      */
     public function getByField($field, $value, $onlyActive = false, $returnTotal = false, $lang = null, $useOfLang = true, $useOfAllLang = false, 
-			$associations = array(), $start = 0, $limit = 0, $orderBy = '', $orderWay = OrderWay::DESC, $operator = Operator::EQUALS) {
+			$associations = array(), $start = 0, $limit = 0, $orderBy = '', $orderWay = OrderWay::DESC, $operator = Operator::EQUALS, $excludeDeleted = true) {
 		$fields = $this->createFieldArray($field, $value, $operator);
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay);
+        return $this->getByFields($fields, $returnTotal, $lang, $useOfLang, $useOfAllLang, $associations, $start, $limit, $orderBy, $orderWay, LogicalOperator::AND_, $excludeDeleted);
     }
     
-    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS, $lang = null, $useOfLang = true, $useOfAllLang = false) {
+    public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS, $lang = null, $useOfLang = true, $useOfAllLang = false, $excludeDeleted = true) {
 		$fields = $this->createFieldArray($field, $value, $operator);
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFieldsCount($fields, $operator, $lang = null, $useOfLang = true, $useOfAllLang = false);
+        return $this->getByFieldsCount($fields, $operator, $lang, $useOfLang, $useOfAllLang, $excludeDeleted);
     }
 	
 	public function createFieldArray($field, $value, $operator) {
         return array($field => array('value' => $value, 'operator' => $operator));
     }
 	
-	protected function addDelectedParam($params){
-		if(isset($this->definition['fields']['deleted']) && !isset($params['deleted'])){
+	protected function addDelectedParam($params, $excludeDeleted = true){
+		if($excludeDeleted && isset($this->definition['fields']['deleted']) && !isset($params['deleted'])){
 			$params['deleted'] = 0;
 		}
 		return $params;
@@ -386,7 +386,7 @@ class DAO{
 		return  Factory::getDAOInstance($params['class'], (isset($params['module']) ? $params['module'] : ''));
     }
 	
-	public function getMultipleAssociatedData($associated, $id, $idsOnly = true, $useOfLang = false, $lang = null, $restrictions = array(), $associations = array()){
+	public function getMultipleAssociatedData($associated, $id, $targetField = null, $idsOnly = true, $useOfLang = false, $lang = null, $restrictions = array(), $associations = array()){
 		$this->setDefinition();
 		$data = array();
 		if(isset($this->definition['multipleAssociateds']) && isset($this->definition['multipleAssociateds'][$associated]) && !is_array($this->definition['primary'])){
@@ -398,5 +398,10 @@ class DAO{
 			throw new \Exception('multiple association "' . $associated.'" doest not have exist or is not available for multiple primary');
 		}
 		return $data;
+	}
+	
+	public function setAssociatedData($model, $field, $useOfLang = true, $useOfAllLang = false, $lang = null){
+		$data = $this->createForeignDAO($field)->getById($model->getSinglePrimaryValue(), false, $lang, $useOfLang, $useOfAllLang, array(), false);
+		$model->setAssociated($field, $data);
 	}
 }

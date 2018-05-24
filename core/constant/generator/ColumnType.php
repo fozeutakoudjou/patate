@@ -13,4 +13,6 @@ class ColumnType{
 	const BOOL = 8;
 	const OPTION = 9;
 	const CUSTOM = 10;
+	const TO_STRING = 11;
+	const TO_STRING_FOREIGN = 12;
 }

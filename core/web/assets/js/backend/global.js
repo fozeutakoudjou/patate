@@ -62,6 +62,11 @@ function handleGlobalEvent(){
 		var form = $(this).closest("form");
 		form.find("input[name='action']:first").val("");
 	});
+	
+	$(document).on("click", ".tableCheckboxMultiple .trData", function(e){
+		var checkItem = $(this).find(".check_all_item:first");
+		checkItem.prop("checked", !checkItem.is(":checked"));
+	});
 }
 
 function continuePropagation(target){

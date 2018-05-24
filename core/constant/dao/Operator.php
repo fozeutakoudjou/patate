@@ -9,4 +9,6 @@ abstract class Operator{
 	const END_WITH = 4;
 	const DIFFERENT = 5;
 	const BETWEEN = 6;
+	const IN_LIST = 7;
+	const NOT_IN_LIST = 8;
 }

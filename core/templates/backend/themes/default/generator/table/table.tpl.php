@@ -38,8 +38,10 @@
 <?php else:?>
 	<div>
 <?php endif;?>
+<?php if($item->isFormEnabled()):?>
 	<form class="<?php echo $item->getAdditional('formClasses');?>" action="<?php echo $item->getFormAction();?>" method="<?php echo $item->getMethod();?>" enctype="<?php echo $item->getEnctype();?>">
 	<?php echo $item->generateContent();?>
+<?php endif;?>
 	<div class="table-container table-responsive">
 		<table class="table table-striped table-bordered table-hover table-checkable <?php echo $item->drawClasses();?>" <?php echo $item->drawAttributes();?>>
 			<thead>
@@ -111,6 +113,7 @@
 				<?php endif;?>
 			</tbody>
 		</table>
+		<?php if($item->isTableFooterEnabled()):?>
 		<div class="row">
 			<div class="col-lg-4"><?php echo $item->drawBulkActions();?></div>
 			<div class="col-lg-8">
@@ -140,11 +143,10 @@
 					<?php echo $footer->generate();?>
 				<?php endforeach;?>
 			<?php endif;?>
-			
 		</div>
-		
+		<?php endif;?>
 	</div>
-<?php if(!$item->isContentOnly()):?>
+<?php if($item->isFormEnabled()):?>
 	</form>
 <?php endif;?>
 <?php if($item->isDecorated()):?>
