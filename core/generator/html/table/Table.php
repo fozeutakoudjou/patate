@@ -211,7 +211,7 @@ class Table extends Form{
 	public function drawBulkActions($templateFile = ''){
 		$key = $templateFile;
 		if(!isset($this->bulkActionContent[$key])){
-			if($this->isEmpty()){
+			if($this->isEmpty() || !$this->hasBulkActions()){
 				$this->bulkActionContent[$key] = '';
 			}else{
 				$templateFile = empty($templateFile) ? 'generator/bulk_action' : $templateFile;
@@ -469,7 +469,36 @@ class Table extends Form{
 	public function setRowFormatter($rowFormatter) {
 		$this->rowFormatter=$rowFormatter;
 	}
+	public function separeActionsFromList($list) {
+		$result = array('defaultAction'=>null, 'othersActions'=>array());
+		$first = true;
+		$firstKey = '';
+		foreach($list as $key => $action){
+			if($action->isDefault() && ($result['defaultAction']==null)){
+				$result['defaultAction'] = $action;
+			}else{
+				$result['othersActions'][$key] = $action;
+			}
+			if($first){
+				$first = false;
+				$firstKey = $key;
+			}
+		}
+		if(($result['defaultAction']==null) && isset($result['othersActions'][$firstKey])){
+			$result['defaultAction'] = $result['othersActions'][$firstKey];
+			unset($result['othersActions'][$firstKey]);
+		}
+		$result['othersActions'] = ($result['othersActions']==null) ? array() : $result['othersActions'];
+		return $result;
+	}
 	public function separeRowActions() {
+		if($this->defaultRowAction==null){
+			$result = $this->separeActionsFromList($this->rowActions);
+			$this->defaultRowAction = $result['defaultAction'];
+			$this->othersRowActions = $result['othersActions'];
+		}
+	}
+	/*public function separeRowActions() {
 		if($this->defaultRowAction==null){
 			$first = true;
 			$firstKey = '';
@@ -490,7 +519,7 @@ class Table extends Form{
 			}
 			$this->othersRowActions = ($this->othersRowActions==null) ? array() : $this->othersRowActions;
 		}
-	}
+	}*/
 	public function getDefaultRowAction() {
 		$this->separeRowActions();
 		return $this->defaultRowAction;

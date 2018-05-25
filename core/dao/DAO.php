@@ -372,7 +372,7 @@ class DAO{
 	public function createForeignDAO($field)
     {
 		$dao = null;
-		$this->setDefinition($field);
+		$this->setDefinition();
 		if(isset($this->definition['fields'][$field]) && isset($this->definition['fields'][$field]['reference'])){
 			$dao = $this->getExternaDAO($this->definition['fields'][$field]['reference']);
         }else{

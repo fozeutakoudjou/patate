@@ -21,6 +21,7 @@ class Column extends Element{
 	protected $searchOptions = array();
 	protected $dataOptions = array();
 	protected $table;
+	protected $valueKey;
 	
 	protected $dataFormatter;
 	
@@ -163,19 +164,19 @@ class Column extends Element{
 		$value = '';
 		if(is_object($data)){
 			if($this->dataType == ColumnType::TO_STRING_FOREIGN){
-				$associated = $data->getAssociated($this->name);
+				$associated = $data->getAssociated($this->valueKey);
 				$value = ($associated == null) ? $value : $associated->__toString();
 			}else{
-				$value = ($this->dataType == ColumnType::TO_STRING) ? $data->__toString() : $data->getPropertyValue($this->name);
+				$value = ($this->dataType == ColumnType::TO_STRING) ? $data->__toString() : $data->getPropertyValue($this->valueKey);
 			}
 		}elseif(is_array($data)){
-			$value = $data[$this->name];
+			$value = $data[$this->valueKey];
 		} 
 		return $value;
 	}
 	
-	public function createCell($data) {
-		$cell = new Cell($this->getCellValue($data), $data, $this);
+	public function createCell($row) {
+		$cell = new Cell($this->getCellValue($row->getValue()), $row->getValue(), $this, $row->getColumnDataOptions($this->name));
 		$cell->setTemplateFile($this->cellTemplateFile, false);
 		return $cell;
 	}
@@ -185,5 +186,14 @@ class Column extends Element{
 	}
 	public function setDataFormatter($dataFormatter) {
 		$this->dataFormatter=$dataFormatter;
+	}
+	public function setName($name) {
+		parent::setName($name);
+		if(empty($this->valueKey)){
+			$this->setValueKey($this->name);
+		}
+	}
+	public function setValueKey($valueKey) {
+		$this->valueKey = $valueKey;
 	}
 }

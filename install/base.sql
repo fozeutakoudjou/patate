@@ -129,6 +129,7 @@ create table c2w_user
    lastConnectionDate      datetime,
    lastConnectionData      text,
    deleted               bool DEFAULT '0',
+   superAdmin               bool DEFAULT '0' NOT NULL,
    primary key (id),
    UNIQUE KEY `UNIQUE_user_email_type` (`type`, `email`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

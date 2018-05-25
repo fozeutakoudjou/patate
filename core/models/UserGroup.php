@@ -7,10 +7,11 @@ class UserGroup extends Model{
 	protected $definition = array(
 		'entity' => 'user_group',
 		'primary' => array('idUser', 'idGroup'),
-		'uniques' => array(array('idUser', 'idGroup')),
+		'uniques' => array('idUser_idGroup' => array('idUser', 'idGroup')),
+		'referenced' => true,
 		'fields' => array(
-			'idUser' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt'),
-			'idGroup' => array('type' => self::TYPE_INT, 'required' => true, 'validate' => 'isUnsignedInt')
+			'idUser' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'User', 'field' =>'id'), 'validate' => 'isUnsignedInt'),
+			'idGroup' => array('type' => self::TYPE_INT, 'required' => true, 'foreign' => true, 'reference' => array('class' =>'Group', 'field' =>'id'), 'validate' => 'isUnsignedInt')
 		)
 	);	
 
@@ -25,13 +26,5 @@ class UserGroup extends Model{
 	}
 	public function setIdGroup($idGroup){
 		$this->idGroup = $idGroup;
-	}
-	
-	public static function getUsers($idGroup){
-		
-	}
-	
-	public static function getGroups($idUser, $idsOnly = true, $withParents = true, $useOfLang = false, $lang = null){
-		
 	}
 }

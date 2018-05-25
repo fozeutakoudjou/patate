@@ -11,18 +11,18 @@
 <?php endif;?>
 <?php foreach($columns as $column):?>
 	<?php $column->prepare();?>
-	<?php echo $column->createCell($item->getValue())->generate();?>
+	<?php echo $column->createCell($item)->generate();?>
 <?php endforeach;?>
 <?php if($table->needActionColumn()):?>
 	<td>
 		<?php if($table->hasRowActions()):?>
 			<div class="btn-group">
-				<?php $defaultAction = $table->getDefaultRowAction()->createNewLink($item->getValue()); $defaultAction->addClass('btn-default');?>
+				<?php $defaultAction = $item->getDefaultRowAction()->createNewLink($item->getValue()); $defaultAction->addClass('btn btn-default');?>
 				<?php echo $defaultAction->generate();?>
-				<?php if($table->hasOthersRowActions()):?>
+				<?php if($item->hasOthersRowActions()):?>
 					<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 						<i class="fa fa-angle-down"></i>&nbsp;
-					<?php $othersActions = $table->getOthersRowActions();?>
+					<?php $othersActions = $item->getOthersRowActions();?>
 					</button>
 					<ul class="dropdown-menu" role="menu">
 						<?php foreach($othersActions as $othersAction):?>

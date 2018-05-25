@@ -11,4 +11,5 @@ interface DataType{
     const TYPE_NOTHING = 7;
     const TYPE_SQL     = 8;
     const TYPE_DECIMAL = 9;
+    const TYPE_DATETIME = 10;
 }

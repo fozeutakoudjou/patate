@@ -68,7 +68,7 @@ class Group extends Model{
 		$this->description = $description;
 	}
 	
-	public function getParents($idsOnly = true, $useOfLang = false, $lang = false){
+	public function getParents($idsOnly = true, $useOfLang = false, $lang = null){
 		$groups = array();
 		if(!empty($this->idParent)){
 			$parent = self::getDao()->getById($this->idParent, false, $lang, $useOfLang);
@@ -81,8 +81,8 @@ class Group extends Model{
 		return $groups;
 	}
 	
-	/*protected static function getDao()
+	protected static function getDao()
     {
 		return Factory::getDAOInstance('Group');
-    }*/
+    }
 }

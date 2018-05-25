@@ -8,6 +8,7 @@ use core\constant\generator\ColumnType;
 use core\constant\generator\SearchType;
 use core\constant\dao\Operator;
 use core\Tools;
+use core\constant\FormPosition;
 class AdminUserGroupAdminController extends AssociationController
 {	
 	protected $modelClassName = 'UserGroup';
@@ -23,9 +24,12 @@ class AdminUserGroupAdminController extends AssociationController
 		$class = $isUser ? 'User' : 'Group';
 		$objectType = $isUser ? UserType::ADMIN : GroupType::ADMIN;
 		$restrictions = array('type'=>$objectType, 'id'=>$this->extraListParams['target']);
+		if($isUser){
+			$restrictions['superAdmin'] = 0;
+		}
 		$objects = $this->getDAOInstance($class, false)->getByFields($restrictions);
 		$this->targetField = 'id'.$class;
-		$this->fieldToSet = $isUser ? 'idGroup' : 'IdUser';
+		$this->fieldToSet = $isUser ? 'idGroup' : 'idUser';
 		$this->associationList[$this->fieldToSet] = null;
 		$this->columnsToExclude[] = $this->targetField;
 		if(!empty($objects)){
@@ -33,7 +37,15 @@ class AdminUserGroupAdminController extends AssociationController
 			if($isUser && ($this->targetObject->getId()==$this->context->getUser()->getId())){
 				$this->restrictedActions=array_merge($this->restrictedActions, array(ActionCode::ADD, ActionCode::DELETE));
 			}
+			$connectedUser = $this->context->getUser();
+			if(!$isUser && !$connectedUser->isSuperAdmin()){
+				$groups = $connectedUser->getGroups(true, true, false);
+				if(!in_array($this->targetObject->getId(), $groups)){
+					$this->restrictedActions[] = ActionCode::ADD;
+				}
+			}
 		}
+		$this->ajaxFormPosition = FormPosition::LEFT;
 	}
 	protected function getAddableItems() {
 		if($this->addableItems===null){
@@ -41,19 +53,47 @@ class AdminUserGroupAdminController extends AssociationController
 			$isUser = $this->isExtraUserParam();
 			$class = $isUser ? 'Group' : 'User';
 			$objectType = $isUser ? GroupType::ADMIN : UserType::ADMIN;
-			$restrictions = array('type'=>$objectType);
 			if(!$isUser){
 				$excludes[] = $this->context->getUser()->getId();
+				$restrictions['superAdmin'] = 0;
 			}
+			$restrictions = array('type'=>$objectType);
 			if(!empty($excludes)){
 				$restrictions['id'] = array('operator'=>Operator::NOT_IN_LIST, 'value'=>$excludes);
 			}
-			$this->addableItems = $this->getDAOInstance($class, false)->getByFields($restrictions);
+			if($isUser){
+				$connectedUser = $this->context->getUser();
+				if($connectedUser->isSuperAdmin()){
+					$this->addableItems = $this->getDAOInstance($class, false)->getByFields($restrictions);
+				}else{
+					$groups = $connectedUser->getGroups(false, true, true);
+					$this->addableItems = array();
+					foreach($groups as $group){
+						if(!in_array($group->getId(), $excludes) && !Tools::inModelArray($group->getId(), $this->addableItems, 'id')){
+							$this->addableItems[] = $group;
+						}
+					}
+					/*if(empty($excludes)){
+						$this->addableItems = $groups;
+					}else{
+						$this->addableItems = array();
+						foreach($groups as $group){
+							if(!in_array($group->getId(), $excludes) && !Tools::inModelArray($group->getId(), $this->addableItems, 'id')){
+								$this->addableItems[] = $group;
+							}
+						}
+					}*/
+				}
+			}else{
+				$this->addableItems = $this->getDAOInstance($class, false)->getByFields($restrictions);
+			}
+			
+			
 		}
 		return $this->addableItems;
 	}
 	
-	protected function getRestrictionFromExtraListParams() {
+	/*protected function getRestrictionFromExtraListParams() {
 		$restriction=parent::getRestrictionFromExtraListParams();
 		if($this->isExtraUserParam()){
 			$restriction['idUser'] = $this->extraListParams['target'];
@@ -61,13 +101,15 @@ class AdminUserGroupAdminController extends AssociationController
 			$restriction['idGroup'] = $this->extraListParams['target'];
 		}
 		return $restriction;
-	}
-	
-	protected function getFormFieldsRestriction($id=''){
-		$fields = parent::getFormFieldsRestriction($id='');
-		$data = empty($id) ? Tools::getValue(self::ID_PARAM_URL) : $id;
-		$fields[Tools::formatForeignField('idUser', 'id')] = array('operator'=>Operator::DIFFERENT, 'value'=>$this->context->getUser()->getId());
-		return $fields;
+	}*/
+	protected function checkFormObjectLoaded(){
+		/*if($this->context->getUser()->getId() != $this->defaultModel->getIdUser()){
+			return true;
+		}else{
+			$this->errors[] = $this->l('You can not edit your own profile');
+			return false;
+		}*/
+		return ($this->context->getUser()->getId() != $this->defaultModel->getIdUser());
 	}
 	
 	protected function getAssociatedTableLabel(){
@@ -91,6 +133,7 @@ class AdminUserGroupAdminController extends AssociationController
 	protected function customizeColumns() {
 		//$this->generator->createColumn($this->table, $label, $name, $dataType= ColumnType::TEXT, $searchType = SearchType::TEXT, $sortable = true, $searchable = true, $searchOptions = array(), $dataOptions = array());
 		//$label = $this->isExtraUserParam() ? $this->l('Profiles') : $this->l('Administrators');
-		$this->generator->createColumn($this->table, $this->l('Name'), $this->fieldToSet, ColumnType::TO_STRING_FOREIGN, SearchType::TEXT, false, false);
+		$column = $this->generator->createColumn($this->table, $this->l('Name'), $this->fieldToSet.'_name', ColumnType::TO_STRING_FOREIGN, SearchType::TEXT, false, false);
+		$column->setValueKey($this->fieldToSet);
 	}
 }

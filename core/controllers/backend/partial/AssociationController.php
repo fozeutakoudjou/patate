@@ -103,11 +103,14 @@ abstract class AssociationController extends AdminController
 	
 	protected function getRestrictionFromExtraListParams() {
 		$restriction=parent::getRestrictionFromExtraListParams();
-		if($this->isExtraUserParam()){
+		if($this->targetObject!=null){
+			$restriction[$this->targetField] = $this->targetObject->getSinglePrimaryValue();
+		}
+		/*if($this->isExtraUserParam()){
 			$restriction['idUser'] = $this->extraListParams['target'];
 		}elseif($this->isExtraGroupParam()){
 			$restriction['idGroup'] = $this->extraListParams['target'];
-		}
+		}*/
 		return $restriction;
 	}
 	

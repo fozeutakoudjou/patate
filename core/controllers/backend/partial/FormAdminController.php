@@ -33,6 +33,7 @@ abstract class FormAdminController extends ListAdminController
 			'isUnsignedInt' =>$this->l('This field must be an unsigned integer'),
 			'isUnsignedFloat' =>$this->l('This field must be an unsigned float'),
 			'isBool' =>$this->l('The value of this field 0 or 1'),
+			'confirmPassword' =>$this->l('Both passwords must be identical'),
 		);
 	}
 	protected function createFormAction()
@@ -56,13 +57,16 @@ abstract class FormAdminController extends ListAdminController
 		$this->checkFormFieldAccess($update);
 		foreach($this->modelDefinition['fields'] as $field => $fieldDefinition){
 			if(!in_array($field, $this->formFieldsToExclude)){
-				$input = $this->createFieldByDefinition($fieldDefinition, $field);
-				$input->setLabelWidth('col-lg-3');
-				$input->setWidth('col-lg-9');
-				$this->form->addChild($input);
+				$this->form->addChild($this->formatFormField($this->createFieldByDefinition($fieldDefinition, $field)));
 			}
 		}
 		$this->customizeFormFields($update);
+	}
+	
+	protected function formatFormField($input) {
+		$input->setLabelWidth('col-lg-3');
+		$input->setWidth('col-lg-9');
+		return $input;
 	}
 	
 	protected function customizeFormFields($update = false) {}
@@ -87,9 +91,13 @@ abstract class FormAdminController extends ListAdminController
 			$return = false;
 		}else{
 			$this->defaultModel = $data[0];
-			$return = true;
+			$return = $this->checkFormObjectLoaded();
 		}
 		return $return;
+	}
+	
+	protected function checkFormObjectLoaded() {
+		return true;
 	}
 	
 	protected function setAddDefaultValues($fields) {

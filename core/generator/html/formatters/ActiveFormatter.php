@@ -3,7 +3,7 @@ namespace core\generator\html\formatters;
 use core\generator\html\interfaces\Formatter;
 class ActiveFormatter implements Formatter{
 	public function format($item) {
-		$options = $item->getColumn()->getDataOptions();
+		$options = $item->getFinalOptions();
 		$value = (int)$item->getValue();
 		$html = $value;
 		if(isset($options[$value])){

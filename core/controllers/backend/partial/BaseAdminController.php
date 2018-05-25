@@ -176,6 +176,7 @@ abstract class BaseAdminController extends Controller
 			ActionCode::ACTIVATE => $this->l('Activated successfully'),
 			ActionCode::DESACTIVATE => $this->l('Desactivated successfully'),
 			ActionCode::CHANGE_FIELD_VALUE => $this->l('Value changed successfully'),
+			ActionCode::UPDATE_PASSWORD => $this->l('Password updated successfully'),
 		);
 	}
 	protected function getSuccessLabel($code)
@@ -285,9 +286,9 @@ abstract class BaseAdminController extends Controller
 			}
 		}
     }
-	protected function isActionEnabled($action)
+	protected function isActionEnabled($action, $checkInAvailable = false)
     {
-		return !in_array($action, $this->restrictedActions);
+		return (!in_array($action, $this->restrictedActions) && (!$checkInAvailable || isset($this->availableActions[$action])));
 	}
 	protected function ajaxProcess()
     {

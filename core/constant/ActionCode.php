@@ -10,4 +10,5 @@ class ActionCode{
 	const ACTIVATE = 'activate';
 	const DESACTIVATE = 'desactivate';
 	const CHANGE_FIELD_VALUE = 'change_value';
+	const UPDATE_PASSWORD = 'update_password';
 }

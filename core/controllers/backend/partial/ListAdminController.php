@@ -14,6 +14,7 @@ use core\constant\DataType;
 use core\constant\FormPosition;
 use core\generator\html\interfaces\AccesChecker;
 use core\generator\html\interfaces\UrlCreator;
+use core\constant\WrapperType;
 
 abstract class ListAdminController extends BaseAdminController implements AccesChecker, UrlCreator
 {
@@ -84,10 +85,10 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 			'1'=>array('label'=>$this->l('Yes')),
 			'0'=>array('label'=>$this->l('No')),
 		);
-		if($this->isActionEnabled(ActionCode::ACTIVATE)){
+		if($this->isActionEnabled(ActionCode::ACTIVATE, true)){
 			$activeOptions['0']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'remove', $this->l('Disabled'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, array(), false, false, '', false, false, 'action-disabled', true);
 		}
-		if($this->isActionEnabled(ActionCode::DESACTIVATE)){
+		if($this->isActionEnabled(ActionCode::DESACTIVATE, true)){
 			$activeOptions['1']['rowAction'] = $this->generator->createRowAction($this->table, '', '', 'check', $this->l('Enabled'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, array(), false, false, '', false, false, 'action-enabled', true);
 		}
 		/*$activeOptions = array(
@@ -112,14 +113,14 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	}
 	
 	protected function createBulkActions() {
-		if($this->isActionEnabled(ActionCode::ACTIVATE)){
+		if($this->isActionEnabled(ActionCode::ACTIVATE, true)){
 			$activateLink = $this->generator->createBulkAction($this->table, $this->l('Activate selection'), '#', 'power-off', $this->l('Activate selection'), false, ActionCode::ACTIVATE, ActionCode::ACTIVATE, false, '', true);
 			$activateLink->getIcon()->addClass('text-success');
-			if(!$this->isActionEnabled(ActionCode::DESACTIVATE)){
+			if(!$this->isActionEnabled(ActionCode::DESACTIVATE, true)){
 				$activateLink->addAdditionalData('separator', '1');
 			}
 		}
-		if($this->isActionEnabled(ActionCode::DESACTIVATE)){
+		if($this->isActionEnabled(ActionCode::DESACTIVATE, true)){
 			$desactivateLink = $this->generator->createBulkAction($this->table, $this->l('Desactivate selection'), '#', 'power-off', $this->l('Desactivate selection'), false, ActionCode::DESACTIVATE, ActionCode::DESACTIVATE, false, '', true);
 			$desactivateLink->getIcon()->addClass('text-danger');
 			$desactivateLink->addAdditionalData('separator', '1');
@@ -426,5 +427,17 @@ abstract class ListAdminController extends BaseAdminController implements AccesC
 	
 	protected function getValueChangeCode($field, $value) {
 		return ActionCode::CHANGE_FIELD_VALUE.'_'.$field.'_'.$value;
+	}
+	
+	protected function createAssociatedRowsActions($controller, $label, $params = array(), $module = '') {
+		$moduleField = empty($module) ? null : $module;
+		$wrapper = ($controller.$module == $this->controllerClass.$this->moduleName) ? $this->wrapper : $this->getDAOInstance('Wrapper', false)->getByFields(array('type'=>WrapperType::ADMIN_CONTROLLER, 'target'=>$controller, 'module'=>$moduleField), false, null, false);
+		$idWrapper = empty($wrapper) ? 0 : $wrapper[0]->getId();
+		if(/*!empty($idWrapper) && */$this->checkUserAccess(ActionCode::LISTING, $idWrapper)){
+			$params = array_merge(array('controller'=>$controller, 'module'=>$module), $params);
+			$link = $this->generator->createRowAction($this->table, $label, '', '', $label, false, ActionCode::LISTING.$controller, ActionCode::LISTING, $params, false, false, '', true, true, 'openInDialog', true);
+			$link->setAjaxEnabled(true);
+		}
+		return $link;
 	}
 }

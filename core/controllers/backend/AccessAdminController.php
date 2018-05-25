@@ -8,8 +8,12 @@ use core\constant\UrlParamType;
 use core\constant\ActionCode;
 use core\constant\FormPosition;
 use core\constant\dao\Operator;
+use core\constant\dao\OrderWay;
+use core\constant\dao\LogicalOperator;
 use core\constant\UserType;
 use core\constant\GroupType;
+use core\constant\WrapperType;
+use core\generator\html\interfaces\Formatter;
 class AccessAdminController extends AssociationController
 {	
 	protected $modelClassName = 'Access';
@@ -22,11 +26,13 @@ class AccessAdminController extends AssociationController
         $this->saveFieldsToExclude = array_merge($this->saveFieldsToExclude, array('active'));
 		$this->addDefaultValues['active'] = 1;
     }
-	protected function getFormFieldsRestriction($id=''){
-		$fields = parent::getFormFieldsRestriction($id='');
-		$data = empty($id) ? Tools::getValue(self::ID_PARAM_URL) : $id;
-		$fields[Tools::formatForeignField('idUser', 'id')] = array('operator'=>Operator::DIFFERENT, 'value'=>$this->context->getUser()->getId());
-		return $fields;
+	protected function checkFormObjectLoaded(){
+		if($this->context->getUser()->getId() != $this->defaultModel->getIdUser()){
+			return true;
+		}else{
+			$this->errors[] = $this->l('You can not edit your own access');
+			return false;
+		}
 	}
 	/*protected function customizeForm($update = false) {
 		if($this->targetObject!=null){
@@ -34,6 +40,10 @@ class AccessAdminController extends AssociationController
 			$this->form->setLabel(sprintf($label, $this->targetObject->__toString()));
 		}
 	}*/
+	protected function customizeTable() {
+		parent::customizeTable();
+		$this->table->setRowFormatter(new AccessRowFormatter($this->context->getUser(), $this->targetObject, $this->targetField, $this->isExtraUserParam()));
+	}
 	protected function getAddableItems() {
 		if($this->addableItems===null){
 			$connectedUser = $this->context->getUser();
@@ -63,20 +73,35 @@ class AccessAdminController extends AssociationController
 		$table = $this->generator->createTableCheckboxMultiple(array('id'=>$this->l('Id'), Tools::formatForeignField('idWrapper', 'name')=>$this->l('target'), Tools::formatForeignField('idAction', 'name')=>$this->l('action'), Tools::formatForeignField('idWrapper', 'module')=>$this->l('module')), $this->l('There are not any rights you can add'));
 		$table->setValue($data);
 		$table->setIdentifier($this->selectableIdentifier);
-		$this->form->addChild($table);
+		$this->form->addChild($this->generator->createInputCustomContent($table, $this->selectableIdentifier, $this->l('Rights'), false));
 	}
-	/*protected function customizeColumns() {
-		$field = Tools::formatForeignField('idWrapper', 'name');
-		$this->generator->createColumn($this->table, $field, $field, ColumnType::TEXT, SearchType::TEXT, true, true);
-		$this->associationList['idWrapper'] = array();
-	}*/
+	protected function customizeColumns() {
+		$field = Tools::formatForeignField('idRight', 'idWrapper');
+		$targets = $this->createOptions('Wrapper', '', array('type'=>WrapperType::ADMIN_CONTROLLER), true);
+		$this->generator->createColumn($this->table, $this->l('Target'), $field, ColumnType::OPTION, SearchType::SELECT, true, true, $targets, $targets);
+		
+		$actions = $this->createOptions('Action', '', array(), true);
+		$this->generator->createColumn($this->table, $this->l('Action'), Tools::formatForeignField('idRight', 'idAction'), ColumnType::OPTION, SearchType::SELECT, true, true, $actions, $actions);
+		$this->associationList['idRight'] = array();
+		$profiles = $this->createOptions('Group', '', array('type'=>GroupType::ADMIN), true);
+		$this->changeColumnOptions('idGroup', ColumnType::OPTION, SearchType::SELECT, $profiles, $profiles);
+		if($this->targetObject==null){
+			$admins = $this->createOptions('User', '', array('type'=>UserType::ADMIN, 'superAdmin'=>0), true);
+			$this->changeColumnOptions('idUser', ColumnType::OPTION, SearchType::SELECT, $admins, $admins);
+		}
+	}
 	protected function loadTargetObject(){
 		$isUser = $this->isExtraUserParam();
 		$class = $isUser ? 'User' : 'Group';
 		$objectType = $isUser ? UserType::ADMIN : GroupType::ADMIN;
 		$restrictions = array('type'=>$objectType, 'id'=>$this->extraListParams['target']);
-		$objects = $this->getDAOInstance($class, false)->getByFields($restrictions);
 		$this->targetField = 'id'.$class;
+		if($isUser){
+			$this->columnsToExclude[] = $this->targetField;
+			$restrictions['superAdmin'] = 0;
+		}
+		$objects = $this->getDAOInstance($class, false)->getByFields($restrictions);
+		
 		if(!empty($objects)){
 			$this->targetObject = $objects[0];
 			if($isUser && ($this->targetObject->getId()==$this->context->getUser()->getId())){
@@ -102,10 +127,66 @@ class AccessAdminController extends AssociationController
 	protected function getRestrictionFromExtraListParams() {
 		$restriction=parent::getRestrictionFromExtraListParams();
 		if($this->isExtraUserParam()){
-			$restriction['idUser'] = $this->extraListParams['target'];
+			$this->defaultOrderColumn = 'idUser';
+			$restriction['idUser'] = array('group'=>true,'logicalOperator'=>LogicalOperator::OR_,'fields'=> array('idUser'=>$this->targetObject->getId()));
+			$groups = $this->targetObject->getGroups(true, true);
+			if(!empty($groups)){
+				$restriction['idUser']['fields']['idGroup'] = array('value'=>$groups, 'operator'=>Operator::IN_LIST);
+			}
 		}elseif($this->isExtraGroupParam()){
-			$restriction['idGroup'] = $this->extraListParams['target'];
+			$this->defaultOrderColumn = 'idGroup';
+			$restriction['idGroup'] = array('group'=>true,'logicalOperator'=>LogicalOperator::OR_,'fields'=> array('idGroup_main'=>array('field'=>'idGroup', 'value'=>$this->targetObject->getId())));
+			$groups = $this->targetObject->getParents(true, false);
+			if(!empty($groups)){
+				$restriction['idGroup']['fields']['idGroup_children'] = array('field'=>'idGroup', 'value'=>$groups, 'operator'=>Operator::IN_LIST);
+			}
 		}
 		return $restriction;
+	}
+}
+
+class AccessRowFormatter implements Formatter
+{
+	protected $ownRights  = null;
+	protected $targetObject;
+	protected $isUserTarget;
+	protected $connectedUser;
+	protected $targetField;
+	protected $rightsDisplayed = array();
+	public function __construct($connectedUser, $targetObject, $targetField, $isUserTarget)
+    {
+		$this->connectedUser = $connectedUser;
+		$this->targetObject = $targetObject;
+		$this->isUserTarget = $isUserTarget;
+		$this->targetField = $targetField;
+    }
+	public function format($item){
+		$object = $item->getValue();
+		if($this->targetObject!=null){
+			$ownRights = $this->getOwnRights($item);
+			$idRight = $object->getIdRight();
+			if((($object->getPropertyValue($this->targetField)!=$this->targetObject->getId()) && in_array($idRight, $ownRights)) || in_array($idRight, $this->rightsDisplayed)){
+				$item->forceContent('');
+			}else{
+				$this->rightsDisplayed[] = $idRight;
+			}
+		}
+		if($object->getIdUser()==$this->connectedUser->getId()){
+			$options = $item->getTable()->getColumn('active')->getSearchOptions();
+			$item->setColumnDataOptions('active', $options);
+			$item->addRowActionToExclude(ActionCode::DELETE);
+		}
+	}
+	public function getOwnRights($item){
+		if($this->ownRights===null){
+			$this->ownRights = array();
+			$data = $item->getTable()->getValue();
+			foreach($data as $value){
+				if($value->getPropertyValue($this->targetField) == $this->targetObject->getId()){
+					$this->ownRights[] = $value->getIdRight();
+				}
+			}
+		}
+		return $this->ownRights;
 	}
 }

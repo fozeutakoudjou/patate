@@ -122,37 +122,47 @@ class Model implements DataType{
             }
         }
     }
-    
-    public function validateFields() {
-        $errors=array();
-        foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
-            $value = $this->getPropertyValue($fieldName);
-			$value = is_array($value) ? $value : array($value);
-            if($this->isFieldEmpty($fieldName)){
-                if(isset($fieldDefinition['required']) && $fieldDefinition['required']
-                        && !isset($fieldDefinition['default'])){
-                    $errors[$fieldName] = array('errors' => array(Validate::VALIDATE_REQUIRED));
-                }
-            }else if(isset($fieldDefinition['validate'])){
-                $fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate'] : array($fieldDefinition['validate']);
-                foreach ($fieldValidations as $validation) {
-                    if (method_exists('core\\Validate', $validation)) {
-						foreach($value as $key => $val){
-							if (!Validate::$validation($val)) {
-								if (isset($errors[$fieldName])) {
-									$errors[$fieldName]['errors'][]=$validation;
-								}else{
-									$errors[$fieldName] = array('errors' => array($validation));
-									if($this->isLangField($fieldName)){
-										$errors[$fieldName]['lang'] = $key;
-									}
+    public function validateField($field) {
+		if(!isset($this->definition['fields'][$field])){
+			throw new \Exception('this field doest not exist');
+		}
+		$errors = array();
+		$value = $this->getPropertyValue($field);
+		$value = is_array($value) ? $value : array($value);
+		$fieldDefinition = $this->definition['fields'][$field];
+		if($this->isFieldEmpty($field)){
+			if(isset($fieldDefinition['required']) && $fieldDefinition['required']
+					&& !isset($fieldDefinition['default'])){
+				$errors = array('errors' => array(Validate::VALIDATE_REQUIRED));
+			}
+		}else if(isset($fieldDefinition['validate'])){
+			$fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate'] : array($fieldDefinition['validate']);
+			foreach ($fieldValidations as $validation) {
+				if (method_exists('core\\Validate', $validation)) {
+					foreach($value as $key => $val){
+						if (!Validate::$validation($val)) {
+							if (isset($errors['errors'])) {
+								$errors['errors'][]=$validation;
+							}else{
+								$errors['errors'] = array($validation);
+								if($this->isLangField($field)){
+									$errors['lang'] = $key;
 								}
 							}
 						}
-                    }
-                }
-            }
-            
+					}
+				}
+			}
+		}
+		return $errors;
+	}
+    public function validateFields() {
+        $errors=array();
+        foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
+			$fieldErrors = $this->validateField($fieldName);
+            if(!empty($fieldErrors)){
+				$errors[$fieldName] = $fieldErrors;
+			}
         }
         $this->fieldsValidated = empty($errors) ? true : false;
         return $errors;
