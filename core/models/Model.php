@@ -19,6 +19,7 @@ class Model implements DataType{
     protected $associateds = array();
 	
     protected $singlePrimaryField;
+    private $validatedFields;
 	/*private static $dao;
 	
 	protected static function getDAO(){
@@ -122,7 +123,7 @@ class Model implements DataType{
             }
         }
     }
-    public function validateField($field) {
+    public function validateField($field, $dao = null) {
 		if(!isset($this->definition['fields'][$field])){
 			throw new \Exception('this field doest not exist');
 		}
@@ -156,12 +157,15 @@ class Model implements DataType{
 		}
 		return $errors;
 	}
-    public function validateFields() {
+    public function validateFields($fieldsToExclude = array(), $fieldsToValidate = array(), $dao = null) {
         $errors=array();
-        foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
-			$fieldErrors = $this->validateField($fieldName);
-            if(!empty($fieldErrors)){
-				$errors[$fieldName] = $fieldErrors;
+		$useFieldsToValidate = !empty($fieldsToValidate);
+		foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
+			if(!in_array($fieldName, $fieldsToExclude) && (!$useFieldsToValidate || in_array($fieldName, $fieldsToValidate))){
+				$fieldErrors = $this->validateField($fieldName);
+				if(!empty($fieldErrors)){
+					$errors[$fieldName] = $fieldErrors;
+				}
 			}
         }
         $this->fieldsValidated = empty($errors) ? true : false;

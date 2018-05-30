@@ -25,6 +25,7 @@ class AccessAdminController extends AssociationController
         $this->formFieldsToExclude = array_merge($this->formFieldsToExclude, array('active', 'idRight', 'idUser', 'idGroup'));
         $this->saveFieldsToExclude = array_merge($this->saveFieldsToExclude, array('active'));
 		$this->addDefaultValues['active'] = 1;
+		$this->columnsToExclude[] = 'idRight';
     }
 	protected function checkFormObjectLoaded(){
 		if($this->context->getUser()->getId() != $this->defaultModel->getIdUser()){

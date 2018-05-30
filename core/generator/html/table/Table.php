@@ -63,6 +63,8 @@ class Table extends Form{
 	
 	protected $filterPrefix;
 	
+	private $uniqueSuffix;
+	
 	public function __construct($decorated = true, $label ='', $icon = null, $searchText = '', $resetText = '', $emptyRowText = '', $selectAllText = '', $unselectAllText = '', $bulkActionText = '', $resetHref = '') {
 		$this->setLabel($label);
 		$this->setIcon($icon);
@@ -78,6 +80,7 @@ class Table extends Form{
 			self::$mediaSetter->addJS(self::$mediaUriCreator->getJSURI(true, '', false).'TableManager.js');
 			self::$mediaSetter->addMediaGroup('tableManager');
 		}
+		$this->uniqueSuffix = strtotime(date("Y-m-d H:i:s"));
 	}
 	public function setEmptyRowText($emptyRowText){
 		$this->emptyRowText = $emptyRowText;
@@ -104,7 +107,7 @@ class Table extends Form{
 		return parent::generate();
 	}
 	public function createTopParentId(){
-		return 'listWrapperTopParent'.'_'. strtotime(date("Y-m-d H:i:s"));
+		return 'listWrapperTopParent'.'_'. $this->uniqueSuffix;
 	}
 	public function canDrawEditionFormAtTop(){
 		return (($this->formPosition==FormPosition::TOP)||($this->formPosition==FormPosition::LEFT));
@@ -217,14 +220,15 @@ class Table extends Form{
 				$templateFile = empty($templateFile) ? 'generator/bulk_action' : $templateFile;
 				$block = new Block(true, $this->bulkActionText);
 				$block->setTemplateFile($templateFile, false);
+				$checkAttribute = '.check_all_item' . $this->uniqueSuffix;
 				if($this->selectAll!=null){
 					$this->selectAll->addClass('all_checker');
-					$this->selectAll->addAttribute('target_item', '.check_all_item');
+					$this->selectAll->addAttribute('target_item', $checkAttribute);
 					$block->addChild($this->selectAll);
 				}
 				if($this->unselectAll!=null){
 					$this->unselectAll->addClass('all_unchecker');
-					$this->unselectAll->addAttribute('target_item', '.check_all_item');
+					$this->unselectAll->addAttribute('target_item', $checkAttribute);
 					$this->unselectAll->addAdditionalData('separator', '1');
 					$block->addChild($this->unselectAll);
 				}
@@ -251,11 +255,12 @@ class Table extends Form{
 		if(!isset($this->rowSelectorCache[$key])){
 			$name = $isHeader?'':$this->identifier.'[]';
 			$checkbox = new Checkbox($name);
-			$checkbox->addClass('check_all_item');
+			$itemClass = 'check_all_item' . $this->uniqueSuffix;
+			$checkbox->addClass($itemClass);
 			if($isHeader){
 				$checkbox->addClass('check_all_switcher');
 				$checkbox->addClass('check_all_switcher');
-				$checkbox->addAttribute('target_item', '.check_all_item');
+				$checkbox->addAttribute('target_item', '.'.$itemClass);
 			}
 			if(!empty($templateFile)){
 				$checkbox->setTemplateFile($templateFile);
