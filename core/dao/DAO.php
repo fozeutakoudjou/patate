@@ -46,6 +46,10 @@ class DAO{
         }
         $this->requireValidation = true;
     }
+	
+	protected function validateUnique($model, $field){
+        
+    }
     
     protected function setDefinition($model = null){
         if (!isset($this->definition)) {

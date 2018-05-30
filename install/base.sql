@@ -223,6 +223,45 @@ CREATE TABLE IF NOT EXISTS `c2w_admin_menu_lang` (
 	CONSTRAINT FK_admin_menu_lang_admin_menu FOREIGN KEY (`id_admin_menu`) REFERENCES c2w_admin_menu(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `c2w_hook` (
+	`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` varchar(50) NOT NULL,
+	PRIMARY KEY (`id`), 
+	UNIQUE KEY `UNIQUE_hook_code` (`code`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `c2w_hook_lang` (
+	`id_hook` int(11) UNSIGNED NOT NULL,
+	`lang` varchar(2) NOT NULL,
+	`name` varchar(50),
+	`description` text,
+	PRIMARY KEY (`id_hook`, `lang`),
+	CONSTRAINT FK_hook_lang_hook FOREIGN KEY (id_hook) REFERENCES c2w_hook(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `c2w_hook_association` (
+	`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`idHook` int(11) UNSIGNED NOT NULL,
+	`idWrapper` int(11) UNSIGNED NOT NULL,
+	`position` int(11) UNSIGNED NOT NULL,
+	PRIMARY KEY (`id`),
+	CONSTRAINT FK_hook_association_hook FOREIGN KEY (idHook) REFERENCES c2w_hook(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT FK_hook_association_wrapper FOREIGN KEY (idWrapper) REFERENCES c2w_wrapper(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+	UNIQUE KEY `UNIQUE_hook_association_hook_wrapper` (`idHook`, `idWrapper`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `c2w_hook_exclusion` (
+	`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`idHook` int(11) UNSIGNED NOT NULL,
+	`idTriggerWrapper` int(11) UNSIGNED NOT NULL,
+	`idExcludedWrapper` int(11) UNSIGNED NOT NULL,
+	PRIMARY KEY (`id`),
+	CONSTRAINT FK_hook_exclusion_hook FOREIGN KEY (idHook) REFERENCES c2w_hook(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT FK_hook_exclusion_wrapper_idTriggerWrapper FOREIGN KEY (idTriggerWrapper) REFERENCES c2w_wrapper(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT FK_hook_exclusion_wrapper_idExcludedWrapper FOREIGN KEY (idExcludedWrapper) REFERENCES c2w_wrapper(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+	UNIQUE KEY `UNIQUE_hook_exclusion_hook_wrapperTrigger_wrapperExcluded` (`idHook`, `idTriggerWrapper`, `idExcludedWrapper`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 alter table c2w_admin_menu add constraint FK_admin_menu_idParent_admin_menu foreign key (idParent) references c2w_admin_menu (id) on delete cascade on update cascade;
 alter table c2w_group add constraint FK_group_idParent_group foreign key (idParent) references c2w_group (id) on delete cascade on update cascade;
 

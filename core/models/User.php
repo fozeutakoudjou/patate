@@ -264,8 +264,7 @@ class User extends Model{
 	public static function getByEmail($email, $password = null, $onlyActive = true, $isAdmin = false)
     {
 		//$passValidate = $isAdmin ? Validate::isPasswordAdmin($password) : Validate::isPassword($password);
-		$passValidate = $isAdmin ? Validate::isPasswordAdmin($password) : Validate::isPassword($password);
-        if (!Validate::isEmail($email) || (($password != null) && !Validate::isPassword($password))) {
+		if (!Validate::isEmail($email) || (($password != null) && !Validate::isPassword($password))) {
             die('Invalid');
         }
 		$password = ($password===null) ? $password : Tools::encrypt($password);
