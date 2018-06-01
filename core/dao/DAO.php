@@ -17,8 +17,6 @@ class DAO{
     protected $definition;
 	
     protected $defaultModel;
-    
-    protected $requireValidation = true;
 	
 	protected $isImplementation;
 	
@@ -40,15 +38,10 @@ class DAO{
 		}
     }
     
-    protected function validation($model){
-        if ($this->requireValidation && !$model->isFieldsValidated()) {
+    protected function validation($model, $fieldsToExclude = array(), $fieldsToValidate = array(), $update = false, $identifiers = array()){
+        if (!$model->isFieldsValidated($fieldsToExclude, $fieldsToValidate) && !empty($model->validateFields($fieldsToExclude, $fieldsToValidate, $this, $update, $identifiers))) {
             throw new \Exception('Some fields are invalid.');
         }
-        $this->requireValidation = true;
-    }
-	
-	protected function validateUnique($model, $field){
-        
     }
     
     protected function setDefinition($model = null){
@@ -78,13 +71,13 @@ class DAO{
     public function add($model, $saveOfLangField = true, $languages = null) {
 		$languages = ($languages==null)?$this->defaultLanguages : $languages;
 		$this->setDefinition($model);
+		$this->validation($model);
 		if (isset($this->definition['fields']['dateAdd'])) {
             $model->setDateAdd(date('Y-m-d H:i:s'));
         }
         if (isset($this->definition['fields']['dateUpdate'])) {
             $model->setDateUpdate(date('Y-m-d H:i:s'));
         }
-        $this->validation($model);
         $model->formatFields($languages, $this->defaultLang);
         $result = $this->getImplementation()->_add($model);
         if($result && !is_array($this->definition['primary']) && $model->isAutoIncrement()){
@@ -108,10 +101,10 @@ class DAO{
     public function update($model, $fieldsToExclude = array(), $fieldsToUpdate = array(), $identifiers = array(), $saveOfLangField = true, $languages = null) {
 		$languages = ($languages==null)?$this->defaultLanguages : $languages;
 		$this->setDefinition($model);
+		$this->validation($model, $fieldsToExclude, $fieldsToUpdate, true, $identifiers);
 		if (isset($this->definition['fields']['dateUpdate'])) {
             $model->setDateUpdate(date('Y-m-d H:i:s'));
         }
-        $this->validation($model);
 		$model->formatFields($languages, $this->defaultLang);
 		$newFieldsToUpdate = array();
 		$newLangFields = array();
@@ -141,9 +134,7 @@ class DAO{
     public function delete($model, $setDeleted = false, $identifiers = array()) {
         $this->setDefinition($model);
 		if($setDeleted){
-			$this->requireValidation = false;
 			$result = $this->changeValue($model, 'deleted', 1);
-			$this->requireValidation = true;
 			return $result;
 		}else{
 			return $this->getImplementation()->_delete($model, $identifiers);
@@ -229,7 +220,27 @@ class DAO{
     public function getByFieldCount($field, $value, $onlyActive = false, $operator = Operator::EQUALS, $lang = null, $useOfLang = true, $useOfAllLang = false, $excludeDeleted = true) {
 		$fields = $this->createFieldArray($field, $value, $operator);
 		$fields = $this->addActiveParam($fields, $onlyActive);
-        return $this->getByFieldsCount($fields, $operator, $lang, $useOfLang, $useOfAllLang, $excludeDeleted);
+        return $this->getByFieldsCount($fields, LogicalOperator::AND_, $lang, $useOfLang, $useOfAllLang, $excludeDeleted);
+    }
+	
+	public function checkUnique($model, $fields, $update = false, $identifiers = array()) {
+		$this->setDefinition($model);
+		$fields = is_array($fields) ? $fields : array($fields);
+		$restrictions = $update ? $this->formatIdentifiers($model, $identifiers) : array();
+		foreach ($restrictions as $field => $value) {
+			$restrictions[$field] = array('value' => $value, 'operator' => Operator::DIFFERENT);
+		}
+		$useOfLang = false;
+		foreach($fields as $field){
+			$value = $model->getPropertyValue($field);
+			if($model->isLangField($field)){
+				$useOfLang = true;
+			}
+			$value = is_array($value) ? array('value' => $value, 'operator' => Operator::IN_LIST) : $value;
+			$restrictions[$field] = $value;
+		}
+		$count = $this->getByFieldsCount($restrictions, LogicalOperator::AND_, null, $useOfLang, true, true);
+        return ($count==0);
     }
 	
 	public function createFieldArray($field, $value, $operator) {
@@ -298,19 +309,15 @@ class DAO{
      * @return bool
      */
     protected function changeActive($model, $active) {
-        $this->requireValidation = false;
         $result = $this->changeValue($model, 'active', (int)$active);
-		$this->requireValidation = true;
 		return $result;
     }
 	
 	 public function changeValue($model, $field, $value) {
-		$this->requireValidation = false;
         $this->setDefinition($model);
 		if(isset($this->definition['fields'][$field])){
 			$model->setPropertyValue($field, pSQL($value));
             $result = $this->update($model, array(), array($field));
-			$this->requireValidation = true;
             return $result;
         }else{
             throw new \Exception('Model must contain field ' . $field);

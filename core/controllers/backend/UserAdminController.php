@@ -83,8 +83,8 @@ class UserAdminController extends AdminController
 		);
 	}
 	
-	protected function validateFormData($update = false) {
-		parent::validateFormData($update);
+	protected function validateFormData($update = false, $fieldsToExclude = array(), $fieldsToValidate = array(), $identifiers = array()) {
+		parent::validateFormData($update, $fieldsToExclude, $fieldsToValidate, $identifiers);
 		if(!$update){
 			$this->validateConfirmPassword();
 		}
@@ -104,9 +104,9 @@ class UserAdminController extends AdminController
 			if($submitted){
 				$password = Tools::getValue('password');
 				$this->defaultModel->setPassword($password);
-				$this->validateFormData(true);
+				$this->validateFormData(true, array(), array('password'));
 				$this->validateConfirmPassword();
-				if($this->defaultModel->isFieldsValidated() && !$this->hasErrors()){
+				if($this->defaultModel->isFieldsValidated(array(), array('password')) && !$this->hasErrors()){
 					if($this->getDAOInstance()->changeValue($this->defaultModel, 'password', $password)){
 						$this->processResult['success'] = $this->action;
 						$this->redirectAfter = true;

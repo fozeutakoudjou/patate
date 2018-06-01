@@ -19,6 +19,7 @@ abstract class AdminController extends FormAdminController
 		$submitted = Tools::isSubmit($this->createFormAction());
 		$continue = true;
 		$objectLoaded = false;
+		$identifiers = array();
 		if($submitted){
 			if($update){
 				$continue = $this->loadFormObject();
@@ -31,8 +32,9 @@ abstract class AdminController extends FormAdminController
 				if(!$update){
 					$this->setAddDefaultValues(array_merge($this->formFieldsToExclude, $this->saveFieldsToExclude));
 				}
-				$this->validateFormData($update);
-				if($this->defaultModel->isFieldsValidated() && !$this->hasErrors()){
+				$saveFieldsToExcludeValidate = ($update ? $this->saveFieldsToExclude : array());
+				$this->validateFormData($update, $saveFieldsToExcludeValidate, array(), $identifiers);
+				if($this->defaultModel->isFieldsValidated($saveFieldsToExcludeValidate) && !$this->hasErrors()){
 					$continue = $this->beforeEdit($update);
 					if($continue && !$this->hasErrors()){
 						$result = $update ? $this->getDAOInstance()->update($this->defaultModel, $this->saveFieldsToExclude, array(), $identifiers, true, $this->formLanguages) :

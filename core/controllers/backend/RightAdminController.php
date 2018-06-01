@@ -16,7 +16,6 @@ class RightAdminController extends AdminController
 		$field = Tools::formatForeignField('idWrapper', 'module');
 		$this->generator->createColumn($this->table, $this->l('Module'), $field, ColumnType::TEXT, SearchType::TEXT, true, true);
 		$this->associationList['idWrapper'] = array();
-		$this->associationList['idAction'] = array();
 	}
 	
 	protected function createFieldByDefinition($fieldDefinition, $field)

@@ -32,7 +32,7 @@ class User extends Model{
 	protected $definition = array(
 		'entity' => 'user',
 		'primary' => 'id',
-		'uniques' => array('email_type' => array('email', 'type')),
+		'uniques' => array('email_type_deleted' => array('email', 'type', 'deleted')),
 		'auto_increment' => true,
 		'fields' => array(
 			'lastName' => array('type' => self::TYPE_STRING, 'required' => true, 'validate' => 'isName', 'maxSize' => '35'),

@@ -7,6 +7,7 @@ class Validate
     const PASSWORD_LENGTH = 5;
     
     const VALIDATE_REQUIRED = 8;
+    const VALIDATE_UNIQUE = 9;
 
     public static function isIp2Long($ip)
     {

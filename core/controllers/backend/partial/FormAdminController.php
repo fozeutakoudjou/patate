@@ -29,6 +29,7 @@ abstract class FormAdminController extends ListAdminController
     {
 		$this->errorLabelDefault = $this->l('This field is invalid');
 		$this->errorLabels = array(
+			Validate::VALIDATE_UNIQUE =>$this->l('Another record has already this value'),
 			Validate::VALIDATE_REQUIRED =>$this->l('This field is required'),
 			'isUnsignedInt' =>$this->l('This field must be an unsigned integer'),
 			'isUnsignedFloat' =>$this->l('This field must be an unsigned float'),
@@ -112,8 +113,8 @@ abstract class FormAdminController extends ListAdminController
 		$this->defaultModel->copyFromPost($this->formLanguages, $this->formFieldPreffix, $this->formFieldsToExclude);
 	}
 	
-	protected function validateFormData($update = false) {
-		$this->formErrors = $this->defaultModel->validateFields();
+	protected function validateFormData($update = false, $fieldsToExclude = array(), $fieldsToValidate = array(), $identifiers = array()) {
+		$this->formErrors = $this->defaultModel->validateFields($fieldsToExclude, $fieldsToValidate, $this->getDAOInstance(), $update, $identifiers);
 	}
 	
 	protected function formatFormErrors() {

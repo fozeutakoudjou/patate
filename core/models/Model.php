@@ -9,7 +9,8 @@ use core\constant\DataType;
 use core\FileTools;*/
 
 class Model implements DataType{
-    protected $fieldsValidated = false;
+    /*private $fieldsValidated = false;
+    private $allFieldsValidated = false;*/
     protected $definition = array();
 	
     protected $langFields = null;
@@ -20,6 +21,7 @@ class Model implements DataType{
 	
     protected $singlePrimaryField;
     private $validatedFields;
+    private $validatedUniques;
 	/*private static $dao;
 	
 	protected static function getDAO(){
@@ -123,7 +125,7 @@ class Model implements DataType{
             }
         }
     }
-    public function validateField($field, $dao = null) {
+    public function validateField($field, $dao = null, $update = false, $identifiers = array()) {
 		if(!isset($this->definition['fields'][$field])){
 			throw new \Exception('this field doest not exist');
 		}
@@ -155,14 +157,40 @@ class Model implements DataType{
 				}
 			}
 		}
+		if(empty($errors) && ($dao!=null)){
+			if(isset($fieldDefinition['unique']) && $fieldDefinition['unique']){
+				if(!$dao->checkUnique($this, $field, $update, $identifiers)){
+					$errors['errors'] = Validate::VALIDATE_UNIQUE;
+				}
+			}
+			if(isset($this->definition['uniques']) && is_array($this->definition['uniques'])){
+				foreach ($this->definition['uniques'] as $uniques) {
+					if(in_array($field, $uniques)){
+						$key = Tools::joinArray($uniques, function($key, $value, $params){return $this->getValidateKey($value);},'_');
+						if(!isset($this->validatedUniques[$key])){
+							$this->validatedUniques[$key] = $dao->checkUnique($this, $uniques, $update, $identifiers);
+						}
+						if(!$this->validatedUniques[$key]){
+							$errors['errors'] = Validate::VALIDATE_UNIQUE;
+						}
+					}
+				}
+			}
+		}
+		if(empty($errors)){
+			$this->validatedFields[] = $this->getValidateKey($field);
+		}
 		return $errors;
 	}
-    public function validateFields($fieldsToExclude = array(), $fieldsToValidate = array(), $dao = null) {
+	public function getValidateKey($field){
+		return serialize(array($field =>$this->getPropertyValue($field)));
+	}
+    public function validateFields($fieldsToExclude = array(), $fieldsToValidate = array(), $dao = null, $update = false, $identifiers = array()) {
         $errors=array();
 		$useFieldsToValidate = !empty($fieldsToValidate);
 		foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
 			if(!in_array($fieldName, $fieldsToExclude) && (!$useFieldsToValidate || in_array($fieldName, $fieldsToValidate))){
-				$fieldErrors = $this->validateField($fieldName);
+				$fieldErrors = $this->validateField($fieldName, $dao, $update, $identifiers);
 				if(!empty($fieldErrors)){
 					$errors[$fieldName] = $fieldErrors;
 				}
@@ -170,6 +198,19 @@ class Model implements DataType{
         }
         $this->fieldsValidated = empty($errors) ? true : false;
         return $errors;
+    }
+	public function isFieldsValidated($fieldsToExclude = array(), $fieldsToValidate = array()) {
+		$useFieldsToValidate = !empty($fieldsToValidate);
+		$validated = true;
+		foreach ($this->definition['fields'] as $fieldName => $fieldDefinition) {
+			if(!in_array($fieldName, $fieldsToExclude) && (!$useFieldsToValidate || in_array($fieldName, $fieldsToValidate))){
+				if(!in_array($this->getValidateKey($fieldName), $this->validatedFields)){
+					$validated = false;
+					break;					
+				}
+			}
+        }
+        return $validated;
     }
     
     public static function formatValue($value, $type, $with_quotes = false, $purify = true, $allow_null = false)
@@ -282,9 +323,10 @@ class Model implements DataType{
         }
         $this->setPropertyValue($field, $values);
     }
-    public function isFieldsValidated() {
+	
+	/*public function isFieldsValidated() {
         return $this->fieldsValidated;
-    }
+    }*/
     
     public function getDefinition() {
         return $this->definition;
