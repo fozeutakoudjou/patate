@@ -7,6 +7,33 @@ use core\constant\ActionCode;
 abstract class AdminController extends FormAdminController
 {
 	protected $dataUsedOnce = array();
+	protected $viewFieldsToExclude = array('deleted');
+	
+	protected function processView(){
+		if($this->loadFormObject('', true, false)){
+			$this->generator->setDefaultCancelText($this->l('Back to list'));
+			$this->form = $this->generator->createForm(false, true, $this->createUrl(), true, sprintf($this->l('Informations about %1$s %2$s'), $this->l($this->modelClassName), $this->loadedModel->__toString()), '', '', '');
+			foreach($this->modelDefinition['fields'] as $field => $fieldDefinition){
+				if(!in_array($field, $this->formFieldsToExclude)){
+					$input = $this->generator->createFieldView($field, $this->l($field), $fieldDefinition['type']);
+					$input->setWidth('col-lg-9');
+					$input->setLabelWidth('col-lg-3');
+					$this->form->addChild($input);
+				}
+			}
+			$this->customizeViewField();
+			$this->form->setValue($this->getViewData());
+			$this->processResult['content'] = $this->form->generate();
+			$this->processResult['formContentType'] = 1;
+		}
+	}
+	
+	protected function getViewData(){
+		return $this->defaultModel->toArray('', false, false);
+	}
+	
+	protected function customizeViewField(){}
+	
 	protected function processAdd(){
 		$this->doEdit(false);
 	}

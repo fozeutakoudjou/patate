@@ -239,9 +239,9 @@ abstract class BaseAdminController extends Controller
 		$this->generator->setDefaultFormErrorText($this->l('You have some form errors. Please check below.'));
 		$this->generator->setDefaultAjaxActivatorLabel($this->l('Execute action using ajax?'));
 		$this->generator->setRadioOptions($radioOptions);
+		$this->initWrapper();
 		if(!empty($this->modelClassName)){
 			$this->initModel();
-			$this->initWrapper();
 			$this->initActions();
 			$this->restrictAction();
 			$this->initSuccessLabels();

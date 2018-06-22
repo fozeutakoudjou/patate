@@ -2,6 +2,7 @@
 namespace core\models;
 
 use core\Validate;
+use core\Context;
 use core\Tools;
 use core\constant\Separator;
 use core\constant\DataType;
@@ -136,7 +137,7 @@ class Model implements DataType{
 		if($this->isFieldEmpty($field)){
 			if(isset($fieldDefinition['required']) && $fieldDefinition['required']
 					&& !isset($fieldDefinition['default'])){
-				$errors = array('errors' => array(Validate::VALIDATE_REQUIRED));
+				$errors[Validate::VALIDATE_REQUIRED] = Validate::VALIDATE_REQUIRED;
 			}
 		}else if(isset($fieldDefinition['validate'])){
 			$fieldValidations = is_array($fieldDefinition['validate']) ? $fieldDefinition['validate'] : array($fieldDefinition['validate']);
@@ -144,19 +145,38 @@ class Model implements DataType{
 				if (method_exists('core\\Validate', $validation)) {
 					foreach($value as $key => $val){
 						if (!Validate::$validation($val)) {
-							if (isset($errors['errors'])) {
-								$errors['errors'][]=$validation;
+							if($this->isLangField($field) && isset($errors[$validation])){
+								$errors[$validation]['lang'][] = $key; 
 							}else{
-								$errors['errors'] = array($validation);
-								if($this->isLangField($field)){
-									$errors['lang'] = $key;
-								}
+								$errors[$validation]= $this->isLangField($field) ? array('langs' => array($key)) : $validation;
 							}
 						}
 					}
 				}
 			}
 		}
+		if(isset($fieldDefinition['maxSize'])||isset($fieldDefinition['minSize'])){
+			$sizeValidations = array('maxSize'=>Validate::VALIDATE_MAX_SIZE, 'minSize'=>Validate::VALIDATE_MIN_SIZE);
+			foreach ($sizeValidations as $validationKey => $validation) {
+				if (isset($fieldDefinition[$validationKey])) {
+					foreach($value as $key => $val){
+						$size = strlen($val);
+						$sizeToCheck = $fieldDefinition[$validationKey];
+						if((($validation==Validate::VALIDATE_MAX_SIZE) && ($size>$sizeToCheck)) ||
+							(($validation==Validate::VALIDATE_MIN_SIZE) && ($size<$sizeToCheck))){
+							if($this->isLangField($field) && isset($errors[$validation])){
+								$errors[$validation]['langs'][] = $key; 
+							}else{
+								$errors[$validation]= $this->isLangField($field) ? array('langs' => array($key), 'param' => $sizeToCheck) : array('param' => $sizeToCheck);
+							}
+							
+						}
+					}
+				}
+			}
+		}
+		
+		
 		if(empty($errors) && ($dao!=null)){
 			if(isset($fieldDefinition['unique']) && $fieldDefinition['unique']){
 				if(!$dao->checkUnique($this, $field, $update, $identifiers)){
@@ -506,6 +526,10 @@ class Model implements DataType{
 				$value[] = $this->getPropertyValue($primary);
 			}
 			$value = implode(', ', $value);
+		}
+		if(is_array($value)){
+			$lang = Context::getInstance()->getLang();
+			$value = isset($value[$lang]) ? $value[$lang] : $value;
 		}
         return $value;
     }

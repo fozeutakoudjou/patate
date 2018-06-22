@@ -230,6 +230,9 @@ class HtmlGenerator{
 	public function createSelect($name, $label = '', $options = array()){
 		return new Select($name, $label, $options);
 	}
+	public function createFieldView($name, $label = '', $dataType = null){
+		return new FieldView($name, $label, $dataType);
+	}
 	
 	public function createRadio($name, $label = '', $options = array(), $switch = false){
 		if(empty($options)){

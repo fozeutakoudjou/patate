@@ -3,8 +3,8 @@ namespace core\controllers\backend\partial;
 
 use core\Tools;
 use core\Validate;
-use core\models\Model;
 use core\constant\ActionCode;
+use core\constant\DataType;
 abstract class FormAdminController extends ListAdminController
 {
 	const ERRORS_SEPARATOR = ', ';
@@ -16,6 +16,7 @@ abstract class FormAdminController extends ListAdminController
 	protected $formFieldsAccessChecked = false;
 	protected $errorLabels = array();
 	protected $errorLabelDefault;
+	protected $loadedModel;
 	
 	public function init()
     {
@@ -31,6 +32,8 @@ abstract class FormAdminController extends ListAdminController
 		$this->errorLabels = array(
 			Validate::VALIDATE_UNIQUE =>$this->l('Another record has already this value'),
 			Validate::VALIDATE_REQUIRED =>$this->l('This field is required'),
+			Validate::VALIDATE_MAX_SIZE =>$this->l('This field can not contain more than %s characters'),
+			Validate::VALIDATE_MIN_SIZE =>$this->l('This field can not contain less than %s characters'),
 			'isUnsignedInt' =>$this->l('This field must be an unsigned integer'),
 			'isUnsignedFloat' =>$this->l('This field must be an unsigned float'),
 			'isBool' =>$this->l('The value of this field 0 or 1'),
@@ -46,7 +49,9 @@ abstract class FormAdminController extends ListAdminController
 		$submitAction = $this->createFormAction();
 		$params = $update ? array('action' => ActionCode::UPDATE, self::ID_PARAM_URL => $this->defaultModel->getSinglePrimaryValue()) : array('action' => ActionCode::ADD);
 		$formAction = $this->createUrl($params);
-		$this->form = $this->generator->createForm(true, true, $this->createUrl(), true, $this->l($this->modelClassName), '', $formAction, $submitAction);
+		$title = ($update) ? sprintf($this->l('Update informations about %1$s %2$s'), $this->l($this->modelClassName), $this->loadedModel->__toString())
+			: sprintf($this->l('Add new %s'), $this->l($this->modelClassName));
+		$this->form = $this->generator->createForm(true, true, $this->createUrl(), true, $title, '', $formAction, $submitAction);
 		$this->customizeForm($update);
 	}
 	
@@ -92,6 +97,7 @@ abstract class FormAdminController extends ListAdminController
 			$return = false;
 		}else{
 			$this->defaultModel = $data[0];
+			$this->loadedModel = clone $this->defaultModel;
 			$return = $this->checkFormObjectLoaded();
 		}
 		return $return;
@@ -121,32 +127,41 @@ abstract class FormAdminController extends ListAdminController
 		$formatteds = array();
 		foreach($this->formErrors as $field => $error){
 			$label = $this->errorLabelDefault;
-			if(isset($error['label'])){
-				$label = $error['label'];
-			}elseif(isset($error['errors'])){
-				$label = $this->getErrorLabel($error['errors']);
-			}
-			if(isset($error['lang'])){
-				$formatteds[$field][$error['lang']] = $label;
+			if(is_array($error)){
+				$label = $this->getErrorLabel($error);
 			}else{
-				$formatteds[$field] = $label;
+				$label = $error;
 			}
+			$formatteds[$field] = $label;
 		}
 		return $formatteds;
 	}
 	
 	protected function getErrorLabel($validate) {
-		$validates = is_array($validate) ? $validate : array($validate);
+		if(is_array($validate) && isset($validate['errorCode'])){
+			$validates = array($validate['errorCode']=>$validate);
+		}else{
+			$validates = is_array($validate) ? $validate : array($validate);
+		}
+		
 		$first = true;
-		$label = '';
-		foreach($validates as $validate){
+		$label = array();
+		$noLangCode = 'noLang';
+		foreach($validates as $key => $validate){
 			if(!$first){
 				$label.=self::ERRORS_SEPARATOR;
 			}
-			$label.= isset($this->errorLabels[$validate]) ? $this->errorLabels[$validate] : $this->errorLabelDefault;
+			$validateCode = (empty($validate) || is_array($validate)) ? $key : $validate;
+			$value = isset($this->errorLabels[$validateCode]) ? $this->errorLabels[$validateCode] : $this->errorLabelDefault;
+			$value = (is_array($validate) && isset($validate['param'])) ? sprintf($value, $validate['param']) : $value;
+			$langs = (is_array($validate) && isset($validate['langs'])) ? $validate['langs'] : array($noLangCode);
+			foreach($langs as $lang){
+				$label[$lang] = (isset($label[$lang]) ?$label[$lang] : '').$value;
+			}
+			
 			$first = false;
 		}
-		return $label;
+		return isset($label[$noLangCode]) ? $label[$noLangCode] : $label;
 	}
 	
 	protected function formatFormData($data, $submitted, $update = false) {
@@ -176,7 +191,7 @@ abstract class FormAdminController extends ListAdminController
 	
 	protected function createFieldByDefinition($fieldDefinition, $field)
     {
-		if($fieldDefinition['type']==Model::TYPE_BOOL){
+		if($fieldDefinition['type']==DataType::TYPE_BOOL){
 			$input = $this->generator->createSwitch($field, $this->l($field));
 			//$input = $this->generator->createRadio($field, $this->l($field));
 		}elseif($field=='email'){
@@ -184,7 +199,7 @@ abstract class FormAdminController extends ListAdminController
 			//$input->setTranslatable(true);
 		}elseif($field=='password'){
 			$input = $this->generator->createPasswordField($field, $this->l($field));
-		}elseif($fieldDefinition['type']==Model::TYPE_DATE){
+		}elseif($fieldDefinition['type']==DataType::TYPE_DATE){
 			//$type = ColumnType::DATE;
 		}else{
 			$input = $this->generator->createTextField($field, $this->l($field));

@@ -8,6 +8,8 @@ class Validate
     
     const VALIDATE_REQUIRED = 8;
     const VALIDATE_UNIQUE = 9;
+    const VALIDATE_MAX_SIZE = 10;
+    const VALIDATE_MIN_SIZE = 11;
 
     public static function isIp2Long($ip)
     {

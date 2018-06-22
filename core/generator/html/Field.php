@@ -15,6 +15,8 @@ class Field extends Element{
 	protected $translatable = false;
 	protected $fieldOnly = false;
 	
+	private $firstLangErrorDisplayed = false;
+	
 	protected static $langListContent;
 	function __construct($name, $label='') {
 		$this->setName($name);
@@ -144,7 +146,8 @@ class Field extends Element{
 	public function hasErrorLang($lang = ''){
 		$hasError = $this->hasErrors();
 		if($this->translatable){
-			$hasError = $hasError && isset($this->errors[$lang]);
+			$hasError = $hasError && (isset($this->errors[$lang]) || (!$this->firstLangErrorDisplayed));
+			$this->firstLangErrorDisplayed = ($this->firstLangErrorDisplayed || $hasError);
 		}
 		return $hasError;
 	}
